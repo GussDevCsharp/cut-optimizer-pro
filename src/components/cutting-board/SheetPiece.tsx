@@ -31,13 +31,15 @@ export const SheetPiece = ({ piece, scale }: SheetPieceProps) => {
         transformOrigin: 'center',
       }}
     >
-      {/* Display separate dimensions for width and height */}
+      {/* Display width at the bottom of the piece */}
       <div 
         className="absolute bottom-0.5 w-full text-center" 
         style={{ fontSize: `${fontSize}px`, color: 'rgba(0,0,0,0.7)' }}
       >
         {piece.width}
       </div>
+      
+      {/* Display height on the left side of the piece with vertical text */}
       <div 
         className="absolute left-0.5 h-full flex items-center" 
         style={{ 
