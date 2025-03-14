@@ -106,25 +106,28 @@ export const SheetPanel = () => {
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="material" className="flex items-center gap-2">
+        <div className="space-y-2 bg-muted/20 p-3 rounded-md border">
+          <Label htmlFor="cut-width" className="flex items-center gap-2 text-base font-medium">
             <Scissors size={16} />
-            <span>Espessura de corte (mm)</span>
+            <span>Espessura da serra de corte (mm)</span>
           </Label>
           <div className="pt-2 px-1">
             <Slider
               id="cut-width"
-              defaultValue={[localSheet.cutWidth]}
+              value={[localSheet.cutWidth]}
               max={10}
-              min={1}
+              min={0.5}
               step={0.5}
               onValueChange={handleCutWidthChange}
             />
           </div>
           <div className="flex justify-between text-xs text-muted-foreground pt-1">
-            <span>1mm</span>
-            <span>{localSheet.cutWidth}mm</span>
+            <span>0.5mm</span>
+            <span className="font-medium text-sm">{localSheet.cutWidth}mm</span>
             <span>10mm</span>
+          </div>
+          <div className="text-xs text-muted-foreground mt-1">
+            Esta é a largura do material que será consumida pela serra durante cada corte.
           </div>
         </div>
 

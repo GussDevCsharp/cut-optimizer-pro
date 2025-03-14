@@ -13,29 +13,14 @@ const checkOverlap = (
   placedPieces: PlacedPiece[], 
   cutWidth: number
 ): boolean => {
-  // Add cut width to piece dimensions
-  const pieceWithCut = {
-    x: piece.x,
-    y: piece.y,
-    width: piece.width + cutWidth,
-    height: piece.height + cutWidth
-  };
-
+  // Account for cut width in checking overlaps
   for (const placedPiece of placedPieces) {
-    // Add cut width to placed piece dimensions
-    const placedWithCut = {
-      x: placedPiece.x,
-      y: placedPiece.y,
-      width: placedPiece.width + cutWidth,
-      height: placedPiece.height + cutWidth
-    };
-
-    // Check if pieces overlap
+    // Check if pieces overlap considering the cut width
     if (
-      pieceWithCut.x < placedWithCut.x + placedWithCut.width &&
-      pieceWithCut.x + pieceWithCut.width > placedWithCut.x &&
-      pieceWithCut.y < placedWithCut.y + placedWithCut.height &&
-      pieceWithCut.y + pieceWithCut.height > placedWithCut.y
+      piece.x < placedPiece.x + placedPiece.width + cutWidth &&
+      piece.x + piece.width + cutWidth > placedPiece.x &&
+      piece.y < placedPiece.y + placedPiece.height + cutWidth &&
+      piece.y + piece.height + cutWidth > placedPiece.y
     ) {
       return true;
     }
@@ -87,9 +72,9 @@ const findBestPosition = (
 
   // Strategy: find the topmost, then leftmost position where the piece fits
   for (const orientation of orientations) {
-    // Create a grid of possible positions (for optimization, we could check fewer positions)
-    for (let y = 0; y <= sheet.height - orientation.height; y += sheet.cutWidth) {
-      for (let x = 0; x <= sheet.width - orientation.width; x += sheet.cutWidth) {
+    // Create a grid of possible positions with cutWidth as step size
+    for (let y = 0; y <= sheet.height - orientation.height; y += 1) {
+      for (let x = 0; x <= sheet.width - orientation.width; x += 1) {
         const testPiece = {
           ...orientation,
           x,
