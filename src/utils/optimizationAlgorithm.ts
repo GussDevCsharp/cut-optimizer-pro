@@ -96,7 +96,7 @@ const findBestPosition = (
   return bestFit;
 };
 
-// Main optimization function
+// Main optimization function that can now handle multiple sheets
 export const optimizeCutting = (
   pieces: Piece[],
   sheet: Sheet
@@ -115,21 +115,50 @@ export const optimizeCutting = (
     }
   });
   
-  // Place each piece
+  // Place each piece, creating new sheets as needed
+  let currentSheetIndex = 0;
+  let currentSheetPieces: PlacedPiece[] = [];
+  
   for (const piece of expandedPieces) {
-    const position = findBestPosition(piece, placedPieces, sheet);
+    // Try to place on current sheet
+    const position = findBestPosition(piece, currentSheetPieces, sheet);
     
     if (position) {
+      // Place on current sheet
       const placedPiece: PlacedPiece = {
         ...piece,
         x: position.x,
         y: position.y,
         rotated: position.rotated,
         width: position.rotated ? piece.height : piece.width,
-        height: position.rotated ? piece.width : piece.height
+        height: position.rotated ? piece.width : piece.height,
+        sheetIndex: currentSheetIndex
       };
       
       placedPieces.push(placedPiece);
+      currentSheetPieces.push(placedPiece);
+    } else {
+      // Move to a new sheet
+      currentSheetIndex++;
+      currentSheetPieces = [];
+      
+      // Try to place on the new sheet
+      const newPosition = findBestPosition(piece, currentSheetPieces, sheet);
+      
+      if (newPosition) {
+        const placedPiece: PlacedPiece = {
+          ...piece,
+          x: newPosition.x,
+          y: newPosition.y,
+          rotated: newPosition.rotated,
+          width: newPosition.rotated ? piece.height : piece.width,
+          height: newPosition.rotated ? piece.width : piece.height,
+          sheetIndex: currentSheetIndex
+        };
+        
+        placedPieces.push(placedPiece);
+        currentSheetPieces.push(placedPiece);
+      }
     }
   }
   

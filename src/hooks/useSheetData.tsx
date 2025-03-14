@@ -14,6 +14,7 @@ export interface PlacedPiece extends Piece {
   x: number;
   y: number;
   rotated: boolean;
+  sheetIndex: number; // Add sheetIndex to track which sheet the piece is on
 }
 
 export interface Sheet {
@@ -35,7 +36,10 @@ interface SheetContextType {
     usedArea: number;
     wasteArea: number;
     efficiency: number;
+    sheetCount: number; // Add sheet count to stats
   };
+  currentSheetIndex: number; // Add current sheet index
+  setCurrentSheetIndex: (index: number) => void; // Add setter for current sheet index
 }
 
 const SheetContext = createContext<SheetContextType | undefined>(undefined);
@@ -49,6 +53,7 @@ export const SheetProvider = ({ children }: { children: ReactNode }) => {
   
   const [pieces, setPieces] = useState<Piece[]>([]);
   const [placedPieces, setPlacedPieces] = useState<PlacedPiece[]>([]);
+  const [currentSheetIndex, setCurrentSheetIndex] = useState<number>(0);
 
   const addPiece = (piece: Piece) => {
     setPieces([...pieces, piece]);
@@ -64,9 +69,15 @@ export const SheetProvider = ({ children }: { children: ReactNode }) => {
     setPieces(pieces.filter(piece => piece.id !== id));
   };
 
-  // Calculate usage statistics
+  // Calculate the number of sheets used
+  const sheetCount = placedPieces.length > 0 
+    ? Math.max(...placedPieces.map(p => p.sheetIndex)) + 1 
+    : 0;
+
+  // Calculate usage statistics for the current sheet
+  const currentSheetPieces = placedPieces.filter(p => p.sheetIndex === currentSheetIndex);
   const totalSheetArea = sheet.width * sheet.height;
-  const usedArea = placedPieces.reduce((total, piece) => {
+  const usedArea = currentSheetPieces.reduce((total, piece) => {
     return total + (piece.width * piece.height);
   }, 0);
   const wasteArea = totalSheetArea - usedArea;
@@ -75,7 +86,8 @@ export const SheetProvider = ({ children }: { children: ReactNode }) => {
   const stats = {
     usedArea,
     wasteArea,
-    efficiency
+    efficiency,
+    sheetCount
   };
 
   return (
@@ -90,6 +102,8 @@ export const SheetProvider = ({ children }: { children: ReactNode }) => {
         placedPieces,
         setPlacedPieces,
         stats,
+        currentSheetIndex,
+        setCurrentSheetIndex,
       }}
     >
       {children}

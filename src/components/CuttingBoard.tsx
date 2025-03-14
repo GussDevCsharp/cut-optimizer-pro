@@ -2,11 +2,18 @@
 import { useRef } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Printer } from "lucide-react";
+import { Printer, ChevronLeft, ChevronRight } from "lucide-react";
 import { useSheetData, PlacedPiece } from '../hooks/useSheetData';
+import { 
+  Carousel, 
+  CarouselContent, 
+  CarouselItem, 
+  CarouselPrevious, 
+  CarouselNext 
+} from "@/components/ui/carousel";
 
 export const CuttingBoard = () => {
-  const { sheet, placedPieces, stats } = useSheetData();
+  const { sheet, placedPieces, stats, currentSheetIndex, setCurrentSheetIndex } = useSheetData();
   const containerRef = useRef<HTMLDivElement>(null);
   
   // Fixed container dimensions
@@ -21,6 +28,10 @@ export const CuttingBoard = () => {
   // Calculate dimensions of the sheet in the display
   const displayWidth = sheet.width * scale;
   const displayHeight = sheet.height * scale;
+  
+  // Group pieces by sheet index
+  const sheetCount = stats.sheetCount > 0 ? stats.sheetCount : 1;
+  const sheets = Array.from({ length: sheetCount }, (_, i) => i);
 
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
@@ -38,8 +49,11 @@ export const CuttingBoard = () => {
             .print-info-item { display: flex; justify-content: space-between; }
             .print-info-label { color: #666; }
             .print-info-value { font-weight: bold; }
-            .sheet-container { border: 1px solid #ccc; margin-top: 20px; position: relative; }
-            .piece { position: absolute; border: 1px solid rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; font-size: 12px; box-sizing: border-box; overflow: hidden; }
+            .sheet-container { border: 1px solid #ccc; margin-top: 20px; position: relative; page-break-after: always; }
+            .sheet-title { font-weight: bold; margin-bottom: 10px; }
+            .piece { position: absolute; border: 1px solid rgba(0,0,0,0.2); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 12px; box-sizing: border-box; overflow: hidden; }
+            .dimension-width { position: absolute; bottom: 2px; font-size: 10px; }
+            .dimension-height { position: absolute; left: 2px; writing-mode: vertical-lr; transform: rotate(180deg); font-size: 10px; }
           </style>
         </head>
         <body>
@@ -50,16 +64,16 @@ export const CuttingBoard = () => {
           
           <div class="print-info">
             <div class="print-info-item">
-              <span class="print-info-label">Dimensões:</span>
+              <span class="print-info-label">Dimensões da chapa:</span>
               <span class="print-info-value">${sheet.width}×${sheet.height}mm</span>
             </div>
             <div class="print-info-item">
-              <span class="print-info-label">Peças:</span>
+              <span class="print-info-label">Total de peças:</span>
               <span class="print-info-value">${placedPieces.length}</span>
             </div>
             <div class="print-info-item">
-              <span class="print-info-label">Eficiência:</span>
-              <span class="print-info-value">${stats.efficiency.toFixed(1)}%</span>
+              <span class="print-info-label">Número de chapas:</span>
+              <span class="print-info-value">${sheetCount}</span>
             </div>
             <div class="print-info-item">
               <span class="print-info-label">Largura de corte:</span>
@@ -67,23 +81,30 @@ export const CuttingBoard = () => {
             </div>
           </div>
           
-          <div class="sheet-container" style="width: ${sheet.width}px; height: ${sheet.height}px; max-width: 100%;">
-            ${placedPieces.map((piece) => `
-              <div class="piece" 
-                style="
-                  left: ${piece.x}px; 
-                  top: ${piece.y}px; 
-                  width: ${piece.width}px; 
-                  height: ${piece.height}px; 
-                  background-color: ${piece.color}; 
-                  transform: rotate(${piece.rotated ? '90deg' : '0deg'});
-                  transform-origin: center;
-                "
-              >
-                ${piece.width}×${piece.height}
+          ${sheets.map(sheetIndex => {
+            const sheetPieces = placedPieces.filter(p => p.sheetIndex === sheetIndex);
+            return `
+              <div class="sheet-title">Chapa ${sheetIndex + 1}</div>
+              <div class="sheet-container" style="width: ${sheet.width}px; height: ${sheet.height}px; max-width: 100%;">
+                ${sheetPieces.map((piece) => `
+                  <div class="piece" 
+                    style="
+                      left: ${piece.x}px; 
+                      top: ${piece.y}px; 
+                      width: ${piece.width}px; 
+                      height: ${piece.height}px; 
+                      background-color: ${piece.color}; 
+                      transform: rotate(${piece.rotated ? '90deg' : '0deg'});
+                      transform-origin: center;
+                    "
+                  >
+                    <span class="dimension-width">${piece.width}</span>
+                    <span class="dimension-height">${piece.height}</span>
+                  </div>
+                `).join('')}
               </div>
-            `).join('')}
-          </div>
+            `;
+          }).join('')}
         </body>
       </html>
     `);
@@ -94,10 +115,15 @@ export const CuttingBoard = () => {
     setTimeout(() => printWindow.close(), 1000);
   };
 
+  // Function to handle sheet change through carousel
+  const handleSheetChange = (index: number) => {
+    setCurrentSheetIndex(index);
+  };
+
   return (
     <Card className="h-full border shadow-subtle flex flex-col animate-fade-in">
       <CardContent className="p-4 flex-1 relative">
-        {/* Stats display - moved outside the sheet */}
+        {/* Stats display - outside the sheet */}
         <div className="mb-4 text-sm flex justify-between items-center">
           <div className="px-3 py-1.5 rounded-md bg-background/95 border shadow-subtle inline-block">
             <div className="grid grid-cols-2 gap-x-4 gap-y-1">
@@ -106,6 +132,9 @@ export const CuttingBoard = () => {
               
               <div className="text-muted-foreground">Peças:</div>
               <div className="font-medium text-right">{placedPieces.length}</div>
+              
+              <div className="text-muted-foreground">Chapas utilizadas:</div>
+              <div className="font-medium text-right">{sheetCount}</div>
               
               <div className="text-muted-foreground">Eficiência:</div>
               <div className="font-medium text-right">{stats.efficiency.toFixed(1)}%</div>
@@ -121,47 +150,108 @@ export const CuttingBoard = () => {
           </Button>
         </div>
 
-        <div 
-          ref={containerRef}
-          className="relative mx-auto border border-gray-300 bg-white grid-pattern"
-          style={{
-            width: displayWidth,
-            height: displayHeight,
-            maxWidth: '100%',
-            maxHeight: '100%',
-            backgroundSize: `20px 20px`,
-          }}
-        >
-          {/* Placed pieces */}
-          {placedPieces.map((piece, index) => (
-            <div
-              key={`${piece.id}-${index}`}
-              style={{
-                position: 'absolute',
-                left: piece.x * scale,
-                top: piece.y * scale,
-                width: piece.width * scale,
-                height: piece.height * scale,
-                backgroundColor: piece.color,
-                border: '1px solid rgba(0,0,0,0.2)',
-                boxSizing: 'border-box',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '12px',
-                color: 'rgba(0,0,0,0.6)',
-                transform: `rotate(${piece.rotated ? '90deg' : '0deg'})`,
-                transformOrigin: 'center',
-                overflow: 'hidden',
-              }}
-            >
-              {/* Always show measurements inside pieces */}
-              <div className="whitespace-nowrap">
-                {piece.width}×{piece.height}
-              </div>
+        {/* Sheet carousel */}
+        {sheets.length > 0 && (
+          <Carousel
+            className="w-full"
+            onSelect={(index) => handleSheetChange(index)}
+            value={currentSheetIndex}
+          >
+            <div className="flex justify-center items-center mb-2">
+              <span className="font-medium text-sm">
+                Chapa {currentSheetIndex + 1} de {sheetCount}
+              </span>
             </div>
-          ))}
-        </div>
+            <CarouselContent>
+              {sheets.map((sheetIndex) => {
+                const sheetPieces = placedPieces.filter(p => p.sheetIndex === sheetIndex);
+                
+                return (
+                  <CarouselItem key={sheetIndex}>
+                    <div 
+                      ref={containerRef}
+                      className="relative mx-auto border border-gray-300 bg-white grid-pattern"
+                      style={{
+                        width: displayWidth,
+                        height: displayHeight,
+                        maxWidth: '100%',
+                        maxHeight: '100%',
+                        backgroundSize: `20px 20px`,
+                      }}
+                    >
+                      {/* Placed pieces for this sheet */}
+                      {sheetPieces.map((piece, index) => {
+                        // Calculate font size based on piece dimensions
+                        const minDimension = Math.min(piece.width, piece.height) * scale;
+                        const fontSize = Math.max(Math.min(minDimension / 6, 14), 8);
+                        
+                        return (
+                          <div
+                            key={`${piece.id}-${index}`}
+                            style={{
+                              position: 'absolute',
+                              left: piece.x * scale,
+                              top: piece.y * scale,
+                              width: piece.width * scale,
+                              height: piece.height * scale,
+                              backgroundColor: piece.color,
+                              border: '1px solid rgba(0,0,0,0.2)',
+                              boxSizing: 'border-box',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              overflow: 'hidden',
+                              transform: `rotate(${piece.rotated ? '90deg' : '0deg'})`,
+                              transformOrigin: 'center',
+                            }}
+                          >
+                            {/* Display separate dimensions for width and height */}
+                            <div 
+                              className="absolute bottom-0.5 w-full text-center" 
+                              style={{ fontSize: `${fontSize}px`, color: 'rgba(0,0,0,0.7)' }}
+                            >
+                              {piece.width}
+                            </div>
+                            <div 
+                              className="absolute left-0.5 h-full flex items-center" 
+                              style={{ 
+                                fontSize: `${fontSize}px`, 
+                                color: 'rgba(0,0,0,0.7)', 
+                                writingMode: 'vertical-rl', 
+                                transform: 'rotate(180deg)' 
+                              }}
+                            >
+                              {piece.height}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CarouselItem>
+                );
+              })}
+            </CarouselContent>
+            <div className="flex justify-center mt-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setCurrentSheetIndex(Math.max(0, currentSheetIndex - 1))}
+                disabled={currentSheetIndex === 0}
+                className="mr-2"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setCurrentSheetIndex(Math.min(sheetCount - 1, currentSheetIndex + 1))}
+                disabled={currentSheetIndex === sheetCount - 1}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </Carousel>
+        )}
       </CardContent>
     </Card>
   );

@@ -11,7 +11,7 @@ const Index = () => {
   return (
     <Layout>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - Controls in new order: Chapa, Peças, Melhor Corte */}
+        {/* Left Column - Controls in the order: Chapa, Peças, Melhor Corte */}
         <div className="lg:col-span-1 space-y-6">
           <SheetPanel />
           <PiecesPanel />
@@ -33,7 +33,7 @@ const Index = () => {
           </Card>
         </div>
         
-        {/* Right Column - Visualization */}
+        {/* Right Column - Visualization with multiple sheets in carousel */}
         <div className="lg:col-span-2">
           <CuttingBoard />
         </div>
