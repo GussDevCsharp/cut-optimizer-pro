@@ -10,7 +10,7 @@ import {
   CardHeader, 
   CardTitle 
 } from "@/components/ui/card";
-import { Trash2, Plus, Puzzle, RotateCw, RotateCcw } from 'lucide-react';
+import { Trash2, Plus, Puzzle, RotateCw, RotateCcw, MinusIcon } from 'lucide-react';
 import { Switch } from "@/components/ui/switch";
 import { useSheetData, Piece } from '../hooks/useSheetData';
 
@@ -148,7 +148,7 @@ export const PiecesPanel = () => {
                           className="h-6 w-6"
                           onClick={() => updatePiece(piece.id, { quantity: Math.max(1, piece.quantity - 1) })}
                         >
-                          <Minus size={14} />
+                          <MinusIcon size={14} />
                         </Button>
                         <span>{piece.quantity}</span>
                         <Button
