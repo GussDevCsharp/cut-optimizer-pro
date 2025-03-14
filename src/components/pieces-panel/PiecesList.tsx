@@ -1,6 +1,8 @@
 
 import { Button } from "@/components/ui/button";
-import { Trash2, Plus, MinusIcon } from 'lucide-react';
+import { Input } from "@/components/ui/input";
+import { Trash2 } from 'lucide-react';
+import { useState } from 'react';
 import { Piece } from '../../hooks/useSheetData';
 
 interface PiecesListProps {
@@ -10,9 +12,33 @@ interface PiecesListProps {
 }
 
 export const PiecesList = ({ pieces, onUpdatePiece, onRemovePiece }: PiecesListProps) => {
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState<number>(0);
+
   if (pieces.length === 0) {
     return null;
   }
+
+  const handleDoubleClick = (piece: Piece) => {
+    setEditingId(piece.id);
+    setEditValue(piece.quantity);
+  };
+
+  const handleBlur = () => {
+    if (editingId && editValue > 0) {
+      onUpdatePiece(editingId, { quantity: editValue });
+    }
+    setEditingId(null);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && editingId && editValue > 0) {
+      onUpdatePiece(editingId, { quantity: editValue });
+      setEditingId(null);
+    } else if (e.key === 'Escape') {
+      setEditingId(null);
+    }
+  };
 
   return (
     <div className="max-h-[250px] overflow-y-auto border rounded-md">
@@ -40,26 +66,23 @@ export const PiecesList = ({ pieces, onUpdatePiece, onRemovePiece }: PiecesListP
               <td className="py-2 px-3 text-center">
                 {piece.width}×{piece.height}
               </td>
-              <td className="py-2 px-3 text-center">
-                <div className="flex items-center justify-center space-x-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    onClick={() => onUpdatePiece(piece.id, { quantity: Math.max(1, piece.quantity - 1) })}
-                  >
-                    <MinusIcon size={14} />
-                  </Button>
-                  <span>{piece.quantity}</span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    onClick={() => onUpdatePiece(piece.id, { quantity: piece.quantity + 1 })}
-                  >
-                    <Plus size={14} />
-                  </Button>
-                </div>
+              <td className="py-2 px-3 text-center" onDoubleClick={() => handleDoubleClick(piece)}>
+                {editingId === piece.id ? (
+                  <Input
+                    type="number"
+                    min="1"
+                    value={editValue}
+                    onChange={(e) => setEditValue(parseInt(e.target.value) || 1)}
+                    onBlur={handleBlur}
+                    onKeyDown={handleKeyDown}
+                    autoFocus
+                    className="w-16 h-8 mx-auto"
+                  />
+                ) : (
+                  <span className="cursor-pointer hover:bg-gray-100 px-2 py-1 rounded" title="Clique duplo para editar">
+                    {piece.quantity}
+                  </span>
+                )}
               </td>
               <td className="py-2 px-3 text-right">
                 <Button

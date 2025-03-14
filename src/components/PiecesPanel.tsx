@@ -4,9 +4,17 @@ import { Puzzle } from 'lucide-react';
 import { useSheetData, Piece } from '../hooks/useSheetData';
 import { PieceForm } from './pieces-panel/PieceForm';
 import { PiecesList } from './pieces-panel/PiecesList';
+import { ImportPiecesForm } from './pieces-panel/ImportPiecesForm';
 
 export const PiecesPanel = () => {
   const { pieces, addPiece, updatePiece, removePiece } = useSheetData();
+
+  const handleImportPieces = (importedPieces: Piece[]) => {
+    // Add each imported piece
+    importedPieces.forEach(piece => {
+      addPiece(piece);
+    });
+  };
 
   return (
     <Card className="w-full shadow-subtle border animate-fade-in">
@@ -17,6 +25,9 @@ export const PiecesPanel = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        <div className="flex items-center justify-between">
+          <ImportPiecesForm onImportPieces={handleImportPieces} />
+        </div>
         <PieceForm onAddPiece={addPiece} />
       </CardContent>
 

@@ -25,11 +25,15 @@ export const usePrinterService = ({ sheet, placedPieces, sheetCount, sheets }: P
             .print-info-item { display: flex; justify-content: space-between; }
             .print-info-label { color: #666; }
             .print-info-value { font-weight: bold; }
-            .sheet-container { border: 1px solid #ccc; margin-top: 20px; position: relative; page-break-after: always; }
+            .sheet-container { border: 1px solid #ccc; margin-bottom: 40px; position: relative; page-break-after: always; }
             .sheet-title { font-weight: bold; margin-bottom: 10px; }
             .piece { position: absolute; border: 1px solid rgba(0,0,0,0.2); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 12px; box-sizing: border-box; overflow: hidden; }
             .dimension-width { position: absolute; bottom: 2px; font-size: 10px; }
             .dimension-height { position: absolute; left: 2px; writing-mode: vertical-lr; transform: rotate(180deg); font-size: 10px; }
+            @media print {
+              .sheet-container { page-break-after: always; }
+              .sheet-container:last-child { page-break-after: avoid; }
+            }
           </style>
         </head>
         <body>
