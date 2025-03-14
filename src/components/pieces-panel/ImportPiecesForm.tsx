@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,8 +5,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Upload, FileSpreadsheet, FileText, AlertCircle } from 'lucide-react';
-import { Piece } from '../../hooks/useSheetData';
 import { v4 as uuidv4 } from 'uuid';
+import { Piece } from '../../hooks/useSheetData';
 
 interface ImportPiecesFormProps {
   onImportPieces: (pieces: Piece[]) => void;
@@ -19,7 +18,6 @@ export const ImportPiecesForm = ({ onImportPieces }: ImportPiecesFormProps) => {
   const [textContent, setTextContent] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  // Generate random colors for pieces
   const getRandomColor = () => {
     const colors = [
       '#FFCDD2', '#F8BBD0', '#E1BEE7', '#D1C4E9', '#C5CAE9', 
@@ -36,10 +34,8 @@ export const ImportPiecesForm = ({ onImportPieces }: ImportPiecesFormProps) => {
     }
 
     try {
-      // Read the file as array buffer
       const buffer = await excelFile.arrayBuffer();
       
-      // Import xlsx from CDN if not available
       if (!window.XLSX) {
         await new Promise<void>((resolve, reject) => {
           const script = document.createElement('script');
@@ -50,7 +46,6 @@ export const ImportPiecesForm = ({ onImportPieces }: ImportPiecesFormProps) => {
         });
       }
       
-      // Parse the Excel file
       const workbook = window.XLSX.read(buffer, { type: 'array' });
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
@@ -61,7 +56,6 @@ export const ImportPiecesForm = ({ onImportPieces }: ImportPiecesFormProps) => {
         return;
       }
       
-      // Map the data to pieces
       const importedPieces: Piece[] = data.map((row: any) => {
         const width = parseInt(row.width || row.Width || row.largura || row.Largura);
         const height = parseInt(row.height || row.Height || row.altura || row.Altura);
@@ -98,17 +92,12 @@ export const ImportPiecesForm = ({ onImportPieces }: ImportPiecesFormProps) => {
     }
 
     try {
-      // Split by lines and process each line
       const lines = textContent.trim().split('\n');
       const importedPieces: Piece[] = [];
       
       for (const line of lines) {
-        // Skip empty lines
         if (!line.trim()) continue;
         
-        // Try to match different formats
-        // Format 1: 100x200 (3)  - width x height (quantity)
-        // Format 2: 100 200 3    - width height quantity
         let width, height, quantity = 1;
         
         const xMatch = line.match(/(\d+)\s*[xX]\s*(\d+)(?:\s*\((\d+)\))?/);
