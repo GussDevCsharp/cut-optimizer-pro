@@ -23,6 +23,25 @@ export const CuttingBoard = () => {
   return (
     <Card className="h-full border shadow-subtle flex flex-col animate-fade-in">
       <CardContent className="p-4 flex-1 relative">
+        {/* Stats display - moved outside the sheet */}
+        <div className="mb-4 text-sm">
+          <div className="px-3 py-1.5 rounded-md bg-background/95 border shadow-subtle inline-block">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+              <div className="text-muted-foreground">Dimensões:</div>
+              <div className="font-medium text-right">{sheet.width}×{sheet.height}mm</div>
+              
+              <div className="text-muted-foreground">Peças:</div>
+              <div className="font-medium text-right">{placedPieces.length}</div>
+              
+              <div className="text-muted-foreground">Eficiência:</div>
+              <div className="font-medium text-right">{stats.efficiency.toFixed(1)}%</div>
+              
+              <div className="text-muted-foreground">Largura de corte:</div>
+              <div className="font-medium text-right">{sheet.cutWidth}mm</div>
+            </div>
+          </div>
+        </div>
+
         <div 
           ref={containerRef}
           className="relative mx-auto border border-gray-300 bg-white grid-pattern"
@@ -64,25 +83,6 @@ export const CuttingBoard = () => {
               )}
             </div>
           ))}
-          
-          {/* Stats overlay */}
-          <div className="absolute top-2 left-2 text-xs space-y-1">
-            <div className="px-3 py-1.5 rounded-md bg-background/95 border shadow-subtle">
-              <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                <div className="text-muted-foreground">Dimensões:</div>
-                <div className="font-medium text-right">{sheet.width}×{sheet.height}mm</div>
-                
-                <div className="text-muted-foreground">Peças:</div>
-                <div className="font-medium text-right">{placedPieces.length}</div>
-                
-                <div className="text-muted-foreground">Eficiência:</div>
-                <div className="font-medium text-right">{stats.efficiency.toFixed(1)}%</div>
-                
-                <div className="text-muted-foreground">Largura de corte:</div>
-                <div className="font-medium text-right">{sheet.cutWidth}mm</div>
-              </div>
-            </div>
-          </div>
         </div>
       </CardContent>
     </Card>
