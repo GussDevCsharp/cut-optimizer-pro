@@ -11,6 +11,7 @@ import {
   CarouselPrevious, 
   CarouselNext 
 } from "@/components/ui/carousel";
+import { useEffect, useState } from 'react';
 
 export const CuttingBoard = () => {
   const { sheet, placedPieces, stats, currentSheetIndex, setCurrentSheetIndex } = useSheetData();
@@ -32,6 +33,16 @@ export const CuttingBoard = () => {
   // Group pieces by sheet index
   const sheetCount = stats.sheetCount > 0 ? stats.sheetCount : 1;
   const sheets = Array.from({ length: sheetCount }, (_, i) => i);
+
+  // Use a React state to track the current API
+  const [api, setApi] = useState<any>(null);
+
+  // Use an effect to navigate to the current sheet index when it changes
+  useEffect(() => {
+    if (api) {
+      api.scrollTo(currentSheetIndex);
+    }
+  }, [currentSheetIndex, api]);
 
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
@@ -115,7 +126,7 @@ export const CuttingBoard = () => {
     setTimeout(() => printWindow.close(), 1000);
   };
 
-  // Function to handle sheet change through carousel
+  // Function to handle sheet change
   const handleSheetChange = (index: number) => {
     setCurrentSheetIndex(index);
   };
@@ -152,105 +163,113 @@ export const CuttingBoard = () => {
 
         {/* Sheet carousel */}
         {sheets.length > 0 && (
-          <Carousel
-            className="w-full"
-            onSelect={(index) => handleSheetChange(index)}
-            value={currentSheetIndex}
-          >
+          <div>
             <div className="flex justify-center items-center mb-2">
               <span className="font-medium text-sm">
                 Chapa {currentSheetIndex + 1} de {sheetCount}
               </span>
             </div>
-            <CarouselContent>
-              {sheets.map((sheetIndex) => {
-                const sheetPieces = placedPieces.filter(p => p.sheetIndex === sheetIndex);
-                
-                return (
-                  <CarouselItem key={sheetIndex}>
-                    <div 
-                      ref={containerRef}
-                      className="relative mx-auto border border-gray-300 bg-white grid-pattern"
-                      style={{
-                        width: displayWidth,
-                        height: displayHeight,
-                        maxWidth: '100%',
-                        maxHeight: '100%',
-                        backgroundSize: `20px 20px`,
-                      }}
-                    >
-                      {/* Placed pieces for this sheet */}
-                      {sheetPieces.map((piece, index) => {
-                        // Calculate font size based on piece dimensions
-                        const minDimension = Math.min(piece.width, piece.height) * scale;
-                        const fontSize = Math.max(Math.min(minDimension / 6, 14), 8);
-                        
-                        return (
-                          <div
-                            key={`${piece.id}-${index}`}
-                            style={{
-                              position: 'absolute',
-                              left: piece.x * scale,
-                              top: piece.y * scale,
-                              width: piece.width * scale,
-                              height: piece.height * scale,
-                              backgroundColor: piece.color,
-                              border: '1px solid rgba(0,0,0,0.2)',
-                              boxSizing: 'border-box',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              overflow: 'hidden',
-                              transform: `rotate(${piece.rotated ? '90deg' : '0deg'})`,
-                              transformOrigin: 'center',
-                            }}
-                          >
-                            {/* Display separate dimensions for width and height */}
-                            <div 
-                              className="absolute bottom-0.5 w-full text-center" 
-                              style={{ fontSize: `${fontSize}px`, color: 'rgba(0,0,0,0.7)' }}
-                            >
-                              {piece.width}
-                            </div>
-                            <div 
-                              className="absolute left-0.5 h-full flex items-center" 
-                              style={{ 
-                                fontSize: `${fontSize}px`, 
-                                color: 'rgba(0,0,0,0.7)', 
-                                writingMode: 'vertical-rl', 
-                                transform: 'rotate(180deg)' 
+            <Carousel
+              className="w-full"
+              setApi={setApi}
+              opts={{ startIndex: currentSheetIndex, loop: false }}
+              onSelect={(api) => {
+                if (api) {
+                  const selectedIndex = api.selectedScrollSnap();
+                  handleSheetChange(selectedIndex);
+                }
+              }}
+            >
+              <CarouselContent>
+                {sheets.map((sheetIndex) => {
+                  const sheetPieces = placedPieces.filter(p => p.sheetIndex === sheetIndex);
+                  
+                  return (
+                    <CarouselItem key={sheetIndex}>
+                      <div 
+                        ref={containerRef}
+                        className="relative mx-auto border border-gray-300 bg-white grid-pattern"
+                        style={{
+                          width: displayWidth,
+                          height: displayHeight,
+                          maxWidth: '100%',
+                          maxHeight: '100%',
+                          backgroundSize: `20px 20px`,
+                        }}
+                      >
+                        {/* Placed pieces for this sheet */}
+                        {sheetPieces.map((piece, index) => {
+                          // Calculate font size based on piece dimensions
+                          const minDimension = Math.min(piece.width, piece.height) * scale;
+                          const fontSize = Math.max(Math.min(minDimension / 6, 14), 8);
+                          
+                          return (
+                            <div
+                              key={`${piece.id}-${index}`}
+                              style={{
+                                position: 'absolute',
+                                left: piece.x * scale,
+                                top: piece.y * scale,
+                                width: piece.width * scale,
+                                height: piece.height * scale,
+                                backgroundColor: piece.color,
+                                border: '1px solid rgba(0,0,0,0.2)',
+                                boxSizing: 'border-box',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                overflow: 'hidden',
+                                transform: `rotate(${piece.rotated ? '90deg' : '0deg'})`,
+                                transformOrigin: 'center',
                               }}
                             >
-                              {piece.height}
+                              {/* Display separate dimensions for width and height */}
+                              <div 
+                                className="absolute bottom-0.5 w-full text-center" 
+                                style={{ fontSize: `${fontSize}px`, color: 'rgba(0,0,0,0.7)' }}
+                              >
+                                {piece.width}
+                              </div>
+                              <div 
+                                className="absolute left-0.5 h-full flex items-center" 
+                                style={{ 
+                                  fontSize: `${fontSize}px`, 
+                                  color: 'rgba(0,0,0,0.7)', 
+                                  writingMode: 'vertical-rl', 
+                                  transform: 'rotate(180deg)' 
+                                }}
+                              >
+                                {piece.height}
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </CarouselItem>
-                );
-              })}
-            </CarouselContent>
-            <div className="flex justify-center mt-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setCurrentSheetIndex(Math.max(0, currentSheetIndex - 1))}
-                disabled={currentSheetIndex === 0}
-                className="mr-2"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setCurrentSheetIndex(Math.min(sheetCount - 1, currentSheetIndex + 1))}
-                disabled={currentSheetIndex === sheetCount - 1}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </Carousel>
+                          );
+                        })}
+                      </div>
+                    </CarouselItem>
+                  );
+                })}
+              </CarouselContent>
+              <div className="flex justify-center mt-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setCurrentSheetIndex(Math.max(0, currentSheetIndex - 1))}
+                  disabled={currentSheetIndex === 0}
+                  className="mr-2"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setCurrentSheetIndex(Math.min(sheetCount - 1, currentSheetIndex + 1))}
+                  disabled={currentSheetIndex === sheetCount - 1}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </Carousel>
+          </div>
         )}
       </CardContent>
     </Card>
