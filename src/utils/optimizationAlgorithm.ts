@@ -56,15 +56,12 @@ const findBestPosition = (
   placedPieces: PlacedPiece[],
   sheet: Sheet
 ): { x: number; y: number; rotated: boolean } | null => {
-  // Try both rotations if allowed
-  const orientations = piece.canRotate 
-    ? [
-        { width: piece.width, height: piece.height, rotated: false },
-        { width: piece.height, height: piece.width, rotated: true }
-      ]
-    : [
-        { width: piece.width, height: piece.height, rotated: false }
-      ];
+  // Try both orientations - always check rotation regardless of canRotate setting
+  // We'll always try both orientations for optimal placement
+  const orientations = [
+    { width: piece.width, height: piece.height, rotated: false },
+    { width: piece.height, height: piece.width, rotated: true }
+  ];
 
   let bestFit = null;
   let bestY = sheet.height;

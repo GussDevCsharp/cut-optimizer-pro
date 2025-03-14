@@ -10,8 +10,7 @@ import {
   CardHeader, 
   CardTitle 
 } from "@/components/ui/card";
-import { Trash2, Plus, Puzzle, RotateCw, RotateCcw, MinusIcon } from 'lucide-react';
-import { Switch } from "@/components/ui/switch";
+import { Trash2, Plus, Puzzle, MinusIcon } from 'lucide-react';
 import { useSheetData, Piece } from '../hooks/useSheetData';
 
 export const PiecesPanel = () => {
@@ -20,7 +19,7 @@ export const PiecesPanel = () => {
     width: 100,
     height: 100,
     quantity: 1,
-    canRotate: true,
+    canRotate: true, // Default to true for automatic rotation
   });
 
   const handleAddPiece = () => {
@@ -77,33 +76,14 @@ export const PiecesPanel = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="quantity">Quantidade</Label>
-            <Input
-              id="quantity"
-              type="number"
-              value={newPiece.quantity}
-              onChange={(e) => setNewPiece({ ...newPiece, quantity: Number(e.target.value) })}
-            />
-          </div>
-          <div className="space-y-2 flex flex-col justify-end">
-            <div className="flex items-center space-x-2">
-              <Switch 
-                id="can-rotate"
-                checked={newPiece.canRotate}
-                onCheckedChange={(checked) => setNewPiece({ ...newPiece, canRotate: checked })}
-              />
-              <Label htmlFor="can-rotate" className="cursor-pointer flex items-center">
-                <span>Pode Rotacionar</span>
-                {newPiece.canRotate ? (
-                  <RotateCw size={16} className="ml-1 text-muted-foreground" />
-                ) : (
-                  <RotateCcw size={16} className="ml-1 text-muted-foreground/40" />
-                )}
-              </Label>
-            </div>
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="quantity">Quantidade</Label>
+          <Input
+            id="quantity"
+            type="number"
+            value={newPiece.quantity}
+            onChange={(e) => setNewPiece({ ...newPiece, quantity: Number(e.target.value) })}
+          />
         </div>
 
         <Button className="w-full mt-2" onClick={handleAddPiece}>
@@ -121,7 +101,6 @@ export const PiecesPanel = () => {
                   <th className="text-left py-2 px-3 font-medium">Peça</th>
                   <th className="text-center py-2 px-3 font-medium">Dimensões</th>
                   <th className="text-center py-2 px-3 font-medium">Qtd.</th>
-                  <th className="text-center py-2 px-3 font-medium">Rot.</th>
                   <th className="text-right py-2 px-3 font-medium"></th>
                 </tr>
               </thead>
@@ -160,16 +139,6 @@ export const PiecesPanel = () => {
                           <Plus size={14} />
                         </Button>
                       </div>
-                    </td>
-                    <td className="py-2 px-3 text-center">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6"
-                        onClick={() => updatePiece(piece.id, { canRotate: !piece.canRotate })}
-                      >
-                        {piece.canRotate ? <RotateCw size={14} /> : <RotateCcw size={14} className="opacity-30" />}
-                      </Button>
                     </td>
                     <td className="py-2 px-3 text-right">
                       <Button
