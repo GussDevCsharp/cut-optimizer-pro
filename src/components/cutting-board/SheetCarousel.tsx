@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/carousel";
 import { Sheet, PlacedPiece } from '../../hooks/useSheetData';
 import { SheetPiece } from './SheetPiece';
+import { SheetThumbnails } from './SheetThumbnails';
 
 interface SheetCarouselProps {
   sheet: Sheet;
@@ -105,7 +106,9 @@ export const SheetCarousel = ({
           })}
         </CarouselContent>
       </Carousel>
-      <div className="flex justify-center mt-2">
+      
+      {/* Controles de navegação */}
+      <div className="flex justify-center mt-2 mb-4">
         <Button 
           variant="outline" 
           size="sm" 
@@ -124,6 +127,15 @@ export const SheetCarousel = ({
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
+      
+      {/* Miniaturas das chapas */}
+      <SheetThumbnails
+        sheet={sheet}
+        placedPieces={placedPieces}
+        sheetCount={sheetCount}
+        currentSheetIndex={currentSheetIndex}
+        onSelectSheet={setCurrentSheetIndex}
+      />
     </div>
   );
 };
