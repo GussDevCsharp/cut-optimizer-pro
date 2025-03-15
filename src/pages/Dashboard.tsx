@@ -18,6 +18,7 @@ export default function Dashboard() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const isMobile = useIsMobile();
 
+  // Optimize query with staleTime and faster initial loading
   const { 
     data: projects = [], 
     isLoading, 
@@ -26,14 +27,16 @@ export default function Dashboard() {
     queryKey: ['projects'],
     queryFn: fetchProjects,
     enabled: !!user,
-    staleTime: 30000,
-    retry: 1,
+    staleTime: 30000, // 30 seconds cache to avoid unnecessary refetch
+    retry: 1, // Limit retries to avoid excessive attempts
   });
 
   const handleProjectClick = (projectId: string, projectName: string) => {
     navigate("/app", { state: { projectId, projectName } });
   };
 
+  // Use a simpler initial rendering to avoid layout shifts
+  // and improve perceived performance
   return (
     <Layout>
       <div className={`${isMobile ? 'px-2 py-2' : 'container mx-auto p-4'}`}>

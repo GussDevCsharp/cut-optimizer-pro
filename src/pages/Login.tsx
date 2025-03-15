@@ -39,7 +39,7 @@ export default function Login() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/dashboard");
+      navigate("/dashboard", { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
@@ -50,7 +50,7 @@ export default function Login() {
     try {
       await login(data.email, data.password);
       
-      navigate("/dashboard");
+      navigate("/dashboard", { replace: true });
     } catch (error: any) {
       console.error("Login error:", error);
       
