@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import Layout from '../components/Layout';
 import SheetPanel from '../components/SheetPanel';
@@ -9,21 +9,70 @@ import OptimizationControls from '../components/OptimizationControls';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Scissors } from 'lucide-react';
 import { ProjectNameInput } from '../components/sheet-panel/ProjectNameInput';
-import { useSheetData, SheetProvider } from '../hooks/useSheetData';
+import { useSheetData, SheetProvider, PlacedPiece, Piece } from '../hooks/useSheetData';
 import { useIsMobile } from '../hooks/use-mobile';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useProjectActions } from '@/hooks/useProjectActions';
 
 const IndexContent = () => {
   const location = useLocation();
-  const { setProjectName } = useSheetData();
+  const { setProjectName, setPlacedPieces, setSheet, placedPieces, addPiece, sheet, pieces } = useSheetData();
   const isMobile = useIsMobile();
+  const { loadProject } = useProjectActions();
+  const [loading, setLoading] = useState(false);
   
-  // Get project name from location state (if available)
+  // Get project info from location state (if available)
   useEffect(() => {
-    if (location.state?.projectName) {
-      setProjectName(location.state.projectName);
-    }
-  }, [location.state, setProjectName]);
+    const fetchProjectData = async () => {
+      // Check if there's a projectId in the location state or URL params
+      const searchParams = new URLSearchParams(window.location.search);
+      const projectId = location.state?.projectId || searchParams.get('projectId');
+      
+      if (projectId) {
+        setLoading(true);
+        try {
+          const project = await loadProject(projectId);
+          
+          if (project) {
+            // Set project name
+            setProjectName(project.name);
+            
+            // If project has description with data, load it
+            if (project.description && typeof project.description === 'object') {
+              const projectData = project.description;
+              
+              // Load sheet dimensions if available
+              if (projectData.sheet) {
+                setSheet(projectData.sheet);
+              }
+              
+              // Load pieces if available
+              if (Array.isArray(projectData.pieces)) {
+                // Clear existing pieces and add the saved ones
+                projectData.pieces.forEach((piece: Piece) => {
+                  addPiece(piece);
+                });
+              }
+              
+              // Load placed pieces if available
+              if (Array.isArray(projectData.placedPieces)) {
+                setPlacedPieces(projectData.placedPieces);
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Error loading project data:", error);
+        } finally {
+          setLoading(false);
+        }
+      } else if (location.state?.projectName) {
+        // If no project ID but we have a name, just set the name
+        setProjectName(location.state.projectName);
+      }
+    };
+    
+    fetchProjectData();
+  }, [location.state, setProjectName, loadProject, setPlacedPieces, setSheet, addPiece]);
 
   return (
     <>

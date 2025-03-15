@@ -2,23 +2,28 @@
 import { Button } from "@/components/ui/button";
 import { Save } from "lucide-react";
 import { useProjectActions } from "@/hooks/useProjectActions";
+import { useSheetData } from "@/hooks/useSheetData";
 
 interface SaveProjectButtonProps {
   projectId: string | null;
-  projectName: string;
-  projectData: any;
   className?: string;
 }
 
 export function SaveProjectButton({ 
   projectId, 
-  projectName, 
-  projectData, 
   className = "" 
 }: SaveProjectButtonProps) {
   const { saveProject, isSaving } = useProjectActions();
+  const { projectName, sheet, pieces, placedPieces } = useSheetData();
 
   const handleSave = async () => {
+    // Create a complete project data object
+    const projectData = {
+      sheet, 
+      pieces,
+      placedPieces
+    };
+    
     await saveProject(projectId, projectName, projectData);
   };
 

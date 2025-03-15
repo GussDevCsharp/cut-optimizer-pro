@@ -57,6 +57,9 @@ export const projectService = {
       
       if (error) throw error;
       
+      // After creating a project, check if we need to delete old projects
+      await this.retainOnlyRecentProjects(project.user_id);
+      
       return { data: data as Project, error: null };
     } catch (error: any) {
       console.error("Error creating project:", error.message);
@@ -96,6 +99,31 @@ export const projectService = {
     } catch (error: any) {
       console.error("Error deleting project:", error.message);
       return { data: null, error: error.message };
+    }
+  },
+  
+  // New method to retain only the 5 most recent projects for a user
+  async retainOnlyRecentProjects(userId: string): Promise<void> {
+    try {
+      // Get all projects for this user, ordered by creation date
+      const { data, error } = await projectsTable()
+        .select('id, created_at')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      // If we have more than 5 projects, delete the oldest ones
+      if (data && data.length > 5) {
+        const projectsToDelete = data.slice(5);
+        
+        for (const project of projectsToDelete) {
+          await this.deleteProject(project.id);
+        }
+      }
+    } catch (error) {
+      console.error("Error managing project count:", error);
+      // We don't want to break the app flow if this fails, so just log the error
     }
   }
 };
