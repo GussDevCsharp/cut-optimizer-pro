@@ -15,28 +15,44 @@ export const Features = () => {
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <FeatureCard 
-            icon={<Target className="h-6 w-6 text-primary" />}
-            title="Otimização Inteligente"
-            description="Algoritmo avançado que encontra a melhor distribuição de peças para minimizar desperdício."
-          />
-          <FeatureCard 
-            icon={<LayoutDashboard className="h-6 w-6 text-primary" />}
-            title="Visualização em Tempo Real"
-            description="Veja instantaneamente como suas peças serão dispostas na chapa, facilitando o planejamento."
-          />
-          <FeatureCard 
-            icon={<Zap className="h-6 w-6 text-primary" />}
-            title="Cálculos Automáticos"
-            description="Esqueça planilhas complexas. Nosso sistema calcula tudo para você, incluindo custos e economia."
-          />
-          <FeatureCard 
-            icon={<Clock className="h-6 w-6 text-primary" />}
-            title="Economize Tempo"
-            description="Reduza drasticamente o tempo gasto planejando cortes manualmente e foque no que importa."
-          />
-          <FeatureCard 
-            icon={
+          <div className="flex flex-col p-6 bg-card rounded-lg shadow-sm hover:shadow-md transition-shadow">
+            <div className="rounded-full w-12 h-12 flex items-center justify-center bg-primary/10 mb-4">
+              <Target className="h-6 w-6 text-primary" />
+            </div>
+            <h3 className="text-xl font-bold mb-2">Otimização Inteligente</h3>
+            <p className="text-muted-foreground flex-1">
+              Algoritmo avançado que encontra a melhor distribuição de peças para minimizar desperdício.
+            </p>
+          </div>
+          <div className="flex flex-col p-6 bg-card rounded-lg shadow-sm hover:shadow-md transition-shadow">
+            <div className="rounded-full w-12 h-12 flex items-center justify-center bg-primary/10 mb-4">
+              <LayoutDashboard className="h-6 w-6 text-primary" />
+            </div>
+            <h3 className="text-xl font-bold mb-2">Visualização em Tempo Real</h3>
+            <p className="text-muted-foreground flex-1">
+              Veja instantaneamente como suas peças serão dispostas na chapa, facilitando o planejamento.
+            </p>
+          </div>
+          <div className="flex flex-col p-6 bg-card rounded-lg shadow-sm hover:shadow-md transition-shadow">
+            <div className="rounded-full w-12 h-12 flex items-center justify-center bg-primary/10 mb-4">
+              <Zap className="h-6 w-6 text-primary" />
+            </div>
+            <h3 className="text-xl font-bold mb-2">Cálculos Automáticos</h3>
+            <p className="text-muted-foreground flex-1">
+              Esqueça planilhas complexas. Nosso sistema calcula tudo para você, incluindo custos e economia.
+            </p>
+          </div>
+          <div className="flex flex-col p-6 bg-card rounded-lg shadow-sm hover:shadow-md transition-shadow">
+            <div className="rounded-full w-12 h-12 flex items-center justify-center bg-primary/10 mb-4">
+              <Clock className="h-6 w-6 text-primary" />
+            </div>
+            <h3 className="text-xl font-bold mb-2">Economize Tempo</h3>
+            <p className="text-muted-foreground flex-1">
+              Reduza drasticamente o tempo gasto planejando cortes manualmente e foque no que importa.
+            </p>
+          </div>
+          <div className="flex flex-col p-6 bg-card rounded-lg shadow-sm hover:shadow-md transition-shadow">
+            <div className="rounded-full w-12 h-12 flex items-center justify-center bg-primary/10 mb-4">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="24"
@@ -53,12 +69,14 @@ export const Features = () => {
                 <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
                 <path d="M18 12a2 2 0 0 0 0 4h4v-4Z" />
               </svg>
-            }
-            title="Exportação Profissional"
-            description="Gere relatórios detalhados e envie diretamente para sua equipe ou clientes."
-          />
-          <FeatureCard 
-            icon={
+            </div>
+            <h3 className="text-xl font-bold mb-2">Exportação Profissional</h3>
+            <p className="text-muted-foreground flex-1">
+              Gere relatórios detalhados e envie diretamente para sua equipe ou clientes.
+            </p>
+          </div>
+          <div className="flex flex-col p-6 bg-card rounded-lg shadow-sm hover:shadow-md transition-shadow">
+            <div className="rounded-full w-12 h-12 flex items-center justify-center bg-primary/10 mb-4">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="24"
@@ -76,30 +94,14 @@ export const Features = () => {
                 <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
                 <path d="M16 3.13a4 4 0 0 1 0 7.75" />
               </svg>
-            }
-            title="Colaboração em Equipe"
-            description="Compartilhe projetos facilmente entre sua equipe e mantenha todos alinhados."
-          />
+            </div>
+            <h3 className="text-xl font-bold mb-2">Colaboração em Equipe</h3>
+            <p className="text-muted-foreground flex-1">
+              Compartilhe projetos facilmente entre sua equipe e mantenha todos alinhados.
+            </p>
+          </div>
         </div>
       </div>
     </section>
-  );
-};
-
-interface FeatureCardProps {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}
-
-const FeatureCard = ({ icon, title, description }: FeatureCardProps) => {
-  return (
-    <div className="flex flex-col p-6 bg-card rounded-lg shadow-sm hover:shadow-md transition-shadow">
-      <div className="rounded-full w-12 h-12 flex items-center justify-center bg-primary/10 mb-4">
-        {icon}
-      </div>
-      <h3 className="text-xl font-bold mb-2">{title}</h3>
-      <p className="text-muted-foreground flex-1">{description}</p>
-    </div>
   );
 };
