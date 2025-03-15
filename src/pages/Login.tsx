@@ -1,10 +1,10 @@
 
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { LogIn, Ruler, Scissors } from "lucide-react";
+import { LogIn, Ruler, Scissors, Check, Mail } from "lucide-react";
 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Email inválido" }),
@@ -23,18 +24,32 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const [searchParams] = useSearchParams();
+  const verifiedParam = searchParams.get('verified');
+  const emailParam = searchParams.get('email');
   
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
+      email: emailParam || "",
       password: "",
     },
   });
+
+  // Check for verification parameter
+  useEffect(() => {
+    if (verifiedParam === 'true' && emailParam) {
+      toast({
+        title: "Email confirmado com sucesso!",
+        description: "Sua conta foi ativada. Agora você pode fazer login.",
+        variant: "default",
+      });
+    }
+  }, [verifiedParam, emailParam, toast]);
 
   // Redirect to dashboard if already authenticated
   useEffect(() => {
@@ -47,20 +62,28 @@ export default function Login() {
     setIsLoading(true);
     try {
       await login(data.email, data.password);
-      toast({
-        title: "Login realizado com sucesso!",
-        description: "Você será redirecionado para o seu painel.",
-      });
       navigate("/dashboard");
-    } catch (error) {
+    } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Erro ao fazer login",
-        description: "Email ou senha incorretos. Tente novamente.",
+        description: error.message || "Email ou senha incorretos. Tente novamente.",
       });
     } finally {
       setIsLoading(false);
     }
+  }
+
+  // Show loading state
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-pulse flex flex-col items-center">
+          <div className="h-12 w-12 rounded-full bg-primary/20 mb-4"></div>
+          <div className="h-4 w-32 bg-primary/20 rounded"></div>
+        </div>
+      </div>
+    );
   }
 
   // If already authenticated, don't render the login form
@@ -120,6 +143,16 @@ export default function Login() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {verifiedParam === 'true' && (
+              <Alert className="mb-4 bg-accent text-accent-foreground border-primary/20">
+                <Check className="h-5 w-5 text-green-500" />
+                <AlertTitle className="text-green-600 font-semibold">Email confirmado!</AlertTitle>
+                <AlertDescription>
+                  Sua conta foi ativada com sucesso. Agora você pode fazer login.
+                </AlertDescription>
+              </Alert>
+            )}
+            
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
