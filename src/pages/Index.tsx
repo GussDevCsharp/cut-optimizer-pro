@@ -42,12 +42,12 @@ const IndexContent = () => {
               const projectData = project.description;
               
               // Load sheet dimensions if available
-              if (projectData.sheet) {
+              if (projectData && projectData.sheet) {
                 setSheet(projectData.sheet);
               }
               
               // Load pieces if available
-              if (Array.isArray(projectData.pieces)) {
+              if (projectData && Array.isArray(projectData.pieces)) {
                 // Clear existing pieces and add the saved ones
                 projectData.pieces.forEach((piece: Piece) => {
                   addPiece(piece);
@@ -55,7 +55,7 @@ const IndexContent = () => {
               }
               
               // Load placed pieces if available
-              if (Array.isArray(projectData.placedPieces)) {
+              if (projectData && Array.isArray(projectData.placedPieces)) {
                 setPlacedPieces(projectData.placedPieces);
               }
             }
