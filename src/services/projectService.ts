@@ -1,17 +1,13 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import type { Project, ApiResponse, SupabaseTable } from "@/types/project";
-import { PostgrestQueryBuilder } from "@supabase/supabase-js";
-
-// Use a type that bypasses the type checking for Supabase calls
-type AnyPostgrestQuery = PostgrestQueryBuilder<any, any, any, any>;
 
 export const projectService = {
   async getProjects(): Promise<ApiResponse<Project[]>> {
     try {
       // Use type assertion to bypass type checking
-      const query = supabase.from('projects') as unknown as AnyPostgrestQuery;
-      const { data, error } = await query
+      const { data, error } = await (supabase
+        .from('projects') as any)
         .select('*')
         .order('date_created', { ascending: false });
       
@@ -27,8 +23,8 @@ export const projectService = {
   async getProjectById(id: string): Promise<ApiResponse<Project>> {
     try {
       // Use type assertion to bypass type checking
-      const query = supabase.from('projects') as unknown as AnyPostgrestQuery;
-      const { data, error } = await query
+      const { data, error } = await (supabase
+        .from('projects') as any)
         .select('*')
         .eq('id', id)
         .single();
@@ -52,8 +48,8 @@ export const projectService = {
       };
       
       // Use type assertion to bypass type checking
-      const query = supabase.from('projects') as unknown as AnyPostgrestQuery;
-      const { data, error } = await query
+      const { data, error } = await (supabase
+        .from('projects') as any)
         .insert(newProject)
         .select()
         .single();
@@ -70,8 +66,8 @@ export const projectService = {
   async updateProject(id: string, updates: Partial<Omit<Project, 'id' | 'date_created'>>): Promise<ApiResponse<Project>> {
     try {
       // Use type assertion to bypass type checking
-      const query = supabase.from('projects') as unknown as AnyPostgrestQuery;
-      const { data, error } = await query
+      const { data, error } = await (supabase
+        .from('projects') as any)
         .update({
           ...updates,
           date_modified: new Date().toISOString()
@@ -92,8 +88,8 @@ export const projectService = {
   async deleteProject(id: string): Promise<ApiResponse<null>> {
     try {
       // Use type assertion to bypass type checking
-      const query = supabase.from('projects') as unknown as AnyPostgrestQuery;
-      const { error } = await query
+      const { error } = await (supabase
+        .from('projects') as any)
         .delete()
         .eq('id', id);
       
