@@ -122,15 +122,17 @@ export const logout = async () => {
  */
 export const getUserById = async (id: string) => {
   try {
-    // Removed the database query that was causing type errors
-    // Instead, we'll use the auth user information
-    const { data: authUser } = await supabase.auth.getUser(id);
+    // The correct way to get a user is to call getUser without args if getting the current user
+    // or to use the session's access token
+    const { data } = await supabase.auth.getSession();
     
-    if (!authUser || !authUser.user) {
-      return null;
+    if (data.session && data.session.user.id === id) {
+      return formatSupabaseUser(data.session.user);
     }
     
-    return formatSupabaseUser(authUser.user);
+    // If we're looking for a different user, we can't directly get them with the client SDK
+    // This would typically require a server-side call or a different approach
+    return null;
   } catch (error) {
     console.error("Error fetching user:", error);
     return null;
