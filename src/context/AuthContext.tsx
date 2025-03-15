@@ -1,14 +1,16 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Session, User, AuthError } from "@supabase/supabase-js";
 
-interface User {
+interface AuthUser {
   id: string;
   name: string;
   email: string;
 }
 
 interface AuthContextType {
-  user: User | null;
+  user: AuthUser | null;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
@@ -26,68 +28,104 @@ export const useAuth = () => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Check if user is already logged in
+  // Initialize auth state from Supabase session
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-        setIsAuthenticated(true);
-      } catch (e) {
-        console.error("Failed to parse stored user data", e);
-        localStorage.removeItem("user");
+    const initializeAuth = async () => {
+      setIsLoading(true);
+      
+      // Get current session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        handleSessionChange(session);
       }
-    }
+      
+      // Listen for auth changes
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        (_event, session) => {
+          if (session) {
+            handleSessionChange(session);
+          } else {
+            setUser(null);
+            setIsAuthenticated(false);
+          }
+        }
+      );
+      
+      setIsLoading(false);
+      
+      // Cleanup subscription
+      return () => {
+        subscription.unsubscribe();
+      };
+    };
+    
+    initializeAuth();
   }, []);
+  
+  // Handle session change and set user
+  const handleSessionChange = (session: Session) => {
+    const supabaseUser = session.user;
+    if (supabaseUser) {
+      const authUser: AuthUser = {
+        id: supabaseUser.id,
+        name: supabaseUser?.user_metadata?.name || supabaseUser.email?.split('@')[0] || '',
+        email: supabaseUser.email || '',
+      };
+      setUser(authUser);
+      setIsAuthenticated(true);
+    }
+  };
 
   const login = async (email: string, password: string) => {
-    // In a real app, this would make an API call to validate credentials
-    // For demo purposes, we'll simulate a successful login after a delay
-    return new Promise<void>((resolve, reject) => {
-      setTimeout(() => {
-        if (email && password) {
-          const user = {
-            id: "user-1",
-            name: email.split("@")[0],
-            email,
-          };
-          
-          setUser(user);
-          setIsAuthenticated(true);
-          localStorage.setItem("user", JSON.stringify(user));
-          resolve();
-        } else {
-          reject(new Error("Invalid credentials"));
-        }
-      }, 1000);
-    });
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) {
+        throw error;
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      throw error;
+    }
   };
 
   const register = async (name: string, email: string, password: string) => {
-    // In a real app, this would make an API call to register the user
-    // For demo purposes, we'll simulate a successful registration after a delay
-    return new Promise<void>((resolve) => {
-      setTimeout(() => {
-        const user = {
-          id: "user-" + Date.now(),
-          name,
-          email,
-        };
-        
-        // In a real app, we wouldn't set the user here,
-        // as they would need to log in after registration
-        resolve();
-      }, 1000);
-    });
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+          },
+        },
+      });
+      
+      if (error) {
+        throw error;
+      }
+    } catch (error) {
+      console.error("Registration error:", error);
+      throw error;
+    }
   };
 
-  const logout = () => {
-    setUser(null);
-    setIsAuthenticated(false);
-    localStorage.removeItem("user");
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      setIsAuthenticated(false);
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   return (
@@ -100,7 +138,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAuthenticated,
       }}
     >
-      {children}
+      {!isLoading && children}
     </AuthContext.Provider>
   );
 };
