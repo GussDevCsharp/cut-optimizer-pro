@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { FileText, Download, LogOut } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useSheetData } from '../hooks/useSheetData';
 import { useNavigate } from 'react-router-dom';
@@ -9,7 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 export const Header = () => {
-  const { stats, projectName } = useSheetData();
+  const { projectName } = useSheetData();
   const [scrolled, setScrolled] = useState(false);
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -22,11 +22,6 @@ export const Header = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  const handleExport = () => {
-    // Future implementation: Export functionality
-    console.log("Export functionality to be implemented");
-  };
 
   const handleLogout = () => {
     logout();
@@ -50,36 +45,7 @@ export const Header = () => {
           </div>
         </div>
 
-        <div className="flex items-center justify-end space-x-3 md:space-x-6">
-          <div className="hidden md:flex items-center space-x-4">
-            <div className="text-xs flex flex-col items-end">
-              <span className="text-muted-foreground">Eficiência</span>
-              <span className="font-medium">{stats.efficiency.toFixed(1)}%</span>
-            </div>
-            
-            <div className="h-8 w-px bg-border"></div>
-            
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="gap-1.5 text-muted-foreground hover:text-foreground"
-              onClick={handleExport}
-            >
-              <FileText size={16} />
-              <span>Relatório</span>
-            </Button>
-            
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="gap-1.5 text-muted-foreground hover:text-foreground"
-              onClick={handleExport}
-            >
-              <Download size={16} />
-              <span>Exportar</span>
-            </Button>
-          </div>
-
+        <div className="flex items-center justify-end">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="rounded-full h-10 w-10 p-0">
