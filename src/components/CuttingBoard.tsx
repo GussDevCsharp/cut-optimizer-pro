@@ -6,7 +6,7 @@ import { SheetCarousel } from './cutting-board/SheetCarousel';
 import { usePrinterService } from './cutting-board/PrinterService';
 
 export const CuttingBoard = () => {
-  const { sheet, placedPieces, stats, currentSheetIndex, setCurrentSheetIndex } = useSheetData();
+  const { sheet, placedPieces, stats, currentSheetIndex, setCurrentSheetIndex, projectName } = useSheetData();
   
   // Group pieces by sheet index
   const sheetCount = stats.sheetCount > 0 ? stats.sheetCount : 1;
@@ -17,7 +17,8 @@ export const CuttingBoard = () => {
     sheet, 
     placedPieces, 
     sheetCount, 
-    sheets 
+    sheets,
+    projectName 
   });
 
   return (
@@ -28,7 +29,8 @@ export const CuttingBoard = () => {
           sheet={sheet} 
           placedPieces={placedPieces} 
           stats={stats} 
-          onPrint={handlePrint} 
+          onPrint={handlePrint}
+          projectName={projectName}
         />
 
         {/* Sheet carousel */}
