@@ -26,14 +26,29 @@ export const usePrinterService = ({ sheet, placedPieces, sheetCount, sheets, pro
             .print-info-item { display: flex; justify-content: space-between; }
             .print-info-label { color: #666; }
             .print-info-value { font-weight: bold; }
-            .sheet-container { border: 1px solid #ccc; margin-bottom: 40px; position: relative; page-break-after: always; }
+            .sheet-container { 
+              border: 1px solid #ccc; 
+              margin-bottom: 40px; 
+              position: relative; 
+              page-break-after: always; 
+              box-sizing: border-box;
+            }
+            .sheet-page {
+              page-break-after: always;
+              padding-bottom: 30px;
+            }
+            .sheet-page:last-child {
+              page-break-after: avoid;
+            }
             .sheet-title { font-weight: bold; margin-bottom: 10px; }
             .piece { position: absolute; border: 1px solid rgba(0,0,0,0.2); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 12px; box-sizing: border-box; overflow: hidden; }
             .dimension-width { position: absolute; bottom: 2px; width: 100%; text-align: center; font-size: 10px; }
             .dimension-height { position: absolute; left: 2px; height: 100%; writing-mode: vertical-lr; transform: rotate(180deg); display: flex; align-items: center; font-size: 10px; }
             @media print {
-              .sheet-container { page-break-after: always; }
-              .sheet-container:last-child { page-break-after: avoid; }
+              @page { margin: 0.5cm; }
+              body { margin: 1cm; }
+              .sheet-page { page-break-after: always; }
+              .sheet-page:last-child { page-break-after: avoid; }
             }
           </style>
         </head>
@@ -62,27 +77,90 @@ export const usePrinterService = ({ sheet, placedPieces, sheetCount, sheets, pro
             </div>
           </div>
           
+          <script>
+            function calculateScale() {
+              // Get available print area (accounting for margins)
+              const availableWidth = window.innerWidth - 80; // 40px margin on each side
+              const availableHeight = window.innerHeight - 250; // Header + info + margins
+              
+              // Calculate scale to fit the sheet in the available area
+              const sheetWidth = ${sheet.width};
+              const sheetHeight = ${sheet.height};
+              const widthScale = availableWidth / sheetWidth;
+              const heightScale = availableHeight / sheetHeight;
+              
+              // Use the smaller scale to ensure the sheet fits entirely
+              return Math.min(widthScale, heightScale, 1); // Cap at 1 to avoid enlarging small sheets
+            }
+            
+            function applyScale() {
+              const scale = calculateScale();
+              const sheetContainers = document.querySelectorAll('.sheet-container');
+              
+              sheetContainers.forEach(container => {
+                const originalWidth = ${sheet.width};
+                const originalHeight = ${sheet.height};
+                
+                container.style.width = (originalWidth * scale) + 'px';
+                container.style.height = (originalHeight * scale) + 'px';
+                
+                // Scale pieces within the sheet
+                const pieces = container.querySelectorAll('.piece');
+                pieces.forEach(piece => {
+                  const originalLeft = parseFloat(piece.getAttribute('data-x'));
+                  const originalTop = parseFloat(piece.getAttribute('data-y'));
+                  const originalPieceWidth = parseFloat(piece.getAttribute('data-width'));
+                  const originalPieceHeight = parseFloat(piece.getAttribute('data-height'));
+                  
+                  piece.style.left = (originalLeft * scale) + 'px';
+                  piece.style.top = (originalTop * scale) + 'px';
+                  piece.style.width = (originalPieceWidth * scale) + 'px';
+                  piece.style.height = (originalPieceHeight * scale) + 'px';
+                  
+                  // Adjust font size based on the scale
+                  const fontSize = Math.max(8 * scale, 6);
+                  piece.style.fontSize = fontSize + 'px';
+                  
+                  const dimensionElements = piece.querySelectorAll('.dimension-width, .dimension-height');
+                  dimensionElements.forEach(el => {
+                    el.style.fontSize = fontSize + 'px';
+                  });
+                });
+              });
+            }
+            
+            // Apply scaling when the page loads and when window is resized
+            window.addEventListener('load', applyScale);
+            window.addEventListener('resize', applyScale);
+          </script>
+          
           ${sheets.map(sheetIndex => {
             const sheetPieces = placedPieces.filter(p => p.sheetIndex === sheetIndex);
             return `
-              <div class="sheet-title">Chapa ${sheetIndex + 1}</div>
-              <div class="sheet-container" style="width: ${sheet.width}px; height: ${sheet.height}px; max-width: 100%;">
-                ${sheetPieces.map((piece) => `
-                  <div class="piece" 
-                    style="
-                      left: ${piece.x}px; 
-                      top: ${piece.y}px; 
-                      width: ${piece.width}px; 
-                      height: ${piece.height}px; 
-                      background-color: ${piece.color}; 
-                      transform: rotate(${piece.rotated ? '90deg' : '0deg'});
-                      transform-origin: center;
-                    "
-                  >
-                    <span class="dimension-width">${piece.width}</span>
-                    <span class="dimension-height">${piece.height}</span>
-                  </div>
-                `).join('')}
+              <div class="sheet-page">
+                <div class="sheet-title">Chapa ${sheetIndex + 1}</div>
+                <div class="sheet-container">
+                  ${sheetPieces.map((piece) => `
+                    <div class="piece" 
+                      data-x="${piece.x}"
+                      data-y="${piece.y}"
+                      data-width="${piece.width}"
+                      data-height="${piece.height}"
+                      style="
+                        left: ${piece.x}px; 
+                        top: ${piece.y}px; 
+                        width: ${piece.width}px; 
+                        height: ${piece.height}px; 
+                        background-color: ${piece.color}; 
+                        transform: rotate(${piece.rotated ? '90deg' : '0deg'});
+                        transform-origin: center;
+                      "
+                    >
+                      <span class="dimension-width">${piece.width}</span>
+                      <span class="dimension-height">${piece.height}</span>
+                    </div>
+                  `).join('')}
+                </div>
               </div>
             `;
           }).join('')}
@@ -92,8 +170,10 @@ export const usePrinterService = ({ sheet, placedPieces, sheetCount, sheets, pro
     
     printWindow.document.close();
     printWindow.focus();
-    printWindow.print();
-    setTimeout(() => printWindow.close(), 1000);
+    setTimeout(() => {
+      printWindow.print();
+      setTimeout(() => printWindow.close(), 1000);
+    }, 500);
   };
 
   return { handlePrint };
