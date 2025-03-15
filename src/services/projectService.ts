@@ -1,10 +1,13 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import type { Project, ApiResponse } from "@/types/project";
+import type { Project, ApiResponse, ExtendedDatabase } from "@/types/project";
+import { createClient } from '@supabase/supabase-js';
 
-// This cast is necessary because our Database type doesn't know about the 'projects' table
-// We need to bypass TypeScript's type checking completely for this to work
-const projectsTable = () => supabase.from('projects' as unknown as any) as any;
+// Create a typed client that knows about our projects table
+const typedSupabase = supabase as unknown as ReturnType<typeof createClient<ExtendedDatabase>>;
+
+// Now we can use the typed client to access the projects table with proper typing
+const projectsTable = () => typedSupabase.from('projects');
 
 export const projectService = {
   async getProjects(): Promise<ApiResponse<Project[]>> {
