@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { projectService } from "@/services/projectService";
@@ -27,7 +26,7 @@ export function useProjectActions() {
       if (projectId) {
         const { data, error } = await projectService.updateProject(projectId, {
           name: projectName,
-          data: projectData
+          description: JSON.stringify(projectData) // Store the data as a serialized JSON string
         });
         
         if (error) throw new Error(error);
@@ -43,7 +42,7 @@ export function useProjectActions() {
         const { data, error } = await projectService.createProject({
           name: projectName,
           user_id: user.id,
-          data: projectData,
+          description: JSON.stringify(projectData), // Store the data as a serialized JSON string
           preview_url: "/placeholder.svg" // Placeholder for now
         });
         
@@ -83,6 +82,16 @@ export function useProjectActions() {
       
       if (error) throw new Error(error);
       if (!data) throw new Error("Projeto não encontrado");
+      
+      // Parse the description field if it contains JSON data
+      if (data.description) {
+        try {
+          data.description = JSON.parse(data.description);
+        } catch (e) {
+          // If parsing fails, keep the description as is
+          console.warn("Failed to parse project description as JSON");
+        }
+      }
       
       return data;
     } catch (error: any) {

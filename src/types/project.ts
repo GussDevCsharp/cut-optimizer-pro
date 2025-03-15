@@ -8,7 +8,7 @@ export interface Project {
   user_id: string;
   created_at: string;
   updated_at: string;
-  data?: any; // For storing JSON data about the project
+  description?: string; // Using description instead of data
   preview_url?: string;
 }
 

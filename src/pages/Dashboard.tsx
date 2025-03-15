@@ -77,7 +77,7 @@ export default function Dashboard() {
       const { data, error } = await projectService.createProject({
         name: projectName,
         user_id: user.id,
-        data: {},
+        description: JSON.stringify({}), // Empty object for new projects
         preview_url: "/placeholder.svg"
       });
 
