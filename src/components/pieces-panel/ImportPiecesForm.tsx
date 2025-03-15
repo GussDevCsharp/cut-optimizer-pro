@@ -7,7 +7,7 @@ import { Upload } from 'lucide-react';
 import { Piece } from '../../hooks/useSheetData';
 import { ExcelImportTab } from './import/ExcelImportTab';
 import { TextImportTab } from './import/TextImportTab';
-import { getRandomColor } from '../../utils/colorUtils';
+import { toast } from "sonner";
 
 interface ImportPiecesFormProps {
   onImportPieces: (pieces: Piece[]) => void;
@@ -19,6 +19,7 @@ export const ImportPiecesForm = ({ onImportPieces }: ImportPiecesFormProps) => {
   const handleImportSuccess = (importedPieces: Piece[]) => {
     onImportPieces(importedPieces);
     setOpen(false);
+    toast.success(`${importedPieces.length} peças importadas com sucesso!`);
   };
 
   return (
