@@ -30,6 +30,16 @@ export default function Register() {
   const { register, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  
+  const form = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
 
   // Redirect to dashboard if already authenticated
   useEffect(() => {

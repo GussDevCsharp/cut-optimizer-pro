@@ -25,6 +25,14 @@ export default function Login() {
   const { login, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
 
   // Redirect to dashboard if already authenticated
   useEffect(() => {
