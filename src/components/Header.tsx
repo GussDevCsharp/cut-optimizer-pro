@@ -1,9 +1,9 @@
 
 import { useState, useEffect } from 'react';
-import { LogOut, Menu, Settings } from 'lucide-react';
+import { LogOut, Menu, Settings, ChevronLeft } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useSheetData } from '../hooks/useSheetData';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -15,9 +15,11 @@ export const Header = () => {
   const { projectName } = useSheetData();
   const [scrolled, setScrolled] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, logout } = useAuth();
   const isMobile = useIsMobile();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const isAppRoute = location.pathname === '/app';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -37,6 +39,10 @@ export const Header = () => {
     setSettingsOpen(true);
   };
 
+  const handleBackToDashboard = () => {
+    navigate("/dashboard");
+  };
+
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 px-3 sm:px-6 py-2 sm:py-4 transition-all duration-300 ${
       scrolled 
@@ -54,7 +60,20 @@ export const Header = () => {
           </div>
         </div>
 
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-end gap-2">
+          {/* Back to Dashboard Button - Only show on app route */}
+          {isAppRoute && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleBackToDashboard}
+              className="bg-lilac text-white hover:bg-lilac/90 border-lilac mr-1"
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Dashboard
+            </Button>
+          )}
+
           {isMobile ? (
             <Sheet>
               <SheetTrigger asChild>
