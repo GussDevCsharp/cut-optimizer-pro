@@ -8,11 +8,17 @@ import { useNavigate } from "react-router-dom";
 export function useProjectActions() {
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const saveProject = async (projectId: string | null, projectName: string, projectData: any) => {
+  const saveProject = async (
+    projectId: string | null, 
+    projectName: string, 
+    projectData: any, 
+    imageFile?: File
+  ) => {
     if (!user) {
       toast({
         variant: "destructive",
@@ -24,12 +30,38 @@ export function useProjectActions() {
 
     setIsSaving(true);
     try {
+      // Upload image if provided
+      let preview_url = undefined;
+      if (imageFile) {
+        setIsUploadingImage(true);
+        const { data: fileData, error: fileError } = await projectService.uploadProjectImage(imageFile);
+        
+        if (fileError) {
+          console.error("Error uploading image:", fileError);
+          toast({
+            variant: "destructive",
+            title: "Erro ao fazer upload da imagem",
+            description: "A imagem não pôde ser carregada, mas o projeto será salvo mesmo assim."
+          });
+        } else if (fileData) {
+          preview_url = fileData.path;
+        }
+        setIsUploadingImage(false);
+      }
+
       // If we have a projectId, update it; otherwise, create a new one
       if (projectId) {
-        const { data, error } = await projectService.updateProject(projectId, {
+        const updateData: any = {
           name: projectName,
           description: JSON.stringify(projectData) // Store the data as a serialized JSON string
-        });
+        };
+        
+        // Only update preview_url if we have a new image
+        if (preview_url) {
+          updateData.preview_url = preview_url;
+        }
+        
+        const { data, error } = await projectService.updateProject(projectId, updateData);
         
         if (error) throw new Error(error);
         
@@ -45,7 +77,7 @@ export function useProjectActions() {
           name: projectName,
           user_id: user.id,
           description: JSON.stringify(projectData), // Store the data as a serialized JSON string
-          preview_url: "/placeholder.svg" // Placeholder for now
+          preview_url: preview_url || "/placeholder.svg" // Use uploaded image or placeholder
         });
         
         if (error) throw new Error(error);
@@ -120,6 +152,7 @@ export function useProjectActions() {
     saveProject,
     loadProject,
     isSaving,
-    isLoading
+    isLoading,
+    isUploadingImage
   };
 }
