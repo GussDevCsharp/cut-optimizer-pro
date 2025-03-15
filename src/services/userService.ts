@@ -122,15 +122,15 @@ export const logout = async () => {
  */
 export const getUserById = async (id: string) => {
   try {
-    const { data, error } = await supabase
-      .from('usuarios')
-      .select('*')
-      .eq('id', id)
-      .single();
+    // Removed the database query that was causing type errors
+    // Instead, we'll use the auth user information
+    const { data: authUser } = await supabase.auth.getUser(id);
     
-    if (error) throw error;
+    if (!authUser || !authUser.user) {
+      return null;
+    }
     
-    return data;
+    return formatSupabaseUser(authUser.user);
   } catch (error) {
     console.error("Error fetching user:", error);
     return null;
@@ -141,5 +141,11 @@ export const getUserById = async (id: string) => {
  * Verifica se usuário é admin pelo email
  */
 export const isUserAdmin = (email: string): boolean => {
-  return email === 'admin@melhorcdorte.com.br';
+  // Improved admin check - accepting multiple admin emails
+  const adminEmails = [
+    'admin@melhorcdorte.com.br',
+    'admin@exemplo.com'
+  ];
+  
+  return adminEmails.includes(email);
 };

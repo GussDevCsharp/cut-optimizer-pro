@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -25,18 +24,26 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// Admin route component
+// Admin route component with enhanced security
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, isAdmin } = useAuth();
+  const { isAuthenticated, isAdmin, isLoading } = useAuth();
   
+  // Show nothing while checking auth status
+  if (isLoading) {
+    return null;
+  }
+  
+  // Redirect to login if not authenticated
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
   
+  // Redirect to dashboard if authenticated but not admin
   if (!isAdmin) {
     return <Navigate to="/dashboard" replace />;
   }
   
+  // User is authenticated and is an admin
   return <>{children}</>;
 };
 
@@ -68,8 +75,6 @@ const ViewportHeightFix = () => {
 
 // Main App component
 const AppRoutes = () => {
-  const { isAuthenticated } = useAuth();
-  
   return (
     <Routes>
       <Route path="/home" element={<Home />} />
