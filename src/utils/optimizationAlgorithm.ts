@@ -7,39 +7,13 @@ const generatePastelColor = () => {
   return `hsl(${hue}, 70%, 80%)`;
 };
 
-// Check if a piece at given position would overlap with existing placed pieces
-const checkOverlap = (
-  piece: { width: number; height: number; x: number; y: number }, 
-  placedPieces: PlacedPiece[], 
-  cutWidth: number
-): boolean => {
-  // Account for cut width in checking overlaps
-  const adjustedPiece = {
-    x: piece.x - cutWidth/2,
-    y: piece.y - cutWidth/2,
-    width: piece.width + cutWidth,
-    height: piece.height + cutWidth
-  };
-  
-  for (const placedPiece of placedPieces) {
-    const adjustedPlacedPiece = {
-      x: placedPiece.x - cutWidth/2,
-      y: placedPiece.y - cutWidth/2,
-      width: placedPiece.width + cutWidth,
-      height: placedPiece.height + cutWidth
-    };
-    
-    // Check if pieces overlap
-    if (
-      adjustedPiece.x < adjustedPlacedPiece.x + adjustedPlacedPiece.width &&
-      adjustedPiece.x + adjustedPiece.width > adjustedPlacedPiece.x &&
-      adjustedPiece.y < adjustedPlacedPiece.y + adjustedPlacedPiece.height &&
-      adjustedPiece.y + adjustedPiece.height > adjustedPlacedPiece.y
-    ) {
-      return true;
-    }
-  }
-  return false;
+// Sort pieces by area (largest first) to improve packing efficiency
+const sortPiecesByArea = (pieces: Piece[]): Piece[] => {
+  return [...pieces].sort((a, b) => {
+    const areaA = a.width * a.height;
+    const areaB = b.width * b.height;
+    return areaB - areaA;
+  });
 };
 
 // Check if a piece fits within the sheet boundaries
@@ -55,38 +29,30 @@ const checkBoundaries = (
   );
 };
 
-// Sort pieces by area (largest first) to improve packing efficiency
-const sortPiecesByArea = (pieces: Piece[]): Piece[] => {
-  return [...pieces].sort((a, b) => {
-    const areaA = a.width * a.height;
-    const areaB = b.width * b.height;
-    return areaB - areaA;
-  });
-};
-
 // Create a grid representation of the sheet to track occupied spaces
-const createGrid = (sheet: Sheet, cutWidth: number): boolean[][] => {
-  // Create a grid where each cell represents 1mm×1mm
-  const grid: boolean[][] = [];
-  for (let y = 0; y < sheet.height; y++) {
-    grid[y] = new Array(sheet.width).fill(false);
-  }
-  return grid;
+// Use a more efficient data structure - typed array for better performance
+const createGrid = (sheet: Sheet): Uint8Array => {
+  // Create a flat 1D array representing the grid
+  return new Uint8Array(sheet.width * sheet.height);
 };
 
 // Mark a placed piece on the grid as occupied
 const markPieceOnGrid = (
-  grid: boolean[][],
+  grid: Uint8Array,
   piece: { x: number; y: number; width: number; height: number },
+  sheetWidth: number,
   cutWidth: number
 ): void => {
-  const endX = Math.min(piece.x + piece.width + cutWidth, grid[0].length);
-  const endY = Math.min(piece.y + piece.height + cutWidth, grid.length);
+  const startX = Math.max(0, piece.x - cutWidth);
+  const startY = Math.max(0, piece.y - cutWidth);
+  const endX = Math.min(piece.x + piece.width + cutWidth, sheetWidth);
+  const endY = Math.min(piece.y + piece.height + cutWidth, sheetWidth);
   
-  for (let y = Math.max(0, piece.y - cutWidth); y < endY; y++) {
-    for (let x = Math.max(0, piece.x - cutWidth); x < endX; x++) {
-      if (y < grid.length && x < grid[0].length) {
-        grid[y][x] = true;
+  for (let y = startY; y < endY; y++) {
+    for (let x = startX; x < endX; x++) {
+      const index = y * sheetWidth + x;
+      if (index >= 0 && index < grid.length) {
+        grid[index] = 1;
       }
     }
   }
@@ -94,11 +60,12 @@ const markPieceOnGrid = (
 
 // Check if a piece can be placed at a specific position using the grid
 const canPlacePieceAtPosition = (
-  grid: boolean[][],
+  grid: Uint8Array,
   piece: { x: number; y: number; width: number; height: number },
+  sheetWidth: number,
   sheet: Sheet
 ): boolean => {
-  // Check boundaries
+  // Check boundaries first (quick rejection)
   if (
     piece.x < 0 ||
     piece.y < 0 ||
@@ -110,21 +77,25 @@ const canPlacePieceAtPosition = (
   
   // Check if all required cells are available
   for (let y = piece.y; y < piece.y + piece.height; y++) {
-    for (let x = piece.x; x < piece.x + piece.width; x++) {
-      if (y >= grid.length || x >= grid[0].length || grid[y][x]) {
-        return false;
-      }
+    // Fast scan of row using slice instead of nested loop
+    const rowStartIndex = y * sheetWidth + piece.x;
+    const rowEndIndex = rowStartIndex + piece.width;
+    
+    // Check if any cell in this row is occupied (value > 0)
+    if (grid.slice(rowStartIndex, rowEndIndex).some(cell => cell > 0)) {
+      return false;
     }
   }
   
   return true;
 };
 
-// Find the best position for a new piece
+// Find the best position for a new piece using a faster algorithm
 const findBestPosition = (
   piece: Piece,
-  grid: boolean[][],
-  sheet: Sheet
+  grid: Uint8Array,
+  sheet: Sheet,
+  sheetWidth: number
 ): { x: number; y: number; rotated: boolean } | null => {
   // Try both orientations if canRotate is true
   const orientations = piece.canRotate 
@@ -140,25 +111,41 @@ const findBestPosition = (
   let bestY = sheet.height;
   let bestX = sheet.width;
 
+  // Optimize by scanning in larger increments initially
+  const scanStep = 1; // We could increase this for even faster results, but might reduce quality
+  
   // Strategy: find the topmost, then leftmost position where the piece fits
   for (const orientation of orientations) {
-    // Try each position in the grid
-    for (let y = 0; y <= sheet.height - orientation.height; y++) {
-      for (let x = 0; x <= sheet.width - orientation.width; x++) {
+    // Skip this orientation if it's too large for the sheet
+    if (orientation.width > sheet.width || orientation.height > sheet.height) {
+      continue;
+    }
+    
+    // Improved scanning algorithm: scan top to bottom, left to right
+    for (let y = 0; y <= sheet.height - orientation.height; y += scanStep) {
+      let rowFit = false;
+      
+      for (let x = 0; x <= sheet.width - orientation.width; x += scanStep) {
         const testPiece = {
           ...orientation,
           x,
           y
         };
 
-        if (canPlacePieceAtPosition(grid, testPiece, sheet)) {
+        if (canPlacePieceAtPosition(grid, testPiece, sheetWidth, sheet)) {
           // Found a valid position - check if it's better than our current best
           if (y < bestY || (y === bestY && x < bestX)) {
             bestY = y;
             bestX = x;
             bestFit = { x, y, rotated: orientation.rotated };
+            rowFit = true;
+            break; // Found a position in this row, move to next row
           }
         }
+      }
+      
+      if (rowFit && y < bestY) {
+        break; // If we found a fit in an upper row, don't need to check lower rows
       }
     }
   }
@@ -171,6 +158,8 @@ export const optimizeCutting = (
   pieces: Piece[],
   sheet: Sheet
 ): PlacedPiece[] => {
+  console.time('optimizeCutting');
+  
   const sortedPieces = sortPiecesByArea(pieces);
   const placedPieces: PlacedPiece[] = [];
   
@@ -187,12 +176,12 @@ export const optimizeCutting = (
   
   // Place each piece, creating new sheets as needed
   let currentSheetIndex = 0;
-  let currentSheetGrid = createGrid(sheet, sheet.cutWidth);
-  let currentSheetPieces: PlacedPiece[] = [];
+  const sheetWidth = sheet.width; // Cache this value
+  let currentSheetGrid = createGrid(sheet);
   
   for (const piece of expandedPieces) {
     // Try to place on current sheet
-    const position = findBestPosition(piece, currentSheetGrid, sheet);
+    const position = findBestPosition(piece, currentSheetGrid, sheet, sheetWidth);
     
     if (position) {
       // Place on current sheet
@@ -207,18 +196,16 @@ export const optimizeCutting = (
       };
       
       // Mark the piece on the grid
-      markPieceOnGrid(currentSheetGrid, placedPiece, sheet.cutWidth);
+      markPieceOnGrid(currentSheetGrid, placedPiece, sheetWidth, sheet.cutWidth);
       
       placedPieces.push(placedPiece);
-      currentSheetPieces.push(placedPiece);
     } else {
       // Move to a new sheet
       currentSheetIndex++;
-      currentSheetGrid = createGrid(sheet, sheet.cutWidth);
-      currentSheetPieces = [];
+      currentSheetGrid = createGrid(sheet);
       
       // Try to place on the new sheet
-      const newPosition = findBestPosition(piece, currentSheetGrid, sheet);
+      const newPosition = findBestPosition(piece, currentSheetGrid, sheet, sheetWidth);
       
       if (newPosition) {
         const placedPiece: PlacedPiece = {
@@ -232,13 +219,13 @@ export const optimizeCutting = (
         };
         
         // Mark the piece on the grid
-        markPieceOnGrid(currentSheetGrid, placedPiece, sheet.cutWidth);
+        markPieceOnGrid(currentSheetGrid, placedPiece, sheetWidth, sheet.cutWidth);
         
         placedPieces.push(placedPiece);
-        currentSheetPieces.push(placedPiece);
       }
     }
   }
   
+  console.timeEnd('optimizeCutting');
   return placedPieces;
 };
