@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FolderPlus, LogOut } from "lucide-react";
+import { FolderPlus, LogOut, User } from "lucide-react";
 
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 type Project = {
   id: string;
@@ -58,7 +60,8 @@ export default function Dashboard() {
     });
     
     setIsDialogOpen(false);
-    navigate("/app"); // Redirecionar para a tela do plano de corte
+    // Pass the project name as state when navigating
+    navigate("/app", { state: { projectName: newProjectName } });
   };
 
   const handleLogout = () => {
@@ -66,9 +69,10 @@ export default function Dashboard() {
     navigate("/login");
   };
 
-  const handleProjectClick = (projectId: string) => {
+  const handleProjectClick = (projectId: string, projectName: string) => {
     // In a real app, this would load the selected project
-    navigate("/app"); // Também redirecionamos para a tela do plano de corte ao clicar em um projeto existente
+    // Pass the project name as state when navigating
+    navigate("/app", { state: { projectName: projectName } });
   };
 
   return (
@@ -79,9 +83,24 @@ export default function Dashboard() {
             <h1 className="text-2xl font-bold">Bem-vindo, {user?.name || "Usuário"}</h1>
             <p className="text-muted-foreground">Veja seus projetos recentes ou crie um novo</p>
           </div>
-          <Button variant="outline" onClick={handleLogout}>
-            <LogOut className="mr-2 h-4 w-4" /> Sair
-          </Button>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="rounded-full h-10 w-10 p-0">
+                <Avatar>
+                  <AvatarFallback className="bg-primary text-primary-foreground">
+                    {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Sair</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -128,7 +147,7 @@ export default function Dashboard() {
             <Card 
               key={project.id} 
               className="h-64 cursor-pointer hover:shadow-md transition-shadow"
-              onClick={() => handleProjectClick(project.id)}
+              onClick={() => handleProjectClick(project.id, project.name)}
             >
               <div className="p-4 h-[60%] overflow-hidden bg-gray-100 rounded-t-md flex items-center justify-center">
                 {project.previewUrl ? (

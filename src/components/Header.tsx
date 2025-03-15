@@ -1,12 +1,18 @@
 
 import { useState, useEffect } from 'react';
-import { FileText, Download, Info } from 'lucide-react';
+import { FileText, Download, LogOut } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useSheetData } from '../hooks/useSheetData';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 export const Header = () => {
   const { stats, projectName } = useSheetData();
   const [scrolled, setScrolled] = useState(false);
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -20,6 +26,11 @@ export const Header = () => {
   const handleExport = () => {
     // Future implementation: Export functionality
     console.log("Export functionality to be implemented");
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
   };
 
   return (
@@ -69,13 +80,23 @@ export const Header = () => {
             </Button>
           </div>
 
-          <Button 
-            variant="secondary"
-            size="sm"
-            className="rounded-full h-8 w-8 p-0 md:hidden"
-          >
-            <Info size={16} />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="rounded-full h-10 w-10 p-0">
+                <Avatar>
+                  <AvatarFallback className="bg-primary text-primary-foreground">
+                    {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Sair</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>

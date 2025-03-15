@@ -1,4 +1,6 @@
 
+import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import Layout from '../components/Layout';
 import SheetPanel from '../components/SheetPanel';
 import PiecesPanel from '../components/PiecesPanel';
@@ -7,8 +9,19 @@ import OptimizationControls from '../components/OptimizationControls';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Scissors } from 'lucide-react';
 import { ProjectNameInput } from '../components/sheet-panel/ProjectNameInput';
+import { useSheetData } from '../hooks/useSheetData';
 
 const Index = () => {
+  const location = useLocation();
+  const { setProjectName } = useSheetData();
+  
+  // Get project name from location state (if available)
+  useEffect(() => {
+    if (location.state?.projectName) {
+      setProjectName(location.state.projectName);
+    }
+  }, [location.state, setProjectName]);
+
   return (
     <Layout>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
