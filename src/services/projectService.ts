@@ -1,15 +1,17 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import type { Project, ApiResponse, SupabaseTable } from "@/types/project";
+import type { Project, ApiResponse } from "@/types/project";
+
+// This cast is necessary because our Database type doesn't know about the 'projects' table
+// We're bypassing TypeScript type checking for Supabase queries
+const projectsTable = () => supabase.from('projects') as any;
 
 export const projectService = {
   async getProjects(): Promise<ApiResponse<Project[]>> {
     try {
-      // Use type assertion to bypass type checking
-      const { data, error } = await (supabase
-        .from('projects') as any)
+      const { data, error } = await projectsTable()
         .select('*')
-        .order('date_created', { ascending: false });
+        .order('created_at', { ascending: false });
       
       if (error) throw error;
       
@@ -22,9 +24,7 @@ export const projectService = {
   
   async getProjectById(id: string): Promise<ApiResponse<Project>> {
     try {
-      // Use type assertion to bypass type checking
-      const { data, error } = await (supabase
-        .from('projects') as any)
+      const { data, error } = await projectsTable()
         .select('*')
         .eq('id', id)
         .single();
@@ -38,18 +38,16 @@ export const projectService = {
     }
   },
   
-  async createProject(project: Omit<Project, 'id' | 'date_created' | 'date_modified'>): Promise<ApiResponse<Project>> {
+  async createProject(project: Omit<Project, 'id' | 'created_at' | 'updated_at'>): Promise<ApiResponse<Project>> {
     try {
       const now = new Date().toISOString();
       const newProject = {
         ...project,
-        date_created: now,
-        date_modified: now,
+        created_at: now,
+        updated_at: now,
       };
       
-      // Use type assertion to bypass type checking
-      const { data, error } = await (supabase
-        .from('projects') as any)
+      const { data, error } = await projectsTable()
         .insert(newProject)
         .select()
         .single();
@@ -63,14 +61,12 @@ export const projectService = {
     }
   },
   
-  async updateProject(id: string, updates: Partial<Omit<Project, 'id' | 'date_created'>>): Promise<ApiResponse<Project>> {
+  async updateProject(id: string, updates: Partial<Omit<Project, 'id' | 'created_at'>>): Promise<ApiResponse<Project>> {
     try {
-      // Use type assertion to bypass type checking
-      const { data, error } = await (supabase
-        .from('projects') as any)
+      const { data, error } = await projectsTable()
         .update({
           ...updates,
-          date_modified: new Date().toISOString()
+          updated_at: new Date().toISOString()
         })
         .eq('id', id)
         .select()
@@ -87,9 +83,7 @@ export const projectService = {
   
   async deleteProject(id: string): Promise<ApiResponse<null>> {
     try {
-      // Use type assertion to bypass type checking
-      const { error } = await (supabase
-        .from('projects') as any)
+      const { error } = await projectsTable()
         .delete()
         .eq('id', id);
       
