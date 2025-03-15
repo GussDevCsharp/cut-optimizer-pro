@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FolderPlus, LogOut } from "lucide-react";
@@ -27,25 +26,30 @@ export default function Dashboard() {
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
 
-  // Query to fetch user's projects
   const { data: projects = [], isLoading, error } = useQuery({
     queryKey: ['projects'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        throw new Error(error.message);
+      try {
+        const { data, error } = await supabase
+          .from('projects')
+          .select('*')
+          .order('created_at', { ascending: false });
+        
+        if (error) {
+          throw new Error(error.message);
+        }
+        
+        return data as Project[];
+      } catch (error) {
+        console.error("Error fetching projects:", error);
+        return [];
       }
-      
-      return data as Project[];
     },
-    enabled: !!user, // Only run query if user is authenticated
+    enabled: !!user,
+    staleTime: 30000,
+    retry: 1,
   });
 
-  // Mutation to create a new project
   const createProjectMutation = useMutation({
     mutationFn: async (projectName: string) => {
       const { data, error } = await supabase
@@ -73,7 +77,6 @@ export default function Dashboard() {
       setIsDialogOpen(false);
       setNewProjectName("");
       
-      // Navigate to the app page with the project name
       navigate("/app", { state: { projectName: newProjectName } });
     },
     onError: (error) => {
@@ -107,13 +110,11 @@ export default function Dashboard() {
     navigate("/app", { state: { projectId, projectName } });
   };
 
-  // Format date for display
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('pt-BR');
   };
 
-  // Show error if projects query fails
   useEffect(() => {
     if (error) {
       toast({
@@ -123,6 +124,25 @@ export default function Dashboard() {
       });
     }
   }, [error, toast]);
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className={`${isMobile ? 'px-2 py-2' : 'container mx-auto p-4'}`}>
+          <div className="flex justify-between items-center mb-6 md:mb-8">
+            <div>
+              <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>Carregando projetos...</h1>
+            </div>
+          </div>
+          <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'} mb-8`}>
+            {Array.from({ length: 3 }).map((_, idx) => (
+              <div key={`skeleton-${idx}`} className="h-48 md:h-64 animate-pulse bg-muted rounded-md"></div>
+            ))}
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -201,7 +221,6 @@ export default function Dashboard() {
           </Dialog>
 
           {isLoading ? (
-            // Loading skeleton for projects
             Array.from({ length: 3 }).map((_, idx) => (
               <Card key={`loading-${idx}`} className={`${isMobile ? 'h-48' : 'h-64'} animate-pulse`}>
                 <div className={`p-2 ${isMobile ? 'h-[50%]' : 'p-4 h-[60%]'} bg-gray-200 rounded-t-md`}></div>
@@ -215,7 +234,6 @@ export default function Dashboard() {
               </Card>
             ))
           ) : projects.length > 0 ? (
-            // Render projects
             projects.map((project) => (
               <Card 
                 key={project.id} 
@@ -239,7 +257,6 @@ export default function Dashboard() {
               </Card>
             ))
           ) : (
-            // No projects message
             <div className="lg:col-span-3 text-center p-8 bg-muted/20 rounded-lg border border-dashed">
               <FolderPlus className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
               <h3 className="text-lg font-medium mb-2">Nenhum projeto encontrado</h3>

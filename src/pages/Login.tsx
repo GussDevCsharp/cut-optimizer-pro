@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
@@ -38,7 +37,6 @@ export default function Login() {
     },
   });
 
-  // Redirect to dashboard if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
       navigate("/dashboard");
@@ -51,10 +49,7 @@ export default function Login() {
     
     try {
       await login(data.email, data.password);
-      toast({
-        title: "Login realizado com sucesso!",
-        description: "Você será redirecionado para o seu painel.",
-      });
+      
       navigate("/dashboard");
     } catch (error: any) {
       console.error("Login error:", error);
@@ -78,14 +73,12 @@ export default function Login() {
     }
   }
 
-  // If already authenticated, don't render the login form
   if (isAuthenticated) {
     return null;
   }
 
   return (
     <div className="flex min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
-      {/* Left column with thematic image - hide on mobile */}
       {!isMobile && (
         <div className="hidden md:flex w-1/2 bg-primary/10 flex-col justify-center items-center p-8">
           <div className="max-w-md text-center mb-8">
@@ -93,7 +86,6 @@ export default function Login() {
             <p className="text-lg text-gray-700">Otimize seus cortes, economize material e aumente sua produtividade</p>
           </div>
           
-          {/* Decorative elements for cutting plans */}
           <div className="relative w-full max-w-md aspect-square bg-white/80 rounded-lg shadow-lg p-6 flex items-center justify-center">
             <div className="absolute w-full h-full opacity-10 grid-pattern bg-size-[20px_20px]"></div>
             
@@ -125,7 +117,6 @@ export default function Login() {
         </div>
       )}
       
-      {/* Right column with login form */}
       <div className={`flex items-center justify-center ${isMobile ? 'w-full' : 'w-1/2'} p-4`}>
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">

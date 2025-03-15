@@ -12,18 +12,23 @@ export const useAuthState = () => {
 
   // Fetch user profile data from Supabase
   const fetchUserProfile = async (userId: string) => {
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
+    try {
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+        
+      if (profileError) {
+        console.error("Error fetching user profile:", profileError);
+        return null;
+      }
       
-    if (profileError) {
-      console.error("Error fetching user profile:", profileError);
+      return profileData;
+    } catch (error) {
+      console.error("Unexpected error fetching profile:", error);
       return null;
     }
-    
-    return profileData;
   };
 
   // Set user state based on profile data
@@ -39,6 +44,8 @@ export const useAuthState = () => {
 
   // Initialize auth state and subscribe to changes
   useEffect(() => {
+    let mounted = true;
+    
     const fetchSession = async () => {
       try {
         // Get current session
@@ -46,41 +53,59 @@ export const useAuthState = () => {
         
         if (error) {
           console.error("Error fetching session:", error);
+          if (mounted) setIsLoading(false);
           return;
         }
         
         if (session) {
-          setSession(session);
-          setIsAuthenticated(true);
+          if (mounted) {
+            setSession(session);
+            setIsAuthenticated(true);
           
-          const profileData = await fetchUserProfile(session.user.id);
-          setUserFromProfile(profileData, session.user.email);
+            const profileData = await fetchUserProfile(session.user.id);
+            
+            if (mounted) {
+              setUserFromProfile(profileData, session.user.email);
+              setIsLoading(false);
+            }
+          }
+        } else {
+          if (mounted) setIsLoading(false);
         }
       } catch (error) {
         console.error("Unexpected error during session fetch:", error);
-      } finally {
-        setIsLoading(false);
+        if (mounted) setIsLoading(false);
       }
     };
 
     fetchSession();
 
-    // Subscribe to auth state changes
+    // Subscribe to auth state changes - using a faster response approach
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
-        setSession(currentSession);
-        setIsAuthenticated(!!currentSession);
+        console.log("Auth state changed:", event);
         
-        if (currentSession) {
-          const profileData = await fetchUserProfile(currentSession.user.id);
-          setUserFromProfile(profileData, currentSession.user.email);
-        } else {
-          setUser(null);
+        if (mounted) {
+          setSession(currentSession);
+          setIsAuthenticated(!!currentSession);
+          
+          if (currentSession) {
+            const profileData = await fetchUserProfile(currentSession.user.id);
+            if (mounted) {
+              setUserFromProfile(profileData, currentSession.user.email);
+            }
+          } else {
+            setUser(null);
+          }
+          
+          // Make sure we're not stuck in loading state
+          setIsLoading(false);
         }
       }
     );
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
