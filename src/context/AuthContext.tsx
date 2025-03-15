@@ -26,16 +26,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     } catch (error: any) {
       console.error("Login error:", error);
-      
-      // Handle specific error for unconfirmed email
-      if (error.code === "email_not_confirmed") {
-        toast({
-          variant: "destructive",
-          title: "Email não confirmado",
-          description: "Por favor, verifique seu email e clique no link de confirmação antes de fazer login.",
-        });
-      }
-      
       throw new Error(error.message || "Falha no login");
     }
   };
