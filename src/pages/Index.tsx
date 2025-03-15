@@ -23,7 +23,7 @@ interface ProjectData {
 
 const IndexContent = () => {
   const location = useLocation();
-  const { setProjectName, setPlacedPieces, setSheet, placedPieces, addPiece, sheet, pieces } = useSheetData();
+  const { setProjectName, setPlacedPieces, setSheet, placedPieces, addPiece, setPieces, sheet, pieces } = useSheetData();
   const isMobile = useIsMobile();
   const { loadProject } = useProjectActions();
   const [loading, setLoading] = useState(false);
@@ -49,22 +49,26 @@ const IndexContent = () => {
               // Cast project.description to our ProjectData interface
               const projectData = project.description as ProjectData;
               
+              console.log("Loaded project data:", projectData); // Add logging
+              
               // Load sheet dimensions if available
-              if (projectData && projectData.sheet) {
+              if (projectData.sheet) {
                 setSheet(projectData.sheet);
               }
               
               // Load pieces if available
-              if (projectData && Array.isArray(projectData.pieces)) {
+              if (projectData.pieces && Array.isArray(projectData.pieces)) {
                 // Clear existing pieces and add the saved ones
-                projectData.pieces.forEach((piece) => {
-                  addPiece(piece);
-                });
+                setPieces(projectData.pieces);
+                
+                console.log("Loaded pieces:", projectData.pieces);
               }
               
               // Load placed pieces if available
-              if (projectData && Array.isArray(projectData.placedPieces)) {
+              if (projectData.placedPieces && Array.isArray(projectData.placedPieces)) {
                 setPlacedPieces(projectData.placedPieces);
+                
+                console.log("Loaded placed pieces:", projectData.placedPieces);
               }
             }
           }
@@ -80,7 +84,7 @@ const IndexContent = () => {
     };
     
     fetchProjectData();
-  }, [location.state, setProjectName, loadProject, setPlacedPieces, setSheet, addPiece]);
+  }, [location.state, setProjectName, loadProject, setPlacedPieces, setSheet, addPiece, setPieces]);
 
   return (
     <>

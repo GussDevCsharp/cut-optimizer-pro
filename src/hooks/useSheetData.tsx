@@ -30,6 +30,7 @@ interface SheetContextType {
   setSheet: (sheet: Sheet) => void;
   pieces: Piece[];
   addPiece: (piece: Piece) => void;
+  setPieces: (pieces: Piece[]) => void; // Add this method to set all pieces at once
   updatePiece: (id: string, piece: Partial<Piece>) => void;
   removePiece: (id: string) => void;
   placedPieces: PlacedPiece[];
@@ -101,6 +102,7 @@ export const SheetProvider = ({ children }: { children: ReactNode }) => {
         sheet,
         setSheet,
         pieces,
+        setPieces, // Add the new method to the context
         addPiece,
         updatePiece,
         removePiece,
