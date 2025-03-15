@@ -33,7 +33,7 @@ export const PricingPlans = () => {
             <ul className="space-y-3 mb-6 flex-1">
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
-                <span className="text-sm">Até 10 projetos por mês</span>
+                <span className="text-sm">Até 20 projetos por mês</span>
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
