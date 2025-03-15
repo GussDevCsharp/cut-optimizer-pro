@@ -1,8 +1,18 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Printer } from "lucide-react";
+import { Printer, Mail, Share2 } from "lucide-react";
 import { Sheet, PlacedPiece } from '../../hooks/useSheetData';
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { EmailDialog } from './EmailDialog';
+import { useToast } from '@/hooks/use-toast';
 
 interface StatsDisplayProps {
   sheet: Sheet;
@@ -13,10 +23,21 @@ interface StatsDisplayProps {
   };
   projectName: string;
   onPrint: () => void;
+  onSharePdf: () => void;
+  onEmailPdf: (email: string) => Promise<boolean>;
   isMobile?: boolean;
 }
 
-export const StatsDisplay = ({ sheet, placedPieces, stats, projectName, onPrint, isMobile }: StatsDisplayProps) => {
+export const StatsDisplay = ({ 
+  sheet, 
+  placedPieces, 
+  stats, 
+  projectName, 
+  onPrint, 
+  onSharePdf,
+  onEmailPdf,
+  isMobile 
+}: StatsDisplayProps) => {
   return (
     <div className={`mb-4 text-sm flex ${isMobile ? 'flex-col gap-2' : 'justify-between items-center'}`}>
       <div className={`px-3 py-1.5 rounded-md bg-background/95 border shadow-subtle ${isMobile ? 'w-full' : 'inline-block'}`}>
@@ -45,15 +66,39 @@ export const StatsDisplay = ({ sheet, placedPieces, stats, projectName, onPrint,
         </div>
       </div>
       
-      <Button 
-        variant="outline" 
-        size={isMobile ? "sm" : "sm"} 
-        onClick={onPrint} 
-        className={`gap-2 ${isMobile ? 'w-full mt-1' : ''}`}
-      >
-        <Printer size={16} />
-        Imprimir
-      </Button>
+      <div className={`flex ${isMobile ? 'w-full gap-2' : 'gap-2'}`}>
+        <Button 
+          variant="outline" 
+          size={isMobile ? "sm" : "sm"} 
+          onClick={onPrint} 
+          className="gap-2"
+        >
+          <Printer size={16} />
+          Imprimir
+        </Button>
+        
+        {isMobile ? (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={onSharePdf} 
+            className="gap-2 flex-1"
+          >
+            <Share2 size={16} />
+            Compartilhar
+          </Button>
+        ) : (
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Mail size={16} />
+                Email
+              </Button>
+            </DialogTrigger>
+            <EmailDialog onSendEmail={onEmailPdf} />
+          </Dialog>
+        )}
+      </div>
     </div>
   );
 };

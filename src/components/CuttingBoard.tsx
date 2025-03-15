@@ -5,17 +5,19 @@ import { StatsDisplay } from './cutting-board/StatsDisplay';
 import { SheetCarousel } from './cutting-board/SheetCarousel';
 import { usePrinterService } from './cutting-board/PrinterService';
 import { useIsMobile } from '../hooks/use-mobile';
+import { useToast } from '@/hooks/use-toast';
 
 export const CuttingBoard = () => {
   const { sheet, placedPieces, stats, currentSheetIndex, setCurrentSheetIndex, projectName } = useSheetData();
   const isMobile = useIsMobile();
+  const { toast } = useToast();
   
   // Group pieces by sheet index
   const sheetCount = stats.sheetCount > 0 ? stats.sheetCount : 1;
   const sheets = Array.from({ length: sheetCount }, (_, i) => i);
 
   // Initialize the printer service
-  const { handlePrint } = usePrinterService({ 
+  const { handlePrint, handleSharePdf, handleEmailPdf } = usePrinterService({ 
     sheet, 
     placedPieces, 
     sheetCount, 
@@ -32,6 +34,8 @@ export const CuttingBoard = () => {
           placedPieces={placedPieces} 
           stats={stats} 
           onPrint={handlePrint}
+          onSharePdf={handleSharePdf}
+          onEmailPdf={handleEmailPdf}
           projectName={projectName}
           isMobile={isMobile}
         />

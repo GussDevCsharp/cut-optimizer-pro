@@ -1,5 +1,6 @@
 
 import { Sheet, PlacedPiece } from '../../hooks/useSheetData';
+import { useToast } from '@/hooks/use-toast';
 
 interface PrinterServiceProps {
   sheet: Sheet;
@@ -10,11 +11,10 @@ interface PrinterServiceProps {
 }
 
 export const usePrinterService = ({ sheet, placedPieces, sheetCount, sheets, projectName }: PrinterServiceProps) => {
-  const handlePrint = () => {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-    
-    printWindow.document.write(`
+  const { toast } = useToast();
+
+  const generateHtmlContent = () => {
+    return `
       <html>
         <head>
           <title>Plano de Corte - ${projectName || 'Sem nome'}</title>
@@ -166,7 +166,21 @@ export const usePrinterService = ({ sheet, placedPieces, sheetCount, sheets, pro
           }).join('')}
         </body>
       </html>
-    `);
+    `;
+  };
+
+  const handlePrint = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível abrir a janela de impressão.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    printWindow.document.write(generateHtmlContent());
     
     printWindow.document.close();
     printWindow.focus();
@@ -176,5 +190,58 @@ export const usePrinterService = ({ sheet, placedPieces, sheetCount, sheets, pro
     }, 500);
   };
 
-  return { handlePrint };
+  const handleSharePdf = async () => {
+    // Use Web Share API for mobile
+    if (navigator.share) {
+      try {
+        // For simplicity, we'll create a blob URL that can be shared
+        const blob = new Blob([generateHtmlContent()], { type: 'text/html' });
+        const file = new File([blob], `plano-de-corte-${projectName || 'sem-nome'}.html`, { type: 'text/html' });
+        
+        await navigator.share({
+          title: `Plano de Corte ${projectName ? '- ' + projectName : ''}`,
+          text: 'Confira este plano de corte',
+          files: [file]
+        });
+        
+        toast({
+          title: "Compartilhado",
+          description: "Seu plano de corte foi compartilhado com sucesso.",
+        });
+      } catch (error) {
+        console.error('Error sharing:', error);
+        toast({
+          title: "Erro ao compartilhar",
+          description: "Não foi possível compartilhar o plano de corte.",
+          variant: "destructive",
+        });
+      }
+    } else {
+      toast({
+        title: "Não suportado",
+        description: "Seu dispositivo não suporta compartilhamento.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEmailPdf = async (email: string): Promise<boolean> => {
+    // This is a mock implementation since we don't have a backend
+    // In a real app, you would send the PDF to a server endpoint that would email it
+    console.log(`Would email PDF to ${email}`);
+    
+    // This simulates the API call delay
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        // Return success for demo purposes
+        resolve(true);
+      }, 1500);
+    });
+  };
+
+  return { 
+    handlePrint,
+    handleSharePdf,
+    handleEmailPdf
+  };
 };
