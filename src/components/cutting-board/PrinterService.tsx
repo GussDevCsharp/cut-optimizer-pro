@@ -1,6 +1,7 @@
-
 import { Sheet, PlacedPiece } from '../../hooks/useSheetData';
 import { useToast } from '@/hooks/use-toast';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface PrinterServiceProps {
   sheet: Sheet;
@@ -169,6 +170,65 @@ export const usePrinterService = ({ sheet, placedPieces, sheetCount, sheets, pro
     `;
   };
 
+  const generatePdf = async (): Promise<Blob> => {
+    // Create a temporary container for the HTML content
+    const container = document.createElement('div');
+    container.innerHTML = generateHtmlContent();
+    container.style.position = 'absolute';
+    container.style.left = '-9999px';
+    document.body.appendChild(container);
+    
+    // Wait for images/fonts to load
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Create PDF document with A4 size
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    
+    try {
+      // Get all sheet pages
+      const sheetPages = container.querySelectorAll('.sheet-page');
+      
+      // Process each sheet page
+      for (let i = 0; i < sheetPages.length; i++) {
+        const page = sheetPages[i] as HTMLElement;
+        
+        // Use html2canvas to render each page
+        const canvas = await html2canvas(page, {
+          scale: 2, // Higher resolution
+          logging: false,
+          useCORS: true,
+          allowTaint: true
+        });
+        
+        // Calculate the aspect ratio to fit the page
+        const imgData = canvas.toDataURL('image/png');
+        const imgWidth = pdfWidth - 20; // 10mm margin on each side
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        
+        // Add new page for each sheet (except the first one)
+        if (i > 0) {
+          pdf.addPage();
+        }
+        
+        // Add the image to the PDF
+        pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+      }
+      
+      // Clean up
+      document.body.removeChild(container);
+      
+      // Return as Blob for sharing
+      return pdf.output('blob');
+      
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      document.body.removeChild(container);
+      throw error;
+    }
+  };
+
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
@@ -191,12 +251,20 @@ export const usePrinterService = ({ sheet, placedPieces, sheetCount, sheets, pro
   };
 
   const handleSharePdf = async () => {
-    // Use Web Share API for mobile
-    if (navigator.share) {
-      try {
-        // For simplicity, we'll create a blob URL that can be shared
-        const blob = new Blob([generateHtmlContent()], { type: 'text/html' });
-        const file = new File([blob], `plano-de-corte-${projectName || 'sem-nome'}.html`, { type: 'text/html' });
+    toast({
+      title: "Preparando arquivo",
+      description: "Gerando PDF para compartilhamento...",
+    });
+    
+    try {
+      // Generate the PDF blob
+      const pdfBlob = await generatePdf();
+      
+      // Use Web Share API for mobile
+      if (navigator.share) {
+        const file = new File([pdfBlob], `plano-de-corte-${projectName || 'sem-nome'}.pdf`, { 
+          type: 'application/pdf' 
+        });
         
         await navigator.share({
           title: `Plano de Corte ${projectName ? '- ' + projectName : ''}`,
@@ -208,35 +276,55 @@ export const usePrinterService = ({ sheet, placedPieces, sheetCount, sheets, pro
           title: "Compartilhado",
           description: "Seu plano de corte foi compartilhado com sucesso.",
         });
-      } catch (error) {
-        console.error('Error sharing:', error);
+      } else {
+        // Fallback for non-supporting browsers
+        const url = URL.createObjectURL(pdfBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `plano-de-corte-${projectName || 'sem-nome'}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+        
         toast({
-          title: "Erro ao compartilhar",
-          description: "Não foi possível compartilhar o plano de corte.",
-          variant: "destructive",
+          title: "Download iniciado",
+          description: "O PDF foi gerado e está sendo baixado.",
         });
       }
-    } else {
+    } catch (error) {
+      console.error('Error sharing PDF:', error);
       toast({
-        title: "Não suportado",
-        description: "Seu dispositivo não suporta compartilhamento.",
+        title: "Erro ao compartilhar",
+        description: "Não foi possível gerar ou compartilhar o PDF.",
         variant: "destructive",
       });
     }
   };
 
   const handleEmailPdf = async (email: string): Promise<boolean> => {
-    // This is a mock implementation since we don't have a backend
-    // In a real app, you would send the PDF to a server endpoint that would email it
-    console.log(`Would email PDF to ${email}`);
-    
-    // This simulates the API call delay
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // Return success for demo purposes
-        resolve(true);
-      }, 1500);
+    toast({
+      title: "Preparando email",
+      description: "Gerando PDF para envio...",
     });
+    
+    try {
+      // Generate the PDF blob
+      const pdfBlob = await generatePdf();
+      
+      // This is a mock implementation since we don't have a backend
+      // In a real app, you would send the PDF to a server endpoint that would email it
+      console.log(`Would email PDF to ${email}`);
+      
+      // This simulates the API call delay
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          // Return success for demo purposes
+          resolve(true);
+        }, 1500);
+      });
+    } catch (error) {
+      console.error('Error generating PDF for email:', error);
+      return false;
+    }
   };
 
   return { 
