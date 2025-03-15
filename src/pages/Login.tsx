@@ -39,7 +39,6 @@ export default function Login() {
   // Redirect to dashboard if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      console.info("User is authenticated, redirecting to dashboard");
       navigate("/dashboard");
     }
   }, [isAuthenticated, navigate]);
@@ -48,9 +47,10 @@ export default function Login() {
     setIsLoading(true);
     try {
       await login(data.email, data.password);
-      
-      // No toast here - speeds up the process
-      // Navigate immediately to dashboard
+      toast({
+        title: "Login realizado com sucesso!",
+        description: "Você será redirecionado para o seu painel.",
+      });
       navigate("/dashboard");
     } catch (error) {
       toast({

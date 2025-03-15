@@ -1,9 +1,19 @@
 
-import React, { createContext, useContext } from "react";
-import { authService } from "@/services/auth-service";
-import { useAuthState } from "@/hooks/use-auth-state";
-import { AuthContextType } from "@/types/auth";
-import { useToast } from "@/hooks/use-toast";
+import React, { createContext, useContext, useState, useEffect } from "react";
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+interface AuthContextType {
+  user: User | null;
+  login: (email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string) => Promise<void>;
+  logout: () => void;
+  isAuthenticated: boolean;
+}
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -16,67 +26,69 @@ export const useAuth = () => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, setUser, session, isAuthenticated, isLoading } = useAuthState();
-  const { toast } = useToast();
+  const [user, setUser] = useState<User | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+        setIsAuthenticated(true);
+      } catch (e) {
+        console.error("Failed to parse stored user data", e);
+        localStorage.removeItem("user");
+      }
+    }
+  }, []);
 
   const login = async (email: string, password: string) => {
-    try {
-      const response = await authService.login(email, password);
-      
-      // Set user immediately to prevent loading state issues
-      if (response.user) {
-        setUser({
-          id: response.user.id,
-          name: response.user.user_metadata?.name || response.user.email?.split('@')[0] || 'User',
-          email: response.user.email || '',
-        });
-      }
-      
-      return response;
-    } catch (error: any) {
-      console.error("Login error:", error);
-      throw new Error(error.message || "Falha no login");
-    }
+    // In a real app, this would make an API call to validate credentials
+    // For demo purposes, we'll simulate a successful login after a delay
+    return new Promise<void>((resolve, reject) => {
+      setTimeout(() => {
+        if (email && password) {
+          const user = {
+            id: "user-1",
+            name: email.split("@")[0],
+            email,
+          };
+          
+          setUser(user);
+          setIsAuthenticated(true);
+          localStorage.setItem("user", JSON.stringify(user));
+          resolve();
+        } else {
+          reject(new Error("Invalid credentials"));
+        }
+      }, 1000);
+    });
   };
 
   const register = async (name: string, email: string, password: string) => {
-    try {
-      await authService.register(name, email, password);
-
-      toast({
-        title: "Registro concluído!",
-        description: "Verifique seu email para confirmar seu cadastro.",
-      });
-
-      return;
-    } catch (error: any) {
-      console.error("Registration error:", error);
-      throw new Error(error.message || "Falha no registro");
-    }
+    // In a real app, this would make an API call to register the user
+    // For demo purposes, we'll simulate a successful registration after a delay
+    return new Promise<void>((resolve) => {
+      setTimeout(() => {
+        const user = {
+          id: "user-" + Date.now(),
+          name,
+          email,
+        };
+        
+        // In a real app, we wouldn't set the user here,
+        // as they would need to log in after registration
+        resolve();
+      }, 1000);
+    });
   };
 
-  const logout = async () => {
-    try {
-      await authService.logout();
-      setUser(null);
-    } catch (error: any) {
-      console.error("Logout error:", error);
-      toast({
-        variant: "destructive",
-        title: "Erro ao sair",
-        description: error.message || "Ocorreu um erro ao tentar fazer logout.",
-      });
-    }
+  const logout = () => {
+    setUser(null);
+    setIsAuthenticated(false);
+    localStorage.removeItem("user");
   };
-
-  // Simple loading indicator with reduced height to improve perceived performance
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
 
   return (
     <AuthContext.Provider
@@ -86,7 +98,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         register,
         logout,
         isAuthenticated,
-        session,
       }}
     >
       {children}
