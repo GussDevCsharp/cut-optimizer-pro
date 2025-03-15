@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User, AuthError } from "@supabase/supabase-js";
@@ -14,7 +15,6 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
-  resetPassword: (email: string) => Promise<void>;
   isAuthenticated: boolean;
   isLoading: boolean;
 }
@@ -35,16 +35,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
+  // Initialize auth state from Supabase session
   useEffect(() => {
     const initializeAuth = async () => {
       setIsLoading(true);
       
+      // Get current session
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session) {
         handleSessionChange(session);
       }
       
+      // Listen for auth changes
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         (event, session) => {
           console.log("Auth state change event:", event);
@@ -56,6 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setIsAuthenticated(false);
           }
           
+          // Show toast for specific auth events
           if (event === 'SIGNED_IN') {
             toast({
               title: "Login realizado com sucesso",
@@ -82,6 +86,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       setIsLoading(false);
       
+      // Cleanup subscription
       return () => {
         subscription.unsubscribe();
       };
@@ -90,6 +95,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initializeAuth();
   }, [toast]);
   
+  // Handle session change and set user
   const handleSessionChange = (session: Session) => {
     const supabaseUser = session.user;
     if (supabaseUser) {
@@ -117,6 +123,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error: any) {
       console.error("Login error:", error);
       
+      // Provide more user-friendly error messages
       if (error.message.includes("Invalid login credentials")) {
         throw new Error("Email ou senha incorretos. Verifique suas credenciais.");
       } else if (error.message.includes("Email not confirmed")) {
@@ -129,6 +136,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const register = async (name: string, email: string, password: string) => {
     try {
+      // Configure custom email template settings
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -145,6 +153,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw error;
       }
       
+      // Show success toast
       toast({
         title: "Cadastro iniciado",
         description: "Verifique seu email para confirmar sua conta.",
@@ -153,35 +162,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error: any) {
       console.error("Registration error:", error);
       
+      // Provide more user-friendly error messages
       if (error.message.includes("User already registered")) {
         throw new Error("Este email já está cadastrado. Tente fazer login ou recuperar sua senha.");
-      } else {
-        throw error;
-      }
-    }
-  };
-
-  const resetPassword = async (email: string) => {
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/login?reset=true`,
-      });
-      
-      if (error) {
-        console.error("Password reset error:", error.message);
-        throw error;
-      }
-      
-      toast({
-        title: "Email enviado",
-        description: "Um link para redefinição de senha foi enviado para o seu email.",
-      });
-      
-    } catch (error: any) {
-      console.error("Password reset error:", error);
-      
-      if (error.message.includes("User not found")) {
-        throw new Error("Email não encontrado. Verifique se o email está correto.");
       } else {
         throw error;
       }
@@ -205,7 +188,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         register,
         logout,
-        resetPassword,
         isAuthenticated,
         isLoading,
       }}
