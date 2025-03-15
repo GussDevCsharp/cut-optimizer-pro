@@ -150,7 +150,12 @@ export default function Register() {
                     <FormItem>
                       <FormLabel>Senha</FormLabel>
                       <FormControl>
-                        <Input placeholder="******" type="password" {...field} />
+                        <Input 
+                          placeholder="******" 
+                          type="password" 
+                          showPasswordToggle={true}
+                          {...field} 
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -163,7 +168,12 @@ export default function Register() {
                     <FormItem>
                       <FormLabel>Confirme a senha</FormLabel>
                       <FormControl>
-                        <Input placeholder="******" type="password" {...field} />
+                        <Input 
+                          placeholder="******" 
+                          type="password" 
+                          showPasswordToggle={true}
+                          {...field} 
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
