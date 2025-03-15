@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { projectService } from "@/services/projectService";
@@ -6,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 
 export function useProjectActions() {
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -77,6 +79,7 @@ export function useProjectActions() {
   };
 
   const loadProject = async (projectId: string) => {
+    setIsLoading(true);
     try {
       const { data, error } = await projectService.getProjectById(projectId);
       
@@ -93,6 +96,9 @@ export function useProjectActions() {
         }
       }
       
+      // Add a small delay to ensure UI stability
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
       return data;
     } catch (error: any) {
       toast({
@@ -102,12 +108,18 @@ export function useProjectActions() {
       });
       navigate("/dashboard");
       return null;
+    } finally {
+      // Add a small delay before ending loading state
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 300);
     }
   };
 
   return {
     saveProject,
     loadProject,
-    isSaving
+    isSaving,
+    isLoading
   };
 }

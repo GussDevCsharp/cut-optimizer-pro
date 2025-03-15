@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { Project } from "@/types/project";
 import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
 
 interface ProjectCardProps {
   project: Project;
@@ -12,6 +13,7 @@ interface ProjectCardProps {
 
 export const ProjectCard = ({ project, onClick }: ProjectCardProps) => {
   const isMobile = useIsMobile();
+  const [imageError, setImageError] = useState(false);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -45,12 +47,23 @@ export const ProjectCard = ({ project, onClick }: ProjectCardProps) => {
   };
 
   // Check if project has a valid image URL (not the placeholder)
-  const hasProjectImage = project.preview_url && project.preview_url !== "/placeholder.svg";
+  const hasProjectImage = project.preview_url && 
+                          project.preview_url !== "/placeholder.svg" && 
+                          !imageError;
+
+  // Handle click securely
+  const handleProjectClick = () => {
+    try {
+      onClick(project);
+    } catch (error) {
+      console.error("Error clicking project:", error);
+    }
+  };
 
   return (
     <Card 
       className={`${isMobile ? 'h-48' : 'h-64'} cursor-pointer hover:shadow-md transition-shadow`}
-      onClick={() => onClick(project)}
+      onClick={handleProjectClick}
     >
       <div className={`p-2 ${isMobile ? 'h-[50%]' : 'p-4 h-[60%]'} overflow-hidden bg-gray-100 rounded-t-md flex items-center justify-center relative`}>
         {hasProjectImage ? (
@@ -58,6 +71,7 @@ export const ProjectCard = ({ project, onClick }: ProjectCardProps) => {
             src={project.preview_url} 
             alt={project.name} 
             className="h-full w-full object-cover"
+            onError={() => setImageError(true)}
           />
         ) : (
           <div className="h-full w-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-200">

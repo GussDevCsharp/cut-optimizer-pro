@@ -19,6 +19,7 @@ export const ProjectLoader: React.FC<{ children: React.ReactNode }> = ({ childre
   const [loading, setLoading] = useState(false);
   const [dataLoaded, setDataLoaded] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [isInitialized, setIsInitialized] = useState(false);
   
   useEffect(() => {
     if (loading) {
@@ -36,6 +37,9 @@ export const ProjectLoader: React.FC<{ children: React.ReactNode }> = ({ childre
   
   useEffect(() => {
     const fetchProjectData = async () => {
+      // Prevent double initialization
+      if (isInitialized) return;
+      
       // Check if there's a projectId in the location state or URL params
       const searchParams = new URLSearchParams(window.location.search);
       const projectId = location.state?.projectId || searchParams.get('projectId');
@@ -88,16 +92,21 @@ export const ProjectLoader: React.FC<{ children: React.ReactNode }> = ({ childre
           setProgress(100);
           setTimeout(() => {
             setLoading(false);
-          }, 500);
+            setIsInitialized(true); // Mark as initialized to prevent re-fetching
+          }, 600); // Slightly longer timeout to ensure smooth transition
         }
       } else if (location.state?.projectName) {
         // If no project ID but we have a name, just set the name
         setProjectName(location.state.projectName);
+        setIsInitialized(true);
+      } else {
+        // No project to load, mark as initialized
+        setIsInitialized(true);
       }
     };
     
     fetchProjectData();
-  }, [location.state, setProjectName, loadProject, setPlacedPieces, setSheet, setPieces]);
+  }, [location.state, setProjectName, loadProject, setPlacedPieces, setSheet, setPieces, isInitialized]);
 
   // Display a loading indicator while project is being loaded
   if (loading) {
@@ -109,6 +118,18 @@ export const ProjectLoader: React.FC<{ children: React.ReactNode }> = ({ childre
           <p className="text-sm text-muted-foreground text-center">
             Aguarde enquanto carregamos os dados do seu projeto
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render children until fully initialized
+  if (!isInitialized) {
+    return (
+      <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center z-50">
+        <div className="w-[300px] space-y-4">
+          <h2 className="text-xl font-semibold text-center">Inicializando...</h2>
+          <Progress value={30} className="w-full" />
         </div>
       </div>
     );
