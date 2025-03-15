@@ -22,7 +22,7 @@ export const SheetThumbnails = ({
   return (
     <div className="mt-4 py-2 border-t">
       <div className="flex items-center justify-center">
-        <p className="text-sm text-muted-foreground mb-4">Chapas Utilizadas:</p>
+        <p className="text-sm text-muted-foreground mb-2">Chapas Utilizadas:</p>
       </div>
       <div className="flex overflow-x-auto pb-2 gap-2 justify-center">
         {sheets.map((index) => {
