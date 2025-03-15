@@ -22,9 +22,7 @@ export const authService = {
       options: {
         data: {
           name,
-        },
-        // For development purposes, we can set emailRedirectTo to the current window location
-        emailRedirectTo: `${window.location.origin}/login`,
+        }
       }
     });
 
@@ -41,10 +39,5 @@ export const authService = {
     if (error) {
       throw error;
     }
-  },
-
-  // Add a method to check for unconfirmed email
-  isEmailNotConfirmedError(error: any) {
-    return error && error.code === "email_not_confirmed";
   }
 };

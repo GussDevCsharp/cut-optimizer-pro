@@ -27,8 +27,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error: any) {
       console.error("Login error:", error);
       
-      // Pass the error up to be handled by the Login component
-      throw error;
+      // Handle specific error for unconfirmed email
+      if (error.code === "email_not_confirmed") {
+        toast({
+          variant: "destructive",
+          title: "Email não confirmado",
+          description: "Por favor, verifique seu email e clique no link de confirmação antes de fazer login.",
+        });
+      }
+      
+      throw new Error(error.message || "Falha no login");
     }
   };
 
@@ -44,7 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     } catch (error: any) {
       console.error("Registration error:", error);
-      throw error;
+      throw new Error(error.message || "Falha no registro");
     }
   };
 
