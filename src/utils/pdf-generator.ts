@@ -42,31 +42,18 @@ export const generatePdf = async (
         allowTaint: true
       });
       
+      // Calculate the aspect ratio to fit the page
+      const imgData = canvas.toDataURL('image/png');
+      const imgWidth = pdfWidth - 20; // 10mm margin on each side
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
       // Add new page for each sheet (except the first one)
       if (i > 0) {
         pdf.addPage();
       }
       
-      // Calculate the maximum dimensions that will fit on the page while maintaining aspect ratio
-      // Use almost the full page width (with minimal margins)
-      const imgWidth = pdfWidth - 10; // 5mm margin on each side
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
-      // If the height would overflow, calculate dimensions based on height instead
-      let finalWidth = imgWidth;
-      let finalHeight = imgHeight;
-      
-      if (imgHeight > pdfHeight - 10) {
-        finalHeight = pdfHeight - 10; // 5mm margin on top and bottom
-        finalWidth = (canvas.width * finalHeight) / canvas.height;
-      }
-      
-      // Calculate centering position
-      const xPos = (pdfWidth - finalWidth) / 2;
-      const yPos = (pdfHeight - finalHeight) / 2;
-      
-      // Add the image to the PDF, centered and maximized
-      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', xPos, yPos, finalWidth, finalHeight);
+      // Add the image to the PDF
+      pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
     }
     
     // Clean up
