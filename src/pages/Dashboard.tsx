@@ -58,7 +58,7 @@ export default function Dashboard() {
     });
     
     setIsDialogOpen(false);
-    navigate("/"); // Redirect to the main app
+    navigate("/app"); // Redirecionar para a tela do plano de corte
   };
 
   const handleLogout = () => {
@@ -68,7 +68,7 @@ export default function Dashboard() {
 
   const handleProjectClick = (projectId: string) => {
     // In a real app, this would load the selected project
-    navigate("/");
+    navigate("/app"); // Também redirecionamos para a tela do plano de corte ao clicar em um projeto existente
   };
 
   return (
