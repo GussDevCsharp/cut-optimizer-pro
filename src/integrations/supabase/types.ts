@@ -9,7 +9,211 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      email_settings: {
+        Row: {
+          created_at: string
+          id: string
+          sender_email: string
+          smtp_host: string
+          smtp_pass: string
+          smtp_port: number
+          smtp_user: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          sender_email: string
+          smtp_host: string
+          smtp_pass: string
+          smtp_port: number
+          smtp_user: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          sender_email?: string
+          smtp_host?: string
+          smtp_pass?: string
+          smtp_port?: number
+          smtp_user?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pieces: {
+        Row: {
+          can_rotate: boolean
+          color: string | null
+          created_at: string
+          height: number
+          id: string
+          project_id: string
+          quantity: number
+          width: number
+        }
+        Insert: {
+          can_rotate?: boolean
+          color?: string | null
+          created_at?: string
+          height: number
+          id?: string
+          project_id: string
+          quantity?: number
+          width: number
+        }
+        Update: {
+          can_rotate?: boolean
+          color?: string | null
+          created_at?: string
+          height?: number
+          id?: string
+          project_id?: string
+          quantity?: number
+          width?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pieces_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      placed_pieces: {
+        Row: {
+          created_at: string
+          id: string
+          piece_id: string
+          project_id: string
+          rotated: boolean
+          sheet_index: number
+          x: number
+          y: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          piece_id: string
+          project_id: string
+          rotated?: boolean
+          sheet_index: number
+          x: number
+          y: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          piece_id?: string
+          project_id?: string
+          rotated?: boolean
+          sheet_index?: number
+          x?: number
+          y?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "placed_pieces_piece_id_fkey"
+            columns: ["piece_id"]
+            isOneToOne: false
+            referencedRelation: "pieces"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "placed_pieces_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          name: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id: string
+          name?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string | null
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      sheets: {
+        Row: {
+          created_at: string
+          cut_width: number
+          height: number
+          id: string
+          project_id: string
+          width: number
+        }
+        Insert: {
+          created_at?: string
+          cut_width?: number
+          height: number
+          id?: string
+          project_id: string
+          width: number
+        }
+        Update: {
+          created_at?: string
+          cut_width?: number
+          height?: number
+          id?: string
+          project_id?: string
+          width?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sheets_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
