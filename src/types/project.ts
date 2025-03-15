@@ -18,7 +18,5 @@ export interface ApiResponse<T> {
   error: string | null;
 }
 
-// Define our own Supabase related types separately from the read-only file
-export type Tables = {
-  projects: Project;
-}
+// Since we can't modify the generated Supabase types, we'll create our own generic client type
+export type SupabaseTable = 'projects';

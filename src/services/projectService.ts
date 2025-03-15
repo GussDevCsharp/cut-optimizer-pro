@@ -1,18 +1,19 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import type { Project, ApiResponse } from "@/types/project";
+import type { Project, ApiResponse, SupabaseTable } from "@/types/project";
 
 export const projectService = {
   async getProjects(): Promise<ApiResponse<Project[]>> {
     try {
+      // We need to use the any type here since we can't modify the Supabase types
       const { data, error } = await supabase
-        .from('projects')
+        .from('projects' as SupabaseTable)
         .select('*')
-        .order('date_modified', { ascending: false });
+        .order('date_created', { ascending: false });
       
       if (error) throw error;
       
-      return { data, error: null };
+      return { data: data as Project[], error: null };
     } catch (error: any) {
       console.error("Error fetching projects:", error.message);
       return { data: null, error: error.message };
@@ -22,14 +23,14 @@ export const projectService = {
   async getProjectById(id: string): Promise<ApiResponse<Project>> {
     try {
       const { data, error } = await supabase
-        .from('projects')
+        .from('projects' as SupabaseTable)
         .select('*')
         .eq('id', id)
         .single();
       
       if (error) throw error;
       
-      return { data, error: null };
+      return { data: data as Project, error: null };
     } catch (error: any) {
       console.error("Error fetching project:", error.message);
       return { data: null, error: error.message };
@@ -46,14 +47,14 @@ export const projectService = {
       };
       
       const { data, error } = await supabase
-        .from('projects')
-        .insert(newProject)
+        .from('projects' as SupabaseTable)
+        .insert(newProject as any)
         .select()
         .single();
       
       if (error) throw error;
       
-      return { data, error: null };
+      return { data: data as Project, error: null };
     } catch (error: any) {
       console.error("Error creating project:", error.message);
       return { data: null, error: error.message };
@@ -63,18 +64,18 @@ export const projectService = {
   async updateProject(id: string, updates: Partial<Omit<Project, 'id' | 'date_created'>>): Promise<ApiResponse<Project>> {
     try {
       const { data, error } = await supabase
-        .from('projects')
+        .from('projects' as SupabaseTable)
         .update({
           ...updates,
           date_modified: new Date().toISOString()
-        })
+        } as any)
         .eq('id', id)
         .select()
         .single();
       
       if (error) throw error;
       
-      return { data, error: null };
+      return { data: data as Project, error: null };
     } catch (error: any) {
       console.error("Error updating project:", error.message);
       return { data: null, error: error.message };
@@ -84,7 +85,7 @@ export const projectService = {
   async deleteProject(id: string): Promise<ApiResponse<null>> {
     try {
       const { error } = await supabase
-        .from('projects')
+        .from('projects' as SupabaseTable)
         .delete()
         .eq('id', id);
       
