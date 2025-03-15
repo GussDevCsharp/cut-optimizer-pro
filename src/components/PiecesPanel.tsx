@@ -5,9 +5,15 @@ import { useSheetData, Piece } from '../hooks/useSheetData';
 import { PieceForm } from './pieces-panel/PieceForm';
 import { PiecesList } from './pieces-panel/PiecesList';
 import { ImportPiecesForm } from './pieces-panel/ImportPiecesForm';
+import { useLocation } from 'react-router-dom';
 
 export const PiecesPanel = () => {
   const { pieces, addPiece, updatePiece, removePiece } = useSheetData();
+  const location = useLocation();
+  
+  // Get the projectId from URL params or location state
+  const searchParams = new URLSearchParams(window.location.search);
+  const projectId = location.state?.projectId || searchParams.get('projectId');
 
   const handleImportPieces = (importedPieces: Piece[]) => {
     // Add each imported piece
@@ -28,7 +34,7 @@ export const PiecesPanel = () => {
         <div className="flex items-center justify-between">
           <ImportPiecesForm onImportPieces={handleImportPieces} />
         </div>
-        <PieceForm onAddPiece={addPiece} />
+        <PieceForm onAddPiece={addPiece} projectId={projectId} />
       </CardContent>
 
       {pieces.length > 0 && (

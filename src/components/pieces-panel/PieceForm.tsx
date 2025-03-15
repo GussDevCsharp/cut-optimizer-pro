@@ -5,20 +5,27 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus } from 'lucide-react';
 import { Piece } from '../../hooks/useSheetData';
+import { useProjectActions } from "@/hooks/useProjectActions";
+import { useSheetData } from "@/hooks/useSheetData";
+import { useToast } from "@/hooks/use-toast";
 
 interface PieceFormProps {
   onAddPiece: (piece: Piece) => void;
+  projectId: string | null;
 }
 
-export const PieceForm = ({ onAddPiece }: PieceFormProps) => {
+export const PieceForm = ({ onAddPiece, projectId }: PieceFormProps) => {
   const [newPiece, setNewPiece] = useState<Omit<Piece, 'id'>>({
     width: 100,
     height: 100,
     quantity: 1,
     canRotate: true,
   });
+  const { saveProject, isSaving } = useProjectActions();
+  const { projectName, sheet, pieces, placedPieces } = useSheetData();
+  const { toast } = useToast();
 
-  const handleAddPiece = () => {
+  const handleAddPiece = async () => {
     // Basic validation
     if (newPiece.width <= 0 || newPiece.height <= 0 || newPiece.quantity <= 0) {
       return;
@@ -31,7 +38,41 @@ export const PieceForm = ({ onAddPiece }: PieceFormProps) => {
       color: `hsl(${Math.floor(Math.random() * 360)}, 70%, 80%)`,
     };
     
+    // Add the piece to the local state
     onAddPiece(piece);
+    
+    // Save the updated project data to the database
+    const updatedPieces = [...pieces, piece];
+    const projectData = {
+      sheet,
+      pieces: updatedPieces,
+      placedPieces
+    };
+    
+    console.log("Saving project after adding piece:", projectData);
+    
+    try {
+      if (projectName) {
+        await saveProject(projectId, projectName, projectData);
+        toast({
+          title: "Peça adicionada",
+          description: "Peça adicionada e projeto salvo automaticamente."
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Atenção",
+          description: "Defina um nome para o projeto para salvar automaticamente."
+        });
+      }
+    } catch (err) {
+      console.error("Error saving project after adding piece:", err);
+      toast({
+        variant: "destructive",
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar o projeto após adicionar a peça."
+      });
+    }
     
     // Reset form
     setNewPiece({
@@ -75,9 +116,13 @@ export const PieceForm = ({ onAddPiece }: PieceFormProps) => {
         />
       </div>
 
-      <Button className="w-full mt-2" onClick={handleAddPiece}>
+      <Button 
+        className="w-full mt-2" 
+        onClick={handleAddPiece}
+        disabled={isSaving}
+      >
         <Plus size={16} className="mr-2" />
-        Adicionar Peça
+        {isSaving ? "Salvando..." : "Adicionar Peça"}
       </Button>
     </div>
   );
