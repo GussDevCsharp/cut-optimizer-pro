@@ -4,11 +4,19 @@ import { Sparkles, RectangleHorizontal } from 'lucide-react';
 import { useSheetData } from '../hooks/useSheetData';
 import { optimizeCutting } from '../utils/optimizationAlgorithm';
 import { toast } from "sonner";
+import { useProjectActions } from "@/hooks/useProjectActions";
+import { useLocation } from 'react-router-dom';
 
 export const OptimizationControls = () => {
-  const { sheet, pieces, setPlacedPieces } = useSheetData();
+  const { sheet, pieces, placedPieces, setPlacedPieces, projectName } = useSheetData();
+  const { saveProject } = useProjectActions();
+  const location = useLocation();
   
-  const handleOptimize = () => {
+  // Get projectId from URL params or location state
+  const searchParams = new URLSearchParams(window.location.search);
+  const projectId = location.state?.projectId || searchParams.get('projectId');
+  
+  const handleOptimize = async () => {
     if (pieces.length === 0) {
       toast.error("Adicione peças antes de otimizar", {
         description: "Você precisa adicionar pelo menos uma peça para otimizar o corte."
@@ -16,11 +24,11 @@ export const OptimizationControls = () => {
       return;
     }
     
-    const placedPieces = optimizeCutting(pieces, sheet);
-    setPlacedPieces(placedPieces);
+    const optimizedPieces = optimizeCutting(pieces, sheet);
+    setPlacedPieces(optimizedPieces);
     
     // Show toast with result
-    const placedCount = placedPieces.length;
+    const placedCount = optimizedPieces.length;
     const totalCount = pieces.reduce((total, piece) => total + piece.quantity, 0);
     
     if (placedCount === totalCount) {
@@ -32,13 +40,45 @@ export const OptimizationControls = () => {
         description: `Foram posicionadas ${placedCount} de ${totalCount} peças na chapa.`
       });
     }
+    
+    // Save the project with optimized pieces
+    if (projectName && projectId) {
+      try {
+        const projectData = {
+          sheet,
+          pieces,
+          placedPieces: optimizedPieces
+        };
+        
+        await saveProject(projectId, projectName, projectData);
+        console.log("Project saved after optimization");
+      } catch (error) {
+        console.error("Error saving project after optimization:", error);
+      }
+    }
   };
   
-  const handleClear = () => {
+  const handleClear = async () => {
     setPlacedPieces([]);
     toast.info("Visualização limpa", {
       description: "Todas as peças foram removidas da visualização."
     });
+    
+    // Save the project with cleared placed pieces
+    if (projectName && projectId) {
+      try {
+        const projectData = {
+          sheet,
+          pieces,
+          placedPieces: []
+        };
+        
+        await saveProject(projectId, projectName, projectData);
+        console.log("Project saved after clearing");
+      } catch (error) {
+        console.error("Error saving project after clearing:", error);
+      }
+    }
   };
 
   const totalPieces = pieces.reduce((total, piece) => total + piece.quantity, 0);

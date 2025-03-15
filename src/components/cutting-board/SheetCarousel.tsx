@@ -29,6 +29,7 @@ export const SheetCarousel = ({
   isMobile
 }: SheetCarouselProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [displayPieces, setDisplayPieces] = useState<PlacedPiece[]>([]);
   
   // Calculate container dimensions based on screen size
   const containerWidth = isMobile ? window.innerWidth - 40 : 800;  
@@ -55,6 +56,16 @@ export const SheetCarousel = ({
       api.scrollTo(currentSheetIndex);
     }
   }, [currentSheetIndex, api]);
+  
+  // Filter pieces for the current sheet index when it changes
+  useEffect(() => {
+    if (placedPieces && placedPieces.length > 0) {
+      const filteredPieces = placedPieces.filter(p => p.sheetIndex === currentSheetIndex);
+      setDisplayPieces(filteredPieces);
+    } else {
+      setDisplayPieces([]);
+    }
+  }, [placedPieces, currentSheetIndex]);
 
   // Function to handle sheet change
   const handleSheetChange = (api: any) => {
@@ -79,8 +90,6 @@ export const SheetCarousel = ({
       >
         <CarouselContent>
           {sheets.map((sheetIndex) => {
-            const sheetPieces = placedPieces.filter(p => p.sheetIndex === sheetIndex);
-            
             return (
               <CarouselItem key={sheetIndex}>
                 <div 
@@ -94,8 +103,8 @@ export const SheetCarousel = ({
                     backgroundSize: `${isMobile ? '10px 10px' : '20px 20px'}`,
                   }}
                 >
-                  {/* Placed pieces for this sheet */}
-                  {sheetPieces.map((piece, index) => (
+                  {/* Render pieces only for the current sheet */}
+                  {sheetIndex === currentSheetIndex && displayPieces.map((piece, index) => (
                     <SheetPiece 
                       key={`${piece.id}-${index}`} 
                       piece={piece} 

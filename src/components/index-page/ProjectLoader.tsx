@@ -16,6 +16,7 @@ export const ProjectLoader: React.FC<{ children: React.ReactNode }> = ({ childre
   const { setProjectName, setPlacedPieces, setSheet, setPieces } = useSheetData();
   const { loadProject } = useProjectActions();
   const [loading, setLoading] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState(false);
   
   useEffect(() => {
     const fetchProjectData = async () => {
@@ -58,6 +59,9 @@ export const ProjectLoader: React.FC<{ children: React.ReactNode }> = ({ childre
                 
                 console.log("Loaded placed pieces:", projectData.placedPieces);
               }
+              
+              // Indicate that data has been loaded successfully
+              setDataLoaded(true);
             }
           }
         } catch (error) {
