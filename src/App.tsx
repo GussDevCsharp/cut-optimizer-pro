@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,6 +10,7 @@ import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
+import Testing from "./pages/Testing";
 import Home from "./pages/Home";
 import { useEffect } from "react";
 
@@ -18,6 +20,21 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+  
+  return <>{children}</>;
+};
+
+// Admin route component
+const AdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated, isAdmin } = useAuth();
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  if (!isAdmin) {
+    return <Navigate to="/dashboard" replace />;
   }
   
   return <>{children}</>;
@@ -72,6 +89,14 @@ const AppRoutes = () => {
           <ProtectedRoute>
             <Index />
           </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/testing" 
+        element={
+          <AdminRoute>
+            <Testing />
+          </AdminRoute>
         } 
       />
       <Route 

@@ -2,6 +2,7 @@
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ProjectCard } from "./ProjectCard";
 import { NewProjectCard } from "./NewProjectCard";
+import { TestingCard } from "./TestingCard";
 import type { Project } from "@/types/project";
 import { useAuth } from "@/context/AuthContext";
 import { Loader2 } from "lucide-react";
@@ -20,7 +21,7 @@ export const ProjectsGrid = ({
   onProjectClick 
 }: ProjectsGridProps) => {
   const isMobile = useIsMobile();
-  const { isAdmin } = useAuth(); // Use the isAdmin from our updated context
+  const { isAdmin } = useAuth();
 
   if (isLoading) {
     return (
@@ -34,13 +35,7 @@ export const ProjectsGrid = ({
     <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'} mb-8`}>
       <NewProjectCard onClick={onNewProjectClick} />
       
-      {/* Admin-only components would go here */}
-      {isAdmin && (
-        // Admin-specific card or functionality
-        <div className="admin-only-content">
-          {/* Conteúdo visível apenas para admin */}
-        </div>
-      )}
+      {isAdmin && <TestingCard />}
       
       {projects.map((project) => (
         <ProjectCard 
