@@ -2,7 +2,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { useSheetData } from '../hooks/useSheetData';
 import { StatsDisplay } from './cutting-board/StatsDisplay';
-import { DetailedStats } from './cutting-board/DetailedStats';
 import { SheetCarousel } from './cutting-board/SheetCarousel';
 import { usePrinterService } from './cutting-board/PrinterService';
 
@@ -31,16 +30,6 @@ export const CuttingBoard = () => {
           stats={stats} 
           onPrint={handlePrint} 
         />
-
-        {/* Detailed statistics display */}
-        {placedPieces.length > 0 && (
-          <DetailedStats 
-            sheet={sheet}
-            placedPieces={placedPieces}
-            currentSheetIndex={currentSheetIndex}
-            sheetCount={sheetCount}
-          />
-        )}
 
         {/* Sheet carousel */}
         {sheets.length > 0 && (

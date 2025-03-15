@@ -1,14 +1,12 @@
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Sparkles, RectangleHorizontal, Loader2 } from 'lucide-react';
+import { Sparkles, RectangleHorizontal } from 'lucide-react';
 import { useSheetData } from '../hooks/useSheetData';
 import { optimizeCutting } from '../utils/optimizationAlgorithm';
 import { toast } from "sonner";
 
 export const OptimizationControls = () => {
   const { sheet, pieces, setPlacedPieces } = useSheetData();
-  const [isOptimizing, setIsOptimizing] = useState(false);
   
   const handleOptimize = () => {
     if (pieces.length === 0) {
@@ -18,36 +16,22 @@ export const OptimizationControls = () => {
       return;
     }
     
-    setIsOptimizing(true);
+    const placedPieces = optimizeCutting(pieces, sheet);
+    setPlacedPieces(placedPieces);
     
-    // Use setTimeout to allow the UI to update before running the optimization
-    setTimeout(() => {
-      try {
-        const placedPieces = optimizeCutting(pieces, sheet);
-        setPlacedPieces(placedPieces);
-        
-        // Show toast with result
-        const placedCount = placedPieces.length;
-        const totalCount = pieces.reduce((total, piece) => total + piece.quantity, 0);
-        
-        if (placedCount === totalCount) {
-          toast.success("Otimização concluída com sucesso!", {
-            description: `Todas as ${totalCount} peças foram posicionadas na chapa.`
-          });
-        } else {
-          toast.warning("Otimização parcial!", {
-            description: `Foram posicionadas ${placedCount} de ${totalCount} peças na chapa.`
-          });
-        }
-      } catch (error) {
-        toast.error("Erro na otimização", {
-          description: "Ocorreu um erro ao tentar otimizar o corte."
-        });
-        console.error(error);
-      } finally {
-        setIsOptimizing(false);
-      }
-    }, 10);
+    // Show toast with result
+    const placedCount = placedPieces.length;
+    const totalCount = pieces.reduce((total, piece) => total + piece.quantity, 0);
+    
+    if (placedCount === totalCount) {
+      toast.success("Otimização concluída com sucesso!", {
+        description: `Todas as ${totalCount} peças foram posicionadas na chapa.`
+      });
+    } else {
+      toast.warning("Otimização parcial!", {
+        description: `Foram posicionadas ${placedCount} de ${totalCount} peças na chapa.`
+      });
+    }
   };
   
   const handleClear = () => {
@@ -64,21 +48,16 @@ export const OptimizationControls = () => {
       <Button 
         className="w-full gap-2" 
         onClick={handleOptimize}
-        disabled={pieces.length === 0 || isOptimizing}
+        disabled={pieces.length === 0}
       >
-        {isOptimizing ? (
-          <Loader2 size={16} className="animate-spin" />
-        ) : (
-          <Sparkles size={16} />
-        )}
-        {isOptimizing ? "Otimizando..." : "Otimizar Corte"}
+        <Sparkles size={16} />
+        Otimizar Corte
       </Button>
       
       <Button 
         variant="outline" 
         className="w-full gap-2" 
         onClick={handleClear}
-        disabled={isOptimizing}
       >
         <RectangleHorizontal size={16} />
         Limpar Visualização
