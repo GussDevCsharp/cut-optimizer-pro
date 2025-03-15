@@ -17,7 +17,7 @@ export function SaveProjectButton({
   const { projectName, sheet, pieces, placedPieces } = useSheetData();
 
   const handleSave = async () => {
-    // Create a complete project data object
+    // Create a complete project data object with all necessary information
     const projectData = {
       sheet, 
       pieces,

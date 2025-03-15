@@ -57,7 +57,7 @@ const IndexContent = () => {
               // Load pieces if available
               if (projectData && Array.isArray(projectData.pieces)) {
                 // Clear existing pieces and add the saved ones
-                projectData.pieces.forEach((piece: Piece) => {
+                projectData.pieces.forEach((piece) => {
                   addPiece(piece);
                 });
               }
