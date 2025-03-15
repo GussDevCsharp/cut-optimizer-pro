@@ -1,5 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/use-toast";
 
 interface User {
   id: string;
@@ -31,63 +33,109 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Check if user is already logged in
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-        setIsAuthenticated(true);
-      } catch (e) {
-        console.error("Failed to parse stored user data", e);
-        localStorage.removeItem("user");
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        const { data } = await supabase.auth.getUser();
+        if (data.user) {
+          const userData = {
+            id: data.user.id,
+            email: data.user.email || '',
+            name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'User',
+          };
+          setUser(userData);
+          setIsAuthenticated(true);
+        }
       }
-    }
+    };
+    
+    checkUser();
+
+    // Set up auth state listener
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        const { data } = await supabase.auth.getUser();
+        if (data.user) {
+          const userData = {
+            id: data.user.id,
+            email: data.user.email || '',
+            name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'User',
+          };
+          setUser(userData);
+          setIsAuthenticated(true);
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setIsAuthenticated(false);
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
-    // In a real app, this would make an API call to validate credentials
-    // For demo purposes, we'll simulate a successful login after a delay
-    return new Promise<void>((resolve, reject) => {
-      setTimeout(() => {
-        if (email && password) {
-          const user = {
-            id: "user-1",
-            name: email.split("@")[0],
-            email,
-          };
-          
-          setUser(user);
-          setIsAuthenticated(true);
-          localStorage.setItem("user", JSON.stringify(user));
-          resolve();
-        } else {
-          reject(new Error("Invalid credentials"));
-        }
-      }, 1000);
-    });
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) throw error;
+      
+      if (data.user) {
+        const userData = {
+          id: data.user.id,
+          email: data.user.email || '',
+          name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'User',
+        };
+        setUser(userData);
+        setIsAuthenticated(true);
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao fazer login",
+        description: error.message || "Verifique suas credenciais e tente novamente.",
+      });
+      throw error;
+    }
   };
 
   const register = async (name: string, email: string, password: string) => {
-    // In a real app, this would make an API call to register the user
-    // For demo purposes, we'll simulate a successful registration after a delay
-    return new Promise<void>((resolve) => {
-      setTimeout(() => {
-        const user = {
-          id: "user-" + Date.now(),
-          name,
-          email,
-        };
-        
-        // In a real app, we wouldn't set the user here,
-        // as they would need to log in after registration
-        resolve();
-      }, 1000);
-    });
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+          },
+        },
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Conta criada com sucesso",
+        description: "Verifique seu email para confirmar o cadastro.",
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao criar conta",
+        description: error.message || "Ocorreu um erro ao tentar criar sua conta.",
+      });
+      throw error;
+    }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
     setIsAuthenticated(false);
-    localStorage.removeItem("user");
   };
 
   return (
