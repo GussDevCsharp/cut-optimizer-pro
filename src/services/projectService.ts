@@ -3,8 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Project, ApiResponse } from "@/types/project";
 
 // This cast is necessary because our Database type doesn't know about the 'projects' table
-// We're bypassing TypeScript type checking for Supabase queries
-const projectsTable = () => supabase.from('projects') as unknown as any;
+// We're using a double cast to avoid TypeScript errors
+const projectsTable = () => supabase.from('projects' as any) as any;
 
 export const projectService = {
   async getProjects(): Promise<ApiResponse<Project[]>> {
