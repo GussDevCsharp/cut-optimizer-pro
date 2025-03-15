@@ -34,9 +34,11 @@ export const findBestPosition = (
     }
     
     // Improved scanning algorithm: scan top to bottom, left to right
+    // Use scan step to reduce the number of positions checked
     for (let y = 0; y <= sheet.height - orientation.height; y += scanStep) {
       let rowFit = false;
       
+      // Fast-break optimization: once we find a fit in a row, move to next row
       for (let x = 0; x <= sheet.width - orientation.width; x += scanStep) {
         const testPiece = {
           ...orientation,

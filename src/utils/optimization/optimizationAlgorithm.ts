@@ -12,27 +12,31 @@ export const optimizeCutting = (
 ): PlacedPiece[] => {
   console.time('optimizeCutting');
   
+  // Pre-sort pieces by area (largest first) for better packing
   const sortedPieces = sortPiecesByArea(pieces);
   const placedPieces: PlacedPiece[] = [];
   
-  // Expand pieces based on quantity
+  // Prepare pieces array with expanded quantity
   const expandedPieces: Piece[] = [];
   sortedPieces.forEach(piece => {
+    // Pre-calculate and cache colors
+    const color = piece.color || generatePastelColor();
     for (let i = 0; i < piece.quantity; i++) {
       expandedPieces.push({
         ...piece,
-        color: piece.color || generatePastelColor()
+        color
       });
     }
   });
   
-  // Place each piece, creating new sheets as needed
+  // Cache values that don't change during the algorithm
   let currentSheetIndex = 0;
-  const sheetWidth = sheet.width; // Cache this value
+  const sheetWidth = sheet.width;
   let currentSheetGrid = createGrid(sheet);
   
+  // Place each piece optimally
   for (const piece of expandedPieces) {
-    // Try to place on current sheet
+    // Try to place on current sheet with fast position finder
     const position = findBestPosition(piece, currentSheetGrid, sheet, sheetWidth);
     
     if (position) {

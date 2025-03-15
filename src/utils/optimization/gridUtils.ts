@@ -47,6 +47,7 @@ export const canPlacePieceAtPosition = (
   }
   
   // Check if all required cells are available
+  // Using a faster scan with typed arrays for better performance
   for (let y = piece.y; y < piece.y + piece.height; y++) {
     // Fast scan of row using slice instead of nested loop
     const rowStartIndex = y * sheetWidth + piece.x;
