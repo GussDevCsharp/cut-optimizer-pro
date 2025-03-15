@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FolderPlus, LogOut } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -14,35 +15,75 @@ import { useAuth } from "@/context/AuthContext";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useIsMobile } from "@/hooks/use-mobile";
-
-type Project = {
-  id: string;
-  name: string;
-  date: string;
-  previewUrl?: string;
-};
+import { supabase } from "@/integrations/supabase/client";
+import { Project } from "@/types/database";
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [projects, setProjects] = useState<Project[]>([]);
   const [newProjectName, setNewProjectName] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    // In a real app, this would fetch from an API
-    // For now, we'll use mock data
-    const mockProjects = [
-      { id: "1", name: "Projeto de Madeira 1", date: "10/05/2023", previewUrl: "/placeholder.svg" },
-      { id: "2", name: "Corte Especial", date: "15/06/2023", previewUrl: "/placeholder.svg" },
-      { id: "3", name: "Móveis Sala", date: "22/07/2023", previewUrl: "/placeholder.svg" },
-      { id: "4", name: "Projeto Cozinha", date: "05/08/2023", previewUrl: "/placeholder.svg" },
-      { id: "5", name: "Mesa Escritório", date: "18/09/2023", previewUrl: "/placeholder.svg" },
-    ];
-    setProjects(mockProjects);
-  }, []);
+  // Query to fetch user's projects
+  const { data: projects = [], isLoading, error } = useQuery({
+    queryKey: ['projects'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        throw new Error(error.message);
+      }
+      
+      return data as Project[];
+    },
+    enabled: !!user, // Only run query if user is authenticated
+  });
+
+  // Mutation to create a new project
+  const createProjectMutation = useMutation({
+    mutationFn: async (projectName: string) => {
+      const { data, error } = await supabase
+        .from('projects')
+        .insert([
+          { name: projectName, user_id: user?.id }
+        ])
+        .select()
+        .single();
+      
+      if (error) {
+        throw new Error(error.message);
+      }
+      
+      return data as Project;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      
+      toast({
+        title: "Projeto criado com sucesso!",
+        description: `Projeto "${newProjectName}" foi criado.`,
+      });
+      
+      setIsDialogOpen(false);
+      setNewProjectName("");
+      
+      // Navigate to the app page with the project name
+      navigate("/app", { state: { projectName: newProjectName } });
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Erro ao criar projeto",
+        description: error.message || "Ocorreu um erro ao criar o projeto. Tente novamente.",
+      });
+    }
+  });
 
   const handleCreateProject = () => {
     if (!newProjectName.trim()) {
@@ -54,16 +95,7 @@ export default function Dashboard() {
       return;
     }
 
-    // In a real app, this would make an API call to create a project
-    // For now, we'll just mock it and redirect
-    toast({
-      title: "Projeto criado com sucesso!",
-      description: `Projeto "${newProjectName}" foi criado.`,
-    });
-    
-    setIsDialogOpen(false);
-    // Pass the project name as state when navigating
-    navigate("/app", { state: { projectName: newProjectName } });
+    createProjectMutation.mutate(newProjectName);
   };
 
   const handleLogout = () => {
@@ -72,10 +104,25 @@ export default function Dashboard() {
   };
 
   const handleProjectClick = (projectId: string, projectName: string) => {
-    // In a real app, this would load the selected project
-    // Pass the project name as state when navigating
-    navigate("/app", { state: { projectName: projectName } });
+    navigate("/app", { state: { projectId, projectName } });
   };
+
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR');
+  };
+
+  // Show error if projects query fails
+  useEffect(() => {
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao carregar projetos",
+        description: error instanceof Error ? error.message : "Ocorreu um erro ao carregar seus projetos.",
+      });
+    }
+  }, [error, toast]);
 
   return (
     <Layout>
@@ -140,41 +187,67 @@ export default function Dashboard() {
                 </div>
               </div>
               <DialogFooter>
-                <Button onClick={handleCreateProject} className={isMobile ? "w-full" : ""}>
-                  <FolderPlus className="h-4 w-4 mr-2" /> Criar Projeto
+                <Button onClick={handleCreateProject} className={isMobile ? "w-full" : ""} disabled={createProjectMutation.isPending}>
+                  {createProjectMutation.isPending ? (
+                    "Criando..."
+                  ) : (
+                    <>
+                      <FolderPlus className="h-4 w-4 mr-2" /> Criar Projeto
+                    </>
+                  )}
                 </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
 
-          {projects.map((project) => (
-            <Card 
-              key={project.id} 
-              className={`${isMobile ? 'h-48' : 'h-64'} cursor-pointer hover:shadow-md transition-shadow`}
-              onClick={() => handleProjectClick(project.id, project.name)}
-            >
-              <div className={`p-2 ${isMobile ? 'h-[50%]' : 'p-4 h-[60%]'} overflow-hidden bg-gray-100 rounded-t-md flex items-center justify-center`}>
-                {project.previewUrl ? (
-                  <img 
-                    src={project.previewUrl} 
-                    alt={project.name} 
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="text-muted-foreground">Sem preview</div>
-                )}
-              </div>
-              <CardHeader className={`${isMobile ? 'p-3 pb-0' : 'p-4 pb-0'}`}>
-                <CardTitle className={`${isMobile ? 'text-base' : 'text-lg'}`}>{project.name}</CardTitle>
-                <CardDescription className="text-xs">Criado em {project.date}</CardDescription>
-              </CardHeader>
-              <CardFooter className={`${isMobile ? 'p-3 pt-2' : 'p-4 pt-2'}`}>
-                <Button variant="outline" className="w-full" size={isMobile ? "sm" : "sm"}>
-                  Abrir Projeto
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
+          {isLoading ? (
+            // Loading skeleton for projects
+            Array.from({ length: 3 }).map((_, idx) => (
+              <Card key={`loading-${idx}`} className={`${isMobile ? 'h-48' : 'h-64'} animate-pulse`}>
+                <div className={`p-2 ${isMobile ? 'h-[50%]' : 'p-4 h-[60%]'} bg-gray-200 rounded-t-md`}></div>
+                <CardHeader className={`${isMobile ? 'p-3 pb-0' : 'p-4 pb-0'}`}>
+                  <div className="h-5 bg-gray-200 rounded w-3/4 mb-2"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                </CardHeader>
+                <CardFooter className={`${isMobile ? 'p-3 pt-2' : 'p-4 pt-2'}`}>
+                  <div className="h-8 bg-gray-200 rounded w-full"></div>
+                </CardFooter>
+              </Card>
+            ))
+          ) : projects.length > 0 ? (
+            // Render projects
+            projects.map((project) => (
+              <Card 
+                key={project.id} 
+                className={`${isMobile ? 'h-48' : 'h-64'} cursor-pointer hover:shadow-md transition-shadow`}
+                onClick={() => handleProjectClick(project.id, project.name)}
+              >
+                <div className={`p-2 ${isMobile ? 'h-[50%]' : 'p-4 h-[60%]'} overflow-hidden bg-gray-100 rounded-t-md flex items-center justify-center`}>
+                  <div className="flex items-center justify-center w-full h-full">
+                    <FolderPlus className="h-12 w-12 text-primary/40" />
+                  </div>
+                </div>
+                <CardHeader className={`${isMobile ? 'p-3 pb-0' : 'p-4 pb-0'}`}>
+                  <CardTitle className={`${isMobile ? 'text-base' : 'text-lg'}`}>{project.name}</CardTitle>
+                  <CardDescription className="text-xs">Criado em {formatDate(project.created_at)}</CardDescription>
+                </CardHeader>
+                <CardFooter className={`${isMobile ? 'p-3 pt-2' : 'p-4 pt-2'}`}>
+                  <Button variant="outline" className="w-full" size={isMobile ? "sm" : "sm"}>
+                    Abrir Projeto
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))
+          ) : (
+            // No projects message
+            <div className="lg:col-span-3 text-center p-8 bg-muted/20 rounded-lg border border-dashed">
+              <FolderPlus className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
+              <h3 className="text-lg font-medium mb-2">Nenhum projeto encontrado</h3>
+              <p className="text-muted-foreground">
+                Você ainda não tem projetos. Clique em "Criar Novo Projeto" para começar.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </Layout>
