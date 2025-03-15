@@ -21,18 +21,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     try {
-      const { data } = await authService.login(email, password);
+      const response = await authService.login(email, password);
       
       // Set user immediately to prevent loading state issues
-      if (data.user) {
+      if (response.user) {
         setUser({
-          id: data.user.id,
-          name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'User',
-          email: data.user.email || '',
+          id: response.user.id,
+          name: response.user.user_metadata?.name || response.user.email?.split('@')[0] || 'User',
+          email: response.user.email || '',
         });
       }
       
-      return data;
+      return response;
     } catch (error: any) {
       console.error("Login error:", error);
       throw new Error(error.message || "Falha no login");
