@@ -54,7 +54,7 @@ export default function Dashboard() {
     }
   };
 
-  const handleCreateProject = async (projectName: string) => {
+  const handleCreateProject = async (projectName: string, imageFile?: File) => {
     if (!projectName.trim()) {
       toast({
         variant: "destructive",
@@ -74,11 +74,30 @@ export default function Dashboard() {
     }
 
     try {
+      // Default preview URL
+      let preview_url = "/placeholder.svg";
+      
+      // If image file is provided, upload it to Supabase Storage
+      if (imageFile) {
+        const { data: fileData, error: fileError } = await projectService.uploadProjectImage(imageFile);
+        
+        if (fileError) {
+          console.error("Error uploading image:", fileError);
+          toast({
+            variant: "destructive",
+            title: "Erro ao fazer upload da imagem",
+            description: "A imagem não pôde ser carregada, mas o projeto será criado mesmo assim."
+          });
+        } else if (fileData) {
+          preview_url = fileData.path;
+        }
+      }
+
       const { data, error } = await projectService.createProject({
         name: projectName,
         user_id: user.id,
         description: JSON.stringify({}), // Empty object for new projects
-        preview_url: "/placeholder.svg"
+        preview_url
       });
 
       if (error) {

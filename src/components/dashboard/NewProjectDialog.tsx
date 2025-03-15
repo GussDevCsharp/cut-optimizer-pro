@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { FolderPlus } from "lucide-react";
+import { FolderPlus, Image as ImageIcon } from "lucide-react";
 import { 
   Dialog, 
   DialogContent, 
@@ -17,7 +17,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 interface NewProjectDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreateProject: (name: string) => void;
+  onCreateProject: (name: string, imageFile?: File) => void;
 }
 
 export const NewProjectDialog = ({ 
@@ -26,11 +26,19 @@ export const NewProjectDialog = ({
   onCreateProject 
 }: NewProjectDialogProps) => {
   const [newProjectName, setNewProjectName] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const isMobile = useIsMobile();
 
   const handleCreateProject = () => {
-    onCreateProject(newProjectName);
+    onCreateProject(newProjectName, imageFile || undefined);
     setNewProjectName(""); // Reset for next time
+    setImageFile(null); // Reset image file
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setImageFile(e.target.files[0]);
+    }
   };
 
   return (
@@ -54,6 +62,26 @@ export const NewProjectDialog = ({
               placeholder="Meu Projeto de Corte"
               className={isMobile ? "" : "col-span-3"} 
             />
+          </div>
+          
+          <div className={`${isMobile ? 'flex flex-col gap-2' : 'grid grid-cols-4 items-center gap-4'}`}>
+            <Label htmlFor="project-image" className={isMobile ? "" : "text-right"}>
+              Imagem
+            </Label>
+            <div className={isMobile ? "" : "col-span-3"}>
+              <Input
+                id="project-image"
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="cursor-pointer"
+              />
+              {imageFile && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  {imageFile.name} ({Math.round(imageFile.size / 1024)} KB)
+                </p>
+              )}
+            </div>
           </div>
         </div>
         <DialogFooter>

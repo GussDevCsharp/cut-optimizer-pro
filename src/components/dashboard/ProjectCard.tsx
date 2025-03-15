@@ -36,7 +36,7 @@ export const ProjectCard = ({ project, onClick }: ProjectCardProps) => {
 
   const efficiency = getEfficiency();
   
-  // Determine badge color based on efficiency
+  // Determine badge variant based on efficiency
   const getBadgeVariant = (efficiency: number | null) => {
     if (efficiency === null) return "secondary";
     if (efficiency >= 85) return "success";
@@ -44,23 +44,37 @@ export const ProjectCard = ({ project, onClick }: ProjectCardProps) => {
     return "destructive";
   };
 
+  // Check if project has a valid image URL (not the placeholder)
+  const hasProjectImage = project.preview_url && project.preview_url !== "/placeholder.svg";
+
   return (
     <Card 
       className={`${isMobile ? 'h-48' : 'h-64'} cursor-pointer hover:shadow-md transition-shadow`}
       onClick={() => onClick(project)}
     >
       <div className={`p-2 ${isMobile ? 'h-[50%]' : 'p-4 h-[60%]'} overflow-hidden bg-gray-100 rounded-t-md flex items-center justify-center relative`}>
-        {project.preview_url ? (
+        {hasProjectImage ? (
           <img 
             src={project.preview_url} 
             alt={project.name} 
             className="h-full w-full object-cover"
           />
         ) : (
-          <div className="text-muted-foreground">Sem preview</div>
+          <div className="h-full w-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-200">
+            {efficiency !== null ? (
+              <>
+                <div className="text-4xl font-bold text-primary">
+                  {efficiency.toFixed(1)}%
+                </div>
+                <div className="text-sm text-muted-foreground">Eficiência</div>
+              </>
+            ) : (
+              <div className="text-muted-foreground">Sem dados de eficiência</div>
+            )}
+          </div>
         )}
         
-        {efficiency !== null && (
+        {efficiency !== null && hasProjectImage && (
           <Badge 
             variant={getBadgeVariant(efficiency)}
             className="absolute top-2 right-2 text-xs"

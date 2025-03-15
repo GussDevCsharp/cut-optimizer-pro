@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Project, ApiResponse, ExtendedDatabase } from "@/types/project";
 import { createClient } from '@supabase/supabase-js';
+import { v4 as uuidv4 } from 'uuid';
 
 // Create a typed client that knows about our projects table
 const typedSupabase = supabase as unknown as ReturnType<typeof createClient<ExtendedDatabase>>;
@@ -124,6 +125,36 @@ export const projectService = {
     } catch (error) {
       console.error("Error managing project count:", error);
       // We don't want to break the app flow if this fails, so just log the error
+    }
+  },
+
+  // New function to upload project images
+  async uploadProjectImage(file: File): Promise<ApiResponse<{ path: string }>> {
+    try {
+      // Generate a unique filename with original extension
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${uuidv4()}.${fileExt}`;
+      const filePath = `project-images/${fileName}`;
+      
+      // Upload file to Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('project-assets')
+        .upload(filePath, file);
+      
+      if (error) throw error;
+      
+      // Get public URL for the uploaded file
+      const { data: urlData } = supabase.storage
+        .from('project-assets')
+        .getPublicUrl(filePath);
+      
+      return { 
+        data: { path: urlData.publicUrl }, 
+        error: null 
+      };
+    } catch (error: any) {
+      console.error("Error uploading project image:", error.message);
+      return { data: null, error: error.message };
     }
   }
 };

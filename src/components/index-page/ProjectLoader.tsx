@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useSheetData } from '@/hooks/useSheetData';
 import { useProjectActions } from '@/hooks/useProjectActions';
+import { Progress } from "@/components/ui/progress";
 
 // Define the structure of our saved project data
 interface ProjectData {
@@ -17,6 +18,21 @@ export const ProjectLoader: React.FC<{ children: React.ReactNode }> = ({ childre
   const { loadProject } = useProjectActions();
   const [loading, setLoading] = useState(false);
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [progress, setProgress] = useState(0);
+  
+  useEffect(() => {
+    if (loading) {
+      // Simulate loading progress
+      const interval = setInterval(() => {
+        setProgress((prevProgress) => {
+          const newProgress = prevProgress + 10;
+          return newProgress >= 100 ? 100 : newProgress;
+        });
+      }, 200);
+      
+      return () => clearInterval(interval);
+    }
+  }, [loading]);
   
   useEffect(() => {
     const fetchProjectData = async () => {
@@ -26,6 +42,7 @@ export const ProjectLoader: React.FC<{ children: React.ReactNode }> = ({ childre
       
       if (projectId) {
         setLoading(true);
+        setProgress(0);
         try {
           const project = await loadProject(projectId);
           
@@ -67,7 +84,11 @@ export const ProjectLoader: React.FC<{ children: React.ReactNode }> = ({ childre
         } catch (error) {
           console.error("Error loading project data:", error);
         } finally {
-          setLoading(false);
+          // Ensure we reach 100% before removing the loader
+          setProgress(100);
+          setTimeout(() => {
+            setLoading(false);
+          }, 500);
         }
       } else if (location.state?.projectName) {
         // If no project ID but we have a name, just set the name
@@ -78,7 +99,22 @@ export const ProjectLoader: React.FC<{ children: React.ReactNode }> = ({ childre
     fetchProjectData();
   }, [location.state, setProjectName, loadProject, setPlacedPieces, setSheet, setPieces]);
 
-  // Simply render children once loading is complete
+  // Display a loading indicator while project is being loaded
+  if (loading) {
+    return (
+      <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center z-50">
+        <div className="w-[300px] space-y-4">
+          <h2 className="text-xl font-semibold text-center">Carregando projeto</h2>
+          <Progress value={progress} className="w-full" />
+          <p className="text-sm text-muted-foreground text-center">
+            Aguarde enquanto carregamos os dados do seu projeto
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Render children once loading is complete
   return <>{children}</>;
 };
 
