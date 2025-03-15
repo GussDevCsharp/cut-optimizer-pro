@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { LogOut, Menu, Settings, ChevronLeft } from 'lucide-react';
+import { LogOut, Menu, Settings, ChevronLeft, Download } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useSheetData } from '../hooks/useSheetData';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useIsMobile } from '../hooks/use-mobile';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { SettingsContainer } from './settings/SettingsContainer';
+import { useToast } from '@/hooks/use-toast';
 
 export const Header = () => {
   const { projectName } = useSheetData();
@@ -20,6 +21,60 @@ export const Header = () => {
   const isMobile = useIsMobile();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const isAppRoute = location.pathname === '/app';
+  const { toast } = useToast();
+  
+  // PWA installation state
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isInstallable, setIsInstallable] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      // Prevent the mini-infobar from appearing on mobile
+      e.preventDefault();
+      // Stash the event so it can be triggered later
+      setDeferredPrompt(e);
+      // Update UI to notify the user they can install the PWA
+      setIsInstallable(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    // Check if app is already installed
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      setIsInstallable(false);
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) {
+      toast({
+        title: "Instalação",
+        description: "Este dispositivo ou navegador não suporta a instalação do aplicativo.",
+      });
+      return;
+    }
+
+    // Show the install prompt
+    deferredPrompt.prompt();
+    
+    // Wait for the user to respond to the prompt
+    const choiceResult = await deferredPrompt.userChoice;
+    
+    if (choiceResult.outcome === 'accepted') {
+      toast({
+        title: "Sucesso!",
+        description: "Obrigado por instalar nosso aplicativo!",
+      });
+      setIsInstallable(false);
+    }
+
+    // Clear the saved prompt since it can't be used again
+    setDeferredPrompt(null);
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -95,6 +150,13 @@ export const Header = () => {
                     </div>
                   </div>
                   
+                  {isInstallable && (
+                    <Button variant="outline" className="justify-start gap-2" onClick={handleInstallClick}>
+                      <Download className="h-4 w-4" />
+                      <span>Instalar aplicativo</span>
+                    </Button>
+                  )}
+                  
                   <Button variant="outline" className="justify-start gap-2" onClick={openSettings}>
                     <Settings className="h-4 w-4" />
                     <span>Configurações</span>
@@ -119,6 +181,12 @@ export const Header = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                {isInstallable && (
+                  <DropdownMenuItem onClick={handleInstallClick} className="cursor-pointer">
+                    <Download className="mr-2 h-4 w-4" />
+                    <span>Instalar aplicativo</span>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={openSettings} className="cursor-pointer">
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Configurações</span>
