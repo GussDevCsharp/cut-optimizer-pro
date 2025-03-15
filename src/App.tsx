@@ -24,7 +24,8 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/cadastro" element={<Register />} />
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/" element={<Index />} />
+            <Route path="/app" element={<Index />} />
+            <Route path="/" element={<Navigate to="/login" replace />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
