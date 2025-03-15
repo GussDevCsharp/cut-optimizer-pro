@@ -21,9 +21,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     try {
-      await authService.login(email, password);
-      // Session and user will be automatically updated via onAuthStateChange
-      return;
+      const { data } = await authService.login(email, password);
+      
+      // Set user immediately to prevent loading state issues
+      if (data.user) {
+        setUser({
+          id: data.user.id,
+          name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'User',
+          email: data.user.email || '',
+        });
+      }
+      
+      return data;
     } catch (error: any) {
       console.error("Login error:", error);
       throw new Error(error.message || "Falha no login");
@@ -49,7 +58,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     try {
       await authService.logout();
-      
       setUser(null);
     } catch (error: any) {
       console.error("Logout error:", error);
@@ -61,10 +69,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Simple loading indicator with reduced height to improve perceived performance
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
