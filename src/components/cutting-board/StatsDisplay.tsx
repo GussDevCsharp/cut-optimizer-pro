@@ -13,13 +13,14 @@ interface StatsDisplayProps {
   };
   projectName: string;
   onPrint: () => void;
+  isMobile?: boolean;
 }
 
-export const StatsDisplay = ({ sheet, placedPieces, stats, projectName, onPrint }: StatsDisplayProps) => {
+export const StatsDisplay = ({ sheet, placedPieces, stats, projectName, onPrint, isMobile }: StatsDisplayProps) => {
   return (
-    <div className="mb-4 text-sm flex justify-between items-center">
-      <div className="px-3 py-1.5 rounded-md bg-background/95 border shadow-subtle inline-block">
-        <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+    <div className={`mb-4 text-sm flex ${isMobile ? 'flex-col gap-2' : 'justify-between items-center'}`}>
+      <div className={`px-3 py-1.5 rounded-md bg-background/95 border shadow-subtle ${isMobile ? 'w-full' : 'inline-block'}`}>
+        <div className={`${isMobile ? 'grid grid-cols-2 gap-x-2 gap-y-1 text-xs' : 'grid grid-cols-2 gap-x-4 gap-y-1'}`}>
           {projectName && (
             <>
               <div className="text-muted-foreground">Projeto:</div>
@@ -44,7 +45,12 @@ export const StatsDisplay = ({ sheet, placedPieces, stats, projectName, onPrint 
         </div>
       </div>
       
-      <Button variant="outline" size="sm" onClick={onPrint} className="gap-2">
+      <Button 
+        variant="outline" 
+        size={isMobile ? "sm" : "sm"} 
+        onClick={onPrint} 
+        className={`gap-2 ${isMobile ? 'w-full mt-1' : ''}`}
+      >
         <Printer size={16} />
         Imprimir
       </Button>

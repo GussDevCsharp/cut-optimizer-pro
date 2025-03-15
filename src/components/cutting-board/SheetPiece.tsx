@@ -5,12 +5,15 @@ import { PlacedPiece } from '../../hooks/useSheetData';
 interface SheetPieceProps {
   piece: PlacedPiece;
   scale: number;
+  isMobile?: boolean;
 }
 
-export const SheetPiece = ({ piece, scale }: SheetPieceProps) => {
-  // Calculate font size based on piece dimensions
+export const SheetPiece = ({ piece, scale, isMobile }: SheetPieceProps) => {
+  // Calculate font size based on piece dimensions and device
   const minDimension = Math.min(piece.width, piece.height) * scale;
-  const fontSize = Math.max(Math.min(minDimension / 6, 14), 8);
+  const fontSize = isMobile 
+    ? Math.max(Math.min(minDimension / 8, 12), 7) // Smaller text on mobile
+    : Math.max(Math.min(minDimension / 6, 14), 8);
   
   return (
     <div

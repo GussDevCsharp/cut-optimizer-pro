@@ -17,6 +17,7 @@ interface SheetCarouselProps {
   sheetCount: number;
   currentSheetIndex: number;
   setCurrentSheetIndex: (index: number) => void;
+  isMobile?: boolean;
 }
 
 export const SheetCarousel = ({ 
@@ -24,13 +25,14 @@ export const SheetCarousel = ({
   placedPieces, 
   sheetCount, 
   currentSheetIndex, 
-  setCurrentSheetIndex 
+  setCurrentSheetIndex,
+  isMobile
 }: SheetCarouselProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   
-  // Fixed container dimensions
-  const containerWidth = 800;
-  const containerHeight = 600;
+  // Calculate container dimensions based on screen size
+  const containerWidth = isMobile ? window.innerWidth - 40 : 800;  
+  const containerHeight = isMobile ? Math.min(window.innerHeight * 0.5, 400) : 600;
   
   // Calculate scale factor to fit the sheet in the container
   const scaleX = containerWidth / sheet.width;
@@ -65,7 +67,7 @@ export const SheetCarousel = ({
   return (
     <div>
       <div className="flex justify-center items-center mb-2">
-        <span className="font-medium text-sm">
+        <span className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>
           Chapa {currentSheetIndex + 1} de {sheetCount}
         </span>
       </div>
@@ -89,7 +91,7 @@ export const SheetCarousel = ({
                     height: displayHeight,
                     maxWidth: '100%',
                     maxHeight: '100%',
-                    backgroundSize: `20px 20px`,
+                    backgroundSize: `${isMobile ? '10px 10px' : '20px 20px'}`,
                   }}
                 >
                   {/* Placed pieces for this sheet */}
@@ -98,6 +100,7 @@ export const SheetCarousel = ({
                       key={`${piece.id}-${index}`} 
                       piece={piece} 
                       scale={scale} 
+                      isMobile={isMobile}
                     />
                   ))}
                 </div>
@@ -107,34 +110,38 @@ export const SheetCarousel = ({
         </CarouselContent>
       </Carousel>
       
-      {/* Controles de navegação */}
+      {/* Navigation controls */}
       <div className="flex justify-center mt-2 mb-4">
         <Button 
           variant="outline" 
-          size="sm" 
+          size={isMobile ? "icon" : "sm"} 
           onClick={() => setCurrentSheetIndex(Math.max(0, currentSheetIndex - 1))}
           disabled={currentSheetIndex === 0}
-          className="mr-2"
+          className={isMobile ? "w-8 h-8 mr-2" : "mr-2"}
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'}`} />
+          {!isMobile && "Anterior"}
         </Button>
         <Button 
           variant="outline" 
-          size="sm" 
+          size={isMobile ? "icon" : "sm"} 
           onClick={() => setCurrentSheetIndex(Math.min(sheetCount - 1, currentSheetIndex + 1))}
           disabled={currentSheetIndex === sheetCount - 1}
+          className={isMobile ? "w-8 h-8" : ""}
         >
-          <ChevronRight className="h-4 w-4" />
+          {!isMobile && "Próxima"}
+          <ChevronRight className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'}`} />
         </Button>
       </div>
       
-      {/* Miniaturas das chapas */}
+      {/* Sheet thumbnails */}
       <SheetThumbnails
         sheet={sheet}
         placedPieces={placedPieces}
         sheetCount={sheetCount}
         currentSheetIndex={currentSheetIndex}
         onSelectSheet={setCurrentSheetIndex}
+        isMobile={isMobile}
       />
     </div>
   );

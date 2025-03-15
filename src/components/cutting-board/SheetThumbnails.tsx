@@ -8,6 +8,7 @@ interface SheetThumbnailsProps {
   sheetCount: number;
   currentSheetIndex: number;
   onSelectSheet: (index: number) => void;
+  isMobile?: boolean;
 }
 
 export const SheetThumbnails = ({ 
@@ -15,14 +16,19 @@ export const SheetThumbnails = ({
   placedPieces, 
   sheetCount, 
   currentSheetIndex,
-  onSelectSheet
+  onSelectSheet,
+  isMobile
 }: SheetThumbnailsProps) => {
   const sheets = Array.from({ length: sheetCount }, (_, i) => i);
   
+  // Adjust thumbnail size based on device
+  const thumbnailWidth = isMobile ? 60 : 80;
+  const thumbnailHeight = isMobile ? 90 : 120;
+  
   return (
-    <div className="mt-4 py-2 border-t">
+    <div className={`mt-4 py-2 border-t ${isMobile ? 'px-1' : ''}`}>
       <div className="flex items-center justify-center">
-        <p className="text-sm text-muted-foreground mb-2">Chapas Utilizadas:</p>
+        <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-muted-foreground mb-2`}>Chapas Utilizadas:</p>
       </div>
       <div className="flex overflow-x-auto pb-2 gap-2 justify-center">
         {sheets.map((index) => {
@@ -39,9 +45,9 @@ export const SheetThumbnails = ({
                 border border-gray-300 bg-white
               `}
               style={{
-                width: 80,
-                height: 120,
-                minWidth: 80,
+                width: thumbnailWidth,
+                height: thumbnailHeight,
+                minWidth: thumbnailWidth,
               }}
             >
               {/* Miniatura da chapa */}
@@ -51,7 +57,7 @@ export const SheetThumbnails = ({
               
               {/* Peças na miniatura */}
               {sheetPieces.map((piece, pieceIndex) => {
-                const scale = Math.min(80 / sheet.width, 120 / sheet.height);
+                const scale = Math.min(thumbnailWidth / sheet.width, thumbnailHeight / sheet.height);
                 
                 return (
                   <div

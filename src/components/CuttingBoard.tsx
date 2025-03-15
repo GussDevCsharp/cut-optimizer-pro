@@ -4,9 +4,11 @@ import { useSheetData } from '../hooks/useSheetData';
 import { StatsDisplay } from './cutting-board/StatsDisplay';
 import { SheetCarousel } from './cutting-board/SheetCarousel';
 import { usePrinterService } from './cutting-board/PrinterService';
+import { useIsMobile } from '../hooks/use-mobile';
 
 export const CuttingBoard = () => {
   const { sheet, placedPieces, stats, currentSheetIndex, setCurrentSheetIndex, projectName } = useSheetData();
+  const isMobile = useIsMobile();
   
   // Group pieces by sheet index
   const sheetCount = stats.sheetCount > 0 ? stats.sheetCount : 1;
@@ -23,7 +25,7 @@ export const CuttingBoard = () => {
 
   return (
     <Card className="h-full border shadow-subtle flex flex-col animate-fade-in">
-      <CardContent className="p-4 flex-1 relative">
+      <CardContent className={`${isMobile ? 'p-2' : 'p-4'} flex-1 relative`}>
         {/* Stats display - outside the sheet */}
         <StatsDisplay 
           sheet={sheet} 
@@ -31,6 +33,7 @@ export const CuttingBoard = () => {
           stats={stats} 
           onPrint={handlePrint}
           projectName={projectName}
+          isMobile={isMobile}
         />
 
         {/* Sheet carousel */}
@@ -41,6 +44,7 @@ export const CuttingBoard = () => {
             sheetCount={sheetCount}
             currentSheetIndex={currentSheetIndex}
             setCurrentSheetIndex={setCurrentSheetIndex}
+            isMobile={isMobile}
           />
         )}
       </CardContent>

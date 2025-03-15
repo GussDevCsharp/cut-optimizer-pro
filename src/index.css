@@ -93,6 +93,17 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "ss01" on, "ss02" on, "cv01" on, "cv03" on;
+    /* Prevent content from being hidden under the virtual keyboard on mobile */
+    height: 100%;
+    overflow-x: hidden;
+  }
+
+  /* Adjust viewport on iOS devices */
+  @supports (-webkit-touch-callout: none) {
+    body {
+      /* iOS 15+ */
+      min-height: -webkit-fill-available;
+    }
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -110,6 +121,13 @@
 
   ::-webkit-scrollbar-thumb {
     @apply bg-muted-foreground/40 rounded-full hover:bg-muted-foreground/60 transition-colors;
+  }
+
+  /* Fix for iOS input zoom */
+  @media screen and (max-width: 768px) {
+    input, select, textarea {
+      font-size: 16px !important;
+    }
   }
 }
 
@@ -134,4 +152,32 @@
   .input-field {
     @apply w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
   }
+
+  /* Mobile specific styles */
+  .mobile-card {
+    @apply p-3 shadow-sm rounded-lg;
+  }
+  
+  .mobile-text {
+    @apply text-sm;
+  }
+  
+  .mobile-heading {
+    @apply text-base font-semibold;
+  }
+}
+
+/* Meta Viewport Fix for iOS */
+@supports (-webkit-touch-callout: none) {
+  .min-h-screen {
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* Remove App.css styling to prevent conflicts */
+#root {
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  text-align: left;
 }
