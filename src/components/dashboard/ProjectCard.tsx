@@ -3,6 +3,7 @@ import { Card, CardTitle, CardDescription, CardHeader, CardFooter } from "@/comp
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { Project } from "@/types/project";
+import { Badge } from "@/components/ui/badge";
 
 interface ProjectCardProps {
   project: Project;
@@ -17,12 +18,38 @@ export const ProjectCard = ({ project, onClick }: ProjectCardProps) => {
     return date.toLocaleDateString('pt-BR');
   };
 
+  // Parse the project description to get efficiency data
+  const getEfficiency = (): number | null => {
+    try {
+      if (project.description) {
+        const data = JSON.parse(project.description);
+        if (data.stats && typeof data.stats.efficiency === 'number') {
+          return data.stats.efficiency;
+        }
+      }
+      return null;
+    } catch (error) {
+      console.error("Error parsing project description:", error);
+      return null;
+    }
+  };
+
+  const efficiency = getEfficiency();
+  
+  // Determine badge color based on efficiency
+  const getBadgeVariant = (efficiency: number | null) => {
+    if (efficiency === null) return "secondary";
+    if (efficiency >= 85) return "success";
+    if (efficiency >= 70) return "warning";
+    return "destructive";
+  };
+
   return (
     <Card 
       className={`${isMobile ? 'h-48' : 'h-64'} cursor-pointer hover:shadow-md transition-shadow`}
       onClick={() => onClick(project)}
     >
-      <div className={`p-2 ${isMobile ? 'h-[50%]' : 'p-4 h-[60%]'} overflow-hidden bg-gray-100 rounded-t-md flex items-center justify-center`}>
+      <div className={`p-2 ${isMobile ? 'h-[50%]' : 'p-4 h-[60%]'} overflow-hidden bg-gray-100 rounded-t-md flex items-center justify-center relative`}>
         {project.preview_url ? (
           <img 
             src={project.preview_url} 
@@ -31,6 +58,15 @@ export const ProjectCard = ({ project, onClick }: ProjectCardProps) => {
           />
         ) : (
           <div className="text-muted-foreground">Sem preview</div>
+        )}
+        
+        {efficiency !== null && (
+          <Badge 
+            variant={getBadgeVariant(efficiency)}
+            className="absolute top-2 right-2 text-xs"
+          >
+            {efficiency.toFixed(1)}% eficiência
+          </Badge>
         )}
       </div>
       <CardHeader className={`${isMobile ? 'p-3 pb-0' : 'p-4 pb-0'}`}>
