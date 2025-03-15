@@ -13,6 +13,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { authService } from "@/services/auth-service";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Email inválido" }),
@@ -23,6 +24,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
+  const [emailConfirmationNeeded, setEmailConfirmationNeeded] = useState(false);
   const { login, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -45,6 +47,8 @@ export default function Login() {
 
   async function onSubmit(data: LoginFormValues) {
     setIsLoading(true);
+    setEmailConfirmationNeeded(false);
+    
     try {
       await login(data.email, data.password);
       toast({
@@ -52,12 +56,23 @@ export default function Login() {
         description: "Você será redirecionado para o seu painel.",
       });
       navigate("/dashboard");
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Erro ao fazer login",
-        description: "Email ou senha incorretos. Tente novamente.",
-      });
+    } catch (error: any) {
+      console.error("Login error:", error);
+      
+      if (authService.isEmailNotConfirmedError(error)) {
+        setEmailConfirmationNeeded(true);
+        toast({
+          variant: "destructive",
+          title: "Email não confirmado",
+          description: "Por favor, verifique seu email e clique no link de confirmação antes de fazer login.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Erro ao fazer login",
+          description: error.message || "Email ou senha incorretos. Tente novamente.",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -118,6 +133,13 @@ export default function Login() {
             <CardDescription className="text-center">
               Entre com suas credenciais para acessar seu painel
             </CardDescription>
+            
+            {emailConfirmationNeeded && (
+              <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md text-sm text-yellow-800">
+                <p className="font-medium">Verificação de email necessária</p>
+                <p>Você precisa confirmar seu email antes de fazer login. Por favor, verifique sua caixa de entrada.</p>
+              </div>
+            )}
           </CardHeader>
           <CardContent>
             <Form {...form}>
