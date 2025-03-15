@@ -10,6 +10,7 @@ import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
+import Home from "./pages/Home";
 import { useEffect } from "react";
 
 // Protected route component
@@ -55,6 +56,7 @@ const AppRoutes = () => {
   
   return (
     <Routes>
+      <Route path="/home" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/cadastro" element={<Register />} />
       <Route 
@@ -78,7 +80,7 @@ const AppRoutes = () => {
         element={
           isAuthenticated ? 
           <Navigate to="/dashboard" replace /> : 
-          <Navigate to="/login" replace />
+          <Navigate to="/home" replace />
         } 
       />
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
