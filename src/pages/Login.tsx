@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Email inválido" }),
@@ -22,21 +23,37 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
+const resetPasswordSchema = z.object({
+  email: z.string().email({ message: "Email inválido" }),
+});
+
+type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
+
 export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
-  const { login, isAuthenticated, isLoading: authLoading } = useAuth();
+  const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
+  const [resetPasswordLoading, setResetPasswordLoading] = useState(false);
+  const { login, resetPassword, isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [searchParams] = useSearchParams();
   const verifiedParam = searchParams.get('verified');
   const emailParam = searchParams.get('email');
+  const resetParam = searchParams.get('reset');
   
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: emailParam || "",
       password: "",
+    },
+  });
+
+  const resetForm = useForm<ResetPasswordFormValues>({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: {
+      email: "",
     },
   });
 
@@ -49,7 +66,15 @@ export default function Login() {
         variant: "default",
       });
     }
-  }, [verifiedParam, emailParam, toast]);
+    
+    if (resetParam === 'true') {
+      toast({
+        title: "Redefinição de senha",
+        description: "Você pode agora definir uma nova senha. Verifique seu email.",
+        variant: "default",
+      });
+    }
+  }, [verifiedParam, emailParam, resetParam, toast]);
 
   // Redirect to dashboard if already authenticated
   useEffect(() => {
@@ -71,6 +96,23 @@ export default function Login() {
       });
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function onResetPassword(data: ResetPasswordFormValues) {
+    setResetPasswordLoading(true);
+    try {
+      await resetPassword(data.email);
+      setResetPasswordOpen(false);
+      resetForm.reset();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao solicitar redefinição de senha",
+        description: error.message || "Houve um problema ao processar sua solicitação.",
+      });
+    } finally {
+      setResetPasswordLoading(false);
     }
   }
 
@@ -175,8 +217,22 @@ export default function Login() {
                     <FormItem>
                       <FormLabel>Senha</FormLabel>
                       <FormControl>
-                        <Input placeholder="******" type="password" {...field} />
+                        <Input 
+                          placeholder="******" 
+                          type="password" 
+                          showPasswordToggle={true}
+                          {...field} 
+                        />
                       </FormControl>
+                      <div className="flex justify-end">
+                        <button 
+                          type="button" 
+                          onClick={() => setResetPasswordOpen(true)}
+                          className="text-sm text-primary hover:underline mt-1"
+                        >
+                          Esqueceu a senha?
+                        </button>
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -203,6 +259,49 @@ export default function Login() {
           </CardFooter>
         </Card>
       </div>
+
+      {/* Reset Password Dialog */}
+      <Dialog open={resetPasswordOpen} onOpenChange={setResetPasswordOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Esqueceu a senha?</DialogTitle>
+            <DialogDescription>
+              Digite seu email abaixo para receber um link de redefinição de senha.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Form {...resetForm}>
+            <form onSubmit={resetForm.handleSubmit(onResetPassword)} className="space-y-4">
+              <FormField
+                control={resetForm.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input placeholder="seu@email.com" type="email" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setResetPasswordOpen(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={resetPasswordLoading}>
+                  {resetPasswordLoading ? "Enviando..." : "Enviar link"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
