@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useSheetData } from '../hooks/useSheetData';
 
 export const Header = () => {
-  const { stats } = useSheetData();
+  const { stats, projectName } = useSheetData();
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -33,7 +33,10 @@ export const Header = () => {
           <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
             <div className="w-4 h-4 border-2 border-primary-foreground"></div>
           </div>
-          <h1 className="text-xl font-semibold tracking-tight">Melhor Corte</h1>
+          <div className="flex flex-col">
+            <h1 className="text-xl font-semibold tracking-tight">Melhor Corte</h1>
+            {projectName && <span className="text-xs text-muted-foreground">{projectName}</span>}
+          </div>
         </div>
 
         <div className="flex items-center justify-end space-x-3 md:space-x-6">

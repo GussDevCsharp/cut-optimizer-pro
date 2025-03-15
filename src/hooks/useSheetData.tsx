@@ -24,6 +24,8 @@ export interface Sheet {
 }
 
 interface SheetContextType {
+  projectName: string;
+  setProjectName: (name: string) => void;
   sheet: Sheet;
   setSheet: (sheet: Sheet) => void;
   pieces: Piece[];
@@ -45,6 +47,7 @@ interface SheetContextType {
 const SheetContext = createContext<SheetContextType | undefined>(undefined);
 
 export const SheetProvider = ({ children }: { children: ReactNode }) => {
+  const [projectName, setProjectName] = useState<string>('');
   const [sheet, setSheet] = useState<Sheet>({
     width: 1220,
     height: 2440,
@@ -93,6 +96,8 @@ export const SheetProvider = ({ children }: { children: ReactNode }) => {
   return (
     <SheetContext.Provider
       value={{
+        projectName,
+        setProjectName,
         sheet,
         setSheet,
         pieces,

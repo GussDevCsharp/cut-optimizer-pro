@@ -6,13 +6,25 @@ import CuttingBoard from '../components/CuttingBoard';
 import OptimizationControls from '../components/OptimizationControls';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Scissors } from 'lucide-react';
+import { ProjectNameInput } from '../components/sheet-panel/ProjectNameInput';
 
 const Index = () => {
   return (
     <Layout>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - Controls in the order: Chapa, Peças, Melhor Corte */}
+        {/* Left Column - Controls in the order: Project Name, Chapa, Peças, Melhor Corte */}
         <div className="lg:col-span-1 space-y-6">
+          <Card className="animate-fade-in shadow-subtle border">
+            <CardHeader className="pb-2">
+              <CardTitle>Projeto</CardTitle>
+              <CardDescription>
+                Identifique seu projeto de corte
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ProjectNameInput />
+            </CardContent>
+          </Card>
           <SheetPanel />
           <PiecesPanel />
           <Card className="animate-fade-in shadow-subtle border">

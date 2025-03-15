@@ -6,9 +6,10 @@ interface PrinterServiceProps {
   placedPieces: PlacedPiece[];
   sheetCount: number;
   sheets: number[];
+  projectName: string;
 }
 
-export const usePrinterService = ({ sheet, placedPieces, sheetCount, sheets }: PrinterServiceProps) => {
+export const usePrinterService = ({ sheet, placedPieces, sheetCount, sheets, projectName }: PrinterServiceProps) => {
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
@@ -16,7 +17,7 @@ export const usePrinterService = ({ sheet, placedPieces, sheetCount, sheets }: P
     printWindow.document.write(`
       <html>
         <head>
-          <title>Plano de Corte</title>
+          <title>Plano de Corte - ${projectName || 'Sem nome'}</title>
           <style>
             body { font-family: Arial, sans-serif; margin: 20px; }
             .print-header { margin-bottom: 20px; }
@@ -38,7 +39,7 @@ export const usePrinterService = ({ sheet, placedPieces, sheetCount, sheets }: P
         </head>
         <body>
           <div class="print-header">
-            <h1>Plano de Corte</h1>
+            <h1>Plano de Corte${projectName ? ': ' + projectName : ''}</h1>
             <div>Data: ${new Date().toLocaleDateString()}</div>
           </div>
           

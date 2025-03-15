@@ -11,14 +11,22 @@ interface StatsDisplayProps {
     efficiency: number;
     sheetCount: number;
   };
+  projectName: string;
   onPrint: () => void;
 }
 
-export const StatsDisplay = ({ sheet, placedPieces, stats, onPrint }: StatsDisplayProps) => {
+export const StatsDisplay = ({ sheet, placedPieces, stats, projectName, onPrint }: StatsDisplayProps) => {
   return (
     <div className="mb-4 text-sm flex justify-between items-center">
       <div className="px-3 py-1.5 rounded-md bg-background/95 border shadow-subtle inline-block">
         <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+          {projectName && (
+            <>
+              <div className="text-muted-foreground">Projeto:</div>
+              <div className="font-medium text-right">{projectName}</div>
+            </>
+          )}
+          
           <div className="text-muted-foreground">Dimensões:</div>
           <div className="font-medium text-right">{sheet.width}×{sheet.height}mm</div>
           
