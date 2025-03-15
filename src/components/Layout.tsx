@@ -3,6 +3,7 @@ import { PropsWithChildren } from 'react';
 import Header from './Header';
 import { SheetProvider } from '../hooks/useSheetData';
 import { useIsMobile } from '../hooks/use-mobile';
+import OfflineIndicator from './OfflineIndicator';
 
 export const Layout = ({ children }: PropsWithChildren) => {
   const isMobile = useIsMobile();
@@ -21,6 +22,7 @@ export const Layout = ({ children }: PropsWithChildren) => {
             Melhor Corte © {new Date().getFullYear()} - Otimizador de corte profissional
           </div>
         </footer>
+        <OfflineIndicator />
       </div>
     </SheetProvider>
   );
