@@ -10,73 +10,77 @@ export const useAuthState = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Optimize profile data function - make it faster and more reliable
-  const setUserFromSession = (currentSession: Session | null) => {
-    if (!currentSession) {
-      setUser(null);
-      setIsAuthenticated(false);
-      return;
+  // Fetch user profile data from Supabase
+  const fetchUserProfile = async (userId: string) => {
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+      
+    if (profileError) {
+      console.error("Error fetching user profile:", profileError);
+      return null;
     }
     
-    setIsAuthenticated(true);
-    
-    // Extract directly from session to avoid extra database calls
-    const { user: sessionUser } = currentSession;
-    
-    setUser({
-      id: sessionUser.id,
-      name: sessionUser.user_metadata?.name || sessionUser.email?.split('@')[0] || 'User',
-      email: sessionUser.email || '',
-    });
+    return profileData;
+  };
+
+  // Set user state based on profile data
+  const setUserFromProfile = (profileData: any, email: string | undefined) => {
+    if (profileData) {
+      setUser({
+        id: profileData.id,
+        name: profileData.name || email?.split('@')[0] || 'User',
+        email: profileData.email || email || '',
+      });
+    }
   };
 
   // Initialize auth state and subscribe to changes
   useEffect(() => {
-    let mounted = true;
-    
     const fetchSession = async () => {
       try {
-        // Get current session with a short timeout
+        // Get current session
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error("Error fetching session:", error);
-          if (mounted) {
-            setIsLoading(false);
-          }
           return;
         }
         
-        if (mounted) {
+        if (session) {
           setSession(session);
-          setUserFromSession(session);
-          setIsLoading(false);
+          setIsAuthenticated(true);
+          
+          const profileData = await fetchUserProfile(session.user.id);
+          setUserFromProfile(profileData, session.user.email);
         }
       } catch (error) {
         console.error("Unexpected error during session fetch:", error);
-        if (mounted) {
-          setIsLoading(false);
-        }
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchSession();
 
-    // Optimize the auth state change subscription
+    // Subscribe to auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
-        console.log("Auth state changed:", event);
+        setSession(currentSession);
+        setIsAuthenticated(!!currentSession);
         
-        if (mounted) {
-          setSession(currentSession);
-          setUserFromSession(currentSession);
-          setIsLoading(false);
+        if (currentSession) {
+          const profileData = await fetchUserProfile(currentSession.user.id);
+          setUserFromProfile(profileData, currentSession.user.email);
+        } else {
+          setUser(null);
         }
       }
     );
 
     return () => {
-      mounted = false;
       subscription.unsubscribe();
     };
   }, []);

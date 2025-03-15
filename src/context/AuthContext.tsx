@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext } from "react";
 import { authService } from "@/services/auth-service";
 import { useAuthState } from "@/hooks/use-auth-state";
@@ -20,15 +21,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     try {
-      const { session } = await authService.login(email, password);
-      // Manually set the session to speed up the auth state change
-      if (session?.user) {
-        setUser({
-          id: session.user.id,
-          name: session.user.user_metadata?.name || email.split('@')[0],
-          email: session.user.email || '',
-        });
-      }
+      await authService.login(email, password);
+      // Session and user will be automatically updated via onAuthStateChange
       return;
     } catch (error: any) {
       console.error("Login error:", error);
@@ -69,11 +63,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Use a simpler loading state that renders faster
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
   }
