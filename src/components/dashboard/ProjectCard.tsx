@@ -35,7 +35,7 @@ export const ProjectCard = ({ project, onClick }: ProjectCardProps) => {
       </div>
       <CardHeader className={`${isMobile ? 'p-3 pb-0' : 'p-4 pb-0'}`}>
         <CardTitle className={`${isMobile ? 'text-base' : 'text-lg'}`}>{project.name}</CardTitle>
-        <CardDescription className="text-xs">Criado em {formatDate(project.date_created)}</CardDescription>
+        <CardDescription className="text-xs">Criado em {formatDate(project.created_at)}</CardDescription>
       </CardHeader>
       <CardFooter className={`${isMobile ? 'p-3 pt-2' : 'p-4 pt-2'}`}>
         <Button variant="outline" className="w-full" size={isMobile ? "sm" : "sm"}>
