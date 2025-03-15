@@ -1,21 +1,9 @@
 
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/use-toast";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-}
-
-interface AuthContextType {
-  user: User | null;
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
-  isAuthenticated: boolean;
-}
+import React, { createContext, useContext } from "react";
+import { authService } from "@/services/auth-service";
+import { useAuthState } from "@/hooks/use-auth-state";
+import { AuthContextType } from "@/types/auth";
+import { useToast } from "@/hooks/use-toast";
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -28,115 +16,67 @@ export const useAuth = () => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-
-  // Check if user is already logged in
-  useEffect(() => {
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session) {
-        const { data } = await supabase.auth.getUser();
-        if (data.user) {
-          const userData = {
-            id: data.user.id,
-            email: data.user.email || '',
-            name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'User',
-          };
-          setUser(userData);
-          setIsAuthenticated(true);
-        }
-      }
-    };
-    
-    checkUser();
-
-    // Set up auth state listener
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        const { data } = await supabase.auth.getUser();
-        if (data.user) {
-          const userData = {
-            id: data.user.id,
-            email: data.user.email || '',
-            name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'User',
-          };
-          setUser(userData);
-          setIsAuthenticated(true);
-        }
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);
-        setIsAuthenticated(false);
-      }
-    });
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, []);
+  const { user, setUser, session, isAuthenticated, isLoading } = useAuthState();
+  const { toast } = useToast();
 
   const login = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { data } = await authService.login(email, password);
       
-      if (error) throw error;
-      
+      // Set user immediately to prevent loading state issues
       if (data.user) {
-        const userData = {
+        setUser({
           id: data.user.id,
-          email: data.user.email || '',
           name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'User',
-        };
-        setUser(userData);
-        setIsAuthenticated(true);
+          email: data.user.email || '',
+        });
       }
+      
+      return data;
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Erro ao fazer login",
-        description: error.message || "Verifique suas credenciais e tente novamente.",
-      });
-      throw error;
+      console.error("Login error:", error);
+      throw new Error(error.message || "Falha no login");
     }
   };
 
   const register = async (name: string, email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name,
-          },
-        },
-      });
-      
-      if (error) throw error;
-      
+      await authService.register(name, email, password);
+
       toast({
-        title: "Conta criada com sucesso",
-        description: "Verifique seu email para confirmar o cadastro.",
+        title: "Registro concluído!",
+        description: "Verifique seu email para confirmar seu cadastro.",
       });
+
+      return;
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Erro ao criar conta",
-        description: error.message || "Ocorreu um erro ao tentar criar sua conta.",
-      });
-      throw error;
+      console.error("Registration error:", error);
+      throw new Error(error.message || "Falha no registro");
     }
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setIsAuthenticated(false);
+    try {
+      await authService.logout();
+      setUser(null);
+    } catch (error: any) {
+      console.error("Logout error:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao sair",
+        description: error.message || "Ocorreu um erro ao tentar fazer logout.",
+      });
+    }
   };
+
+  // Simple loading indicator with reduced height to improve perceived performance
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <AuthContext.Provider
@@ -146,6 +86,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         register,
         logout,
         isAuthenticated,
+        session,
       }}
     >
       {children}
