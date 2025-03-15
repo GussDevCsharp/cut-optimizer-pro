@@ -7,7 +7,7 @@ export const projectService = {
     try {
       // We need to use the any type here since we can't modify the Supabase types
       const { data, error } = await supabase
-        .from('projects' as SupabaseTable)
+        .from('projects' as unknown as any)
         .select('*')
         .order('date_created', { ascending: false });
       
@@ -23,7 +23,7 @@ export const projectService = {
   async getProjectById(id: string): Promise<ApiResponse<Project>> {
     try {
       const { data, error } = await supabase
-        .from('projects' as SupabaseTable)
+        .from('projects' as unknown as any)
         .select('*')
         .eq('id', id)
         .single();
@@ -47,8 +47,8 @@ export const projectService = {
       };
       
       const { data, error } = await supabase
-        .from('projects' as SupabaseTable)
-        .insert(newProject as any)
+        .from('projects' as unknown as any)
+        .insert(newProject as unknown as any)
         .select()
         .single();
       
@@ -64,11 +64,11 @@ export const projectService = {
   async updateProject(id: string, updates: Partial<Omit<Project, 'id' | 'date_created'>>): Promise<ApiResponse<Project>> {
     try {
       const { data, error } = await supabase
-        .from('projects' as SupabaseTable)
+        .from('projects' as unknown as any)
         .update({
           ...updates,
           date_modified: new Date().toISOString()
-        } as any)
+        } as unknown as any)
         .eq('id', id)
         .select()
         .single();
@@ -85,7 +85,7 @@ export const projectService = {
   async deleteProject(id: string): Promise<ApiResponse<null>> {
     try {
       const { error } = await supabase
-        .from('projects' as SupabaseTable)
+        .from('projects' as unknown as any)
         .delete()
         .eq('id', id);
       
