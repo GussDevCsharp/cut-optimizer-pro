@@ -45,49 +45,116 @@ export const ExcelImportTab = ({ onImportSuccess }: ExcelImportTabProps) => {
         return;
       }
       
-      const importedPieces: Piece[] = [];
-      const headers = findHeaderRow(data);
-      const columnIndexes = getColumnIndexes(headers);
+      // Log data for debugging
+      console.log('Excel data:', data);
       
-      if (!columnIndexes.width || !columnIndexes.height) {
-        setError('Colunas de largura e altura não encontradas na planilha');
+      const importedPieces: Piece[] = [];
+      
+      // If the data is in the first row already, use it directly
+      if (data.length === 1) {
+        setError('A planilha contém apenas cabeçalhos, sem dados');
         return;
       }
       
-      // Start processing from the row after the headers
-      const startRow = headers.rowIndex + 1;
+      // Find the header row and column indexes
+      const headerInfo = findHeaderRow(data);
+      console.log('Header info:', headerInfo);
       
-      for (let i = startRow; i < data.length; i++) {
-        const row: any[] = data[i];
+      const columnIndexes = getColumnIndexes(headerInfo);
+      console.log('Column indexes:', columnIndexes);
+      
+      if (!columnIndexes.width || !columnIndexes.height) {
+        // Try a simpler approach - look at the first row and try to identify columns by position
+        console.log('Trying simple column detection');
+        // Assume first row might be header if it contains strings
+        const firstRowIsHeader = data[0].some(cell => typeof cell === 'string' && cell.toString().trim() !== '');
         
-        // Skip empty rows
-        if (row.every(cell => !cell)) continue;
+        const simpleColumnIndexes = {
+          width: 0,  // First column
+          height: 1, // Second column
+          quantity: 2 // Third column (if exists)
+        };
         
-        const width = parseNumberFromCell(row[columnIndexes.width]);
-        const height = parseNumberFromCell(row[columnIndexes.height]);
-        const quantity = columnIndexes.quantity !== undefined 
-          ? parseNumberFromCell(row[columnIndexes.quantity]) || 1 
-          : 1;
+        console.log('Using simple column indexes:', simpleColumnIndexes);
         
-        const canRotate = columnIndexes.canRotate !== undefined
-          ? Boolean(row[columnIndexes.canRotate])
-          : true;
+        // Start from row 1 if first row is header, otherwise from row 0
+        const startRow = firstRowIsHeader ? 1 : 0;
         
-        if (isNaN(width) || isNaN(height) || width <= 0 || height <= 0) {
-          console.warn(`Ignorando linha ${i + 1}: dados de dimensão inválidos`);
-          continue;
+        for (let i = startRow; i < data.length; i++) {
+          const row: any[] = data[i];
+          
+          // Skip completely empty rows
+          if (row.every(cell => cell === null || cell === undefined || cell === '')) continue;
+          
+          // Get values using direct indexes
+          const width = parseNumberFromCell(row[simpleColumnIndexes.width]);
+          const height = parseNumberFromCell(row[simpleColumnIndexes.height]);
+          
+          // Get quantity if the column exists, otherwise default to 1
+          const quantity = row.length > simpleColumnIndexes.quantity 
+            ? parseNumberFromCell(row[simpleColumnIndexes.quantity]) || 1 
+            : 1;
+          
+          console.log(`Row ${i} - width: ${width}, height: ${height}, quantity: ${quantity}`);
+          
+          if (isNaN(width) || isNaN(height) || width <= 0 || height <= 0) {
+            console.warn(`Ignorando linha ${i + 1}: dados de dimensão inválidos`, row);
+            continue;
+          }
+          
+          // Create individual pieces based on quantity
+          for (let q = 0; q < quantity; q++) {
+            importedPieces.push({
+              id: uuidv4(),
+              width,
+              height,
+              quantity: 1, // Each piece now has quantity 1
+              canRotate: true,
+              color: getRandomColor()
+            });
+          }
         }
+      } else {
+        // Use header-based approach if columns were identified
+        const startRow = headerInfo.rowIndex + 1;
         
-        // Create individual pieces based on quantity
-        for (let q = 0; q < quantity; q++) {
-          importedPieces.push({
-            id: uuidv4(),
-            width,
-            height,
-            quantity: 1, // Each piece now has quantity 1
-            canRotate,
-            color: getRandomColor()
-          });
+        for (let i = startRow; i < data.length; i++) {
+          const row: any[] = data[i];
+          
+          // Skip completely empty rows
+          if (!row.length || row.every(cell => cell === null || cell === undefined || cell === '')) {
+            console.log(`Skipping empty row ${i}`);
+            continue;
+          }
+          
+          const width = parseNumberFromCell(row[columnIndexes.width]);
+          const height = parseNumberFromCell(row[columnIndexes.height]);
+          const quantity = columnIndexes.quantity !== undefined 
+            ? parseNumberFromCell(row[columnIndexes.quantity]) || 1 
+            : 1;
+          
+          const canRotate = columnIndexes.canRotate !== undefined
+            ? Boolean(row[columnIndexes.canRotate])
+            : true;
+          
+          console.log(`Row ${i} - width: ${width}, height: ${height}, quantity: ${quantity}`);
+          
+          if (isNaN(width) || isNaN(height) || width <= 0 || height <= 0) {
+            console.warn(`Ignorando linha ${i + 1}: dados de dimensão inválidos`, row);
+            continue;
+          }
+          
+          // Create individual pieces based on quantity
+          for (let q = 0; q < quantity; q++) {
+            importedPieces.push({
+              id: uuidv4(),
+              width,
+              height,
+              quantity: 1, // Each piece now has quantity 1
+              canRotate,
+              color: getRandomColor()
+            });
+          }
         }
       }
       
@@ -96,12 +163,13 @@ export const ExcelImportTab = ({ onImportSuccess }: ExcelImportTabProps) => {
         return;
       }
       
+      console.log(`Successfully imported ${importedPieces.length} pieces`);
       onImportSuccess(importedPieces);
       setExcelFile(null);
       setError(null);
     } catch (err) {
+      console.error('Error processing Excel file:', err);
       setError(`Erro ao processar arquivo: ${err instanceof Error ? err.message : 'Formato inválido'}`);
-      console.error(err);
     }
   };
 
@@ -110,26 +178,32 @@ export const ExcelImportTab = ({ onImportSuccess }: ExcelImportTabProps) => {
     // Look for a row that might contain headers
     for (let i = 0; i < Math.min(10, data.length); i++) {
       const row = data[i];
-      const potentialHeaders = row.map(String).map(h => h.toLowerCase());
+      if (!row || !row.length) continue;
+      
+      const potentialHeaders = row.map(cell => String(cell || '').toLowerCase());
       
       // Check if this row contains any of our expected header keywords
       if (potentialHeaders.some(h => 
-        h.includes('larg') || h.includes('width') || 
-        h.includes('alt') || h.includes('height') ||
+        h.includes('larg') || 
+        h.includes('width') || 
+        h.includes('alt') || 
+        h.includes('height') ||
         h.includes('quant')
       )) {
-        return { rowIndex: i, headers: row.map(String) };
+        return { rowIndex: i, headers: row.map(cell => String(cell || '')) };
       }
     }
     
     // If no header row found, assume the first row is headers
-    return { rowIndex: 0, headers: data[0].map(String) };
+    return { rowIndex: 0, headers: data[0]?.map(cell => String(cell || '')) || [] };
   };
   
   const getColumnIndexes = (headerInfo: { headers: string[] }) => {
     const result: { width?: number, height?: number, quantity?: number, canRotate?: number } = {};
     
     headerInfo.headers.forEach((header, index) => {
+      if (!header) return;
+      
       const headerLower = String(header).toLowerCase();
       
       if (headerLower.includes('larg') || headerLower.includes('width')) {
