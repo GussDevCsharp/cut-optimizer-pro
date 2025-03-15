@@ -9,10 +9,17 @@ import OptimizationControls from '../components/OptimizationControls';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Scissors } from 'lucide-react';
 import { ProjectNameInput } from '../components/sheet-panel/ProjectNameInput';
-import { useSheetData, SheetProvider, PlacedPiece, Piece } from '../hooks/useSheetData';
+import { useSheetData, SheetProvider, PlacedPiece, Piece, Sheet } from '../hooks/useSheetData';
 import { useIsMobile } from '../hooks/use-mobile';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useProjectActions } from '@/hooks/useProjectActions';
+
+// Define the structure of our saved project data
+interface ProjectData {
+  sheet?: Sheet;
+  pieces?: Piece[];
+  placedPieces?: PlacedPiece[];
+}
 
 const IndexContent = () => {
   const location = useLocation();
@@ -39,7 +46,8 @@ const IndexContent = () => {
             
             // If project has description with data, load it
             if (project.description && typeof project.description === 'object') {
-              const projectData = project.description;
+              // Cast project.description to our ProjectData interface
+              const projectData = project.description as ProjectData;
               
               // Load sheet dimensions if available
               if (projectData && projectData.sheet) {
