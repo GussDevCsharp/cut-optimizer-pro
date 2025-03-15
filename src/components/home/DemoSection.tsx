@@ -45,3 +45,5 @@ export const DemoSection = () => {
     </section>
   );
 };
+
+export default DemoSection;

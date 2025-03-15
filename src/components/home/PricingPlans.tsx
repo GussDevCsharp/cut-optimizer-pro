@@ -18,113 +18,142 @@ export const PricingPlans = () => {
         </div>
         
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          <PricingCard
-            title="Iniciante"
-            price="59"
-            description="Perfeito para pequenas marcenarias"
-            features={[
-              "Até 10 projetos por mês",
-              "Otimização básica",
-              "Exportação em PDF",
-              "1 usuário"
-            ]}
-            isPrimary={false}
-            popularBadge={false}
-          />
+          {/* Starter Plan */}
+          <div className="flex flex-col p-6 bg-card rounded-lg shadow-sm border border-border relative overflow-hidden">
+            <div className="text-center mb-6">
+              <h3 className="text-xl font-bold">Iniciante</h3>
+              <div className="mt-3">
+                <span className="text-3xl font-bold">R$59</span>
+                <span className="text-muted-foreground">/mês</span>
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                Perfeito para pequenas marcenarias
+              </p>
+            </div>
+            <ul className="space-y-3 mb-6 flex-1">
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
+                <span className="text-sm">Até 10 projetos por mês</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
+                <span className="text-sm">Otimização básica</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
+                <span className="text-sm">Exportação em PDF</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
+                <span className="text-sm">1 usuário</span>
+              </li>
+            </ul>
+            <Link to="/cadastro" className="w-full">
+              <Button className="w-full" variant="outline">
+                Começar Teste Grátis
+              </Button>
+            </Link>
+            <p className="text-xs text-center text-muted-foreground mt-3">
+              7 dias grátis, sem compromisso
+            </p>
+          </div>
           
-          <PricingCard
-            title="Profissional"
-            price="99"
-            description="Ideal para marcenarias em crescimento"
-            features={[
-              "Projetos ilimitados",
-              "Otimização avançada",
-              "Exportação em PDF e Excel",
-              "3 usuários",
-              "Compartilhamento por email",
-              "Suporte prioritário"
-            ]}
-            isPrimary={true}
-            popularBadge={true}
-          />
+          {/* Pro Plan */}
+          <div className="flex flex-col p-6 bg-card rounded-lg shadow-md border-2 border-primary relative overflow-hidden">
+            <div className="absolute top-0 right-0">
+              <div className="bg-primary text-primary-foreground text-xs font-medium px-3 py-1 rounded-bl-lg">
+                Mais Popular
+              </div>
+            </div>
+            <div className="text-center mb-6">
+              <h3 className="text-xl font-bold">Profissional</h3>
+              <div className="mt-3">
+                <span className="text-3xl font-bold">R$99</span>
+                <span className="text-muted-foreground">/mês</span>
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                Ideal para marcenarias em crescimento
+              </p>
+            </div>
+            <ul className="space-y-3 mb-6 flex-1">
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
+                <span className="text-sm">Projetos ilimitados</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
+                <span className="text-sm">Otimização avançada</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
+                <span className="text-sm">Exportação em PDF e Excel</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
+                <span className="text-sm">3 usuários</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
+                <span className="text-sm">Compartilhamento por email</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
+                <span className="text-sm">Suporte prioritário</span>
+              </li>
+            </ul>
+            <Link to="/cadastro" className="w-full">
+              <Button className="w-full">
+                Começar Teste Grátis
+              </Button>
+            </Link>
+            <p className="text-xs text-center text-muted-foreground mt-3">
+              7 dias grátis, sem compromisso
+            </p>
+          </div>
           
-          <PricingCard
-            title="Empresarial"
-            price="199"
-            description="Para empresas e indústrias"
-            features={[
-              "Tudo do plano Profissional",
-              "10 usuários",
-              "Suporte dedicado",
-              "Treinamento personalizado"
-            ]}
-            isPrimary={false}
-            popularBadge={false}
-            buttonText="Falar com Consultor"
-            footerText="Demonstração personalizada"
-          />
+          {/* Enterprise Plan */}
+          <div className="flex flex-col p-6 bg-card rounded-lg shadow-sm border border-border relative overflow-hidden">
+            <div className="text-center mb-6">
+              <h3 className="text-xl font-bold">Empresarial</h3>
+              <div className="mt-3">
+                <span className="text-3xl font-bold">R$199</span>
+                <span className="text-muted-foreground">/mês</span>
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                Para empresas e indústrias
+              </p>
+            </div>
+            <ul className="space-y-3 mb-6 flex-1">
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
+                <span className="text-sm">Tudo do plano Profissional</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
+                <span className="text-sm">10 usuários</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
+                <span className="text-sm">Suporte dedicado</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
+                <span className="text-sm">Treinamento personalizado</span>
+              </li>
+            </ul>
+            <Link to="/cadastro" className="w-full">
+              <Button className="w-full" variant="outline">
+                Falar com Consultor
+              </Button>
+            </Link>
+            <p className="text-xs text-center text-muted-foreground mt-3">
+              Demonstração personalizada
+            </p>
+          </div>
         </div>
       </div>
     </section>
   );
 };
 
-interface PricingCardProps {
-  title: string;
-  price: string;
-  description: string;
-  features: string[];
-  isPrimary: boolean;
-  popularBadge: boolean;
-  buttonText?: string;
-  footerText?: string;
-}
-
-const PricingCard = ({
-  title,
-  price,
-  description,
-  features,
-  isPrimary,
-  popularBadge,
-  buttonText = "Começar Teste Grátis",
-  footerText = "7 dias grátis, sem compromisso"
-}: PricingCardProps) => {
-  return (
-    <div className={`flex flex-col p-6 bg-card rounded-lg shadow-sm ${isPrimary ? 'border-2 border-primary' : 'border border-border'} relative overflow-hidden`}>
-      {popularBadge && (
-        <div className="absolute top-0 right-0">
-          <div className="bg-primary text-primary-foreground text-xs font-medium px-3 py-1 rounded-bl-lg">
-            Mais Popular
-          </div>
-        </div>
-      )}
-      <div className="text-center mb-6">
-        <h3 className="text-xl font-bold">{title}</h3>
-        <div className="mt-3">
-          <span className="text-3xl font-bold">R${price}</span>
-          <span className="text-muted-foreground">/mês</span>
-        </div>
-        <p className="text-sm text-muted-foreground mt-1">
-          {description}
-        </p>
-      </div>
-      <ul className="space-y-3 mb-6 flex-1">
-        {features.map((feature, index) => (
-          <li key={index} className="flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
-            <span className="text-sm">{feature}</span>
-          </li>
-        ))}
-      </ul>
-      <Link to="/cadastro" className="w-full">
-        <Button className="w-full" variant={isPrimary ? "default" : "outline"}>
-          {buttonText}
-        </Button>
-      </Link>
-      <p className="text-xs text-center text-muted-foreground mt-3">
-        {footerText}
-      </p>
-    </div>
-  );
-};
+export default PricingPlans;
