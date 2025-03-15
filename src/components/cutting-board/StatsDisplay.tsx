@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Printer } from "lucide-react";
+import { Printer, ChevronDown, ChevronUp } from "lucide-react";
 import { Sheet, PlacedPiece } from '../../hooks/useSheetData';
 
 interface StatsDisplayProps {
@@ -27,9 +27,6 @@ export const StatsDisplay = ({ sheet, placedPieces, stats, onPrint }: StatsDispl
           
           <div className="text-muted-foreground">Chapas utilizadas:</div>
           <div className="font-medium text-right">{stats.sheetCount}</div>
-          
-          <div className="text-muted-foreground">Eficiência:</div>
-          <div className="font-medium text-right">{stats.efficiency.toFixed(1)}%</div>
           
           <div className="text-muted-foreground">Largura de corte:</div>
           <div className="font-medium text-right">{sheet.cutWidth}mm</div>
