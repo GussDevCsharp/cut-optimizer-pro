@@ -1,10 +1,10 @@
 
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import NewProjectCard from "./NewProjectCard";
-import ProjectCard from "./ProjectCard";
-import TestingCard from "./TestingCard"; // Importação do novo componente
+import { Loader2 } from "lucide-react";
+import { NewProjectCard } from "./NewProjectCard";
+import { ProjectCard } from "./ProjectCard";
+import TestingCard from "./TestingCard"; 
+import { useAuth } from "@/context/AuthContext"; 
 import { Project } from "@/types/project";
-import { useAuth } from "@/context/AuthContext"; // Importar useAuth
 
 interface ProjectsGridProps {
   projects: Project[];
@@ -19,13 +19,14 @@ export const ProjectsGrid = ({
   onNewProjectClick,
   onProjectClick,
 }: ProjectsGridProps) => {
-  const { user } = useAuth(); // Obter informações do usuário
-  const isAdmin = user?.email === 'admin@melhorcdorte.com.br' || user?.isAdmin; // Verificar se é admin
+  const { user } = useAuth();
+  // Verificar se é admin pelo email, já que isAdmin não existe no tipo AuthUser
+  const isAdmin = user?.email === 'admin@melhorcdorte.com.br';
 
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <LoadingSpinner size="lg" />
+        <Loader2 className="h-8 w-8 text-primary animate-spin" />
       </div>
     );
   }
