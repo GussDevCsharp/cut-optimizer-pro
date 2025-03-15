@@ -1,9 +1,10 @@
 
 export const getRandomColor = () => {
+  // Lilac, gray, and black palette
   const colors = [
-    '#FFCDD2', '#F8BBD0', '#E1BEE7', '#D1C4E9', '#C5CAE9', 
-    '#BBDEFB', '#B3E5FC', '#B2EBF2', '#B2DFDB', '#C8E6C9', 
-    '#DCEDC8', '#F0F4C3', '#FFF9C4', '#FFECB3', '#FFE0B2'
+    '#D6BCFA', '#C4B5FD', '#A78BFA', '#9B87F5', '#8B5CF6', 
+    '#C8C8C9', '#A1A1AA', '#9F9EA1', '#71717A', '#52525B',
+    '#F1F5F9', '#E2E8F0', '#E5E7EB', '#D1D5DB', '#9CA3AF'
   ];
   return colors[Math.floor(Math.random() * colors.length)];
 };

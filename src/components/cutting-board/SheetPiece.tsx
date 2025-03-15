@@ -32,11 +32,13 @@ export const SheetPiece = ({ piece, scale, isMobile }: SheetPieceProps) => {
         overflow: 'hidden',
         transform: `rotate(${piece.rotated ? '90deg' : '0deg'})`,
         transformOrigin: 'center',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+        borderRadius: '2px',
       }}
     >
       {/* Display width at the bottom of the piece */}
       <div 
-        className="absolute bottom-0.5 w-full text-center" 
+        className="absolute bottom-0.5 w-full text-center font-medium" 
         style={{ fontSize: `${fontSize}px`, color: 'rgba(0,0,0,0.7)' }}
       >
         {piece.width}
@@ -44,7 +46,7 @@ export const SheetPiece = ({ piece, scale, isMobile }: SheetPieceProps) => {
       
       {/* Display height on the left side of the piece with vertical text */}
       <div 
-        className="absolute left-0.5 h-full flex items-center" 
+        className="absolute left-0.5 h-full flex items-center font-medium" 
         style={{ 
           fontSize: `${fontSize}px`, 
           color: 'rgba(0,0,0,0.7)', 

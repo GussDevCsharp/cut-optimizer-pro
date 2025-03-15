@@ -26,7 +26,7 @@ export const CuttingBoard = () => {
   });
 
   return (
-    <Card className="h-full border shadow-subtle flex flex-col animate-fade-in">
+    <Card className="h-full border shadow-subtle flex flex-col animate-fade-in bg-gradient-to-br from-white to-lilac/5">
       <CardContent className={`${isMobile ? 'p-2' : 'p-4'} flex-1 relative`}>
         {/* Stats display - outside the sheet */}
         <StatsDisplay 
