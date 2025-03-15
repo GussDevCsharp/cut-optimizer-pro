@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { MailWarning } from 'lucide-react';
 
 interface EmailDialogProps {
   onSendEmail: (email: string) => Promise<boolean>;
@@ -20,6 +21,10 @@ export const EmailDialog = ({ onSendEmail }: EmailDialogProps) => {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  
+  // Check if email settings are configured
+  const emailSettings = localStorage.getItem('emailSettings');
+  const isEmailConfigured = emailSettings !== null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,6 +66,33 @@ export const EmailDialog = ({ onSendEmail }: EmailDialogProps) => {
       setIsLoading(false);
     }
   };
+
+  if (!isEmailConfigured) {
+    return (
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Configurações de Email</DialogTitle>
+          <DialogDescription>
+            É necessário configurar as credenciais de email antes de enviar planos de corte.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex flex-col items-center justify-center py-6 text-center space-y-3">
+          <div className="bg-muted p-3 rounded-full">
+            <MailWarning className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <p className="font-medium">Email não configurado</p>
+          <p className="text-sm text-muted-foreground">
+            Configure suas credenciais de email nas configurações da conta para utilizar essa funcionalidade.
+          </p>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => window.location.href = '/dashboard'}>
+            Ir para configurações
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    );
+  }
 
   return (
     <DialogContent className="sm:max-w-[425px]">

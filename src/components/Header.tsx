@@ -1,14 +1,15 @@
 
 import { useState, useEffect } from 'react';
-import { LogOut, Menu } from 'lucide-react';
+import { LogOut, Menu, Settings } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useSheetData } from '../hooks/useSheetData';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useIsMobile } from '../hooks/use-mobile';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { SettingsContainer } from './settings/SettingsContainer';
 
 export const Header = () => {
   const { projectName } = useSheetData();
@@ -16,6 +17,7 @@ export const Header = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const isMobile = useIsMobile();
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -29,6 +31,10 @@ export const Header = () => {
   const handleLogout = () => {
     logout();
     navigate("/login");
+  };
+
+  const openSettings = () => {
+    setSettingsOpen(true);
   };
 
   return (
@@ -70,6 +76,11 @@ export const Header = () => {
                     </div>
                   </div>
                   
+                  <Button variant="outline" className="justify-start gap-2" onClick={openSettings}>
+                    <Settings className="h-4 w-4" />
+                    <span>Configurações</span>
+                  </Button>
+                  
                   <Button variant="outline" className="justify-start gap-2" onClick={handleLogout}>
                     <LogOut className="h-4 w-4" />
                     <span>Sair</span>
@@ -89,6 +100,11 @@ export const Header = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={openSettings} className="cursor-pointer">
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Configurações</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Sair</span>
@@ -98,6 +114,8 @@ export const Header = () => {
           )}
         </div>
       </div>
+      
+      <SettingsContainer open={settingsOpen} onOpenChange={setSettingsOpen} />
     </header>
   );
 };

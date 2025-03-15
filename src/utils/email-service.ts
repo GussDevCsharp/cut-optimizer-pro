@@ -19,12 +19,32 @@ export const useEmailService = (
     });
     
     try {
+      // Get email settings from localStorage
+      const emailSettingsString = localStorage.getItem('emailSettings');
+      if (!emailSettingsString) {
+        toast({
+          title: "Configurações não encontradas",
+          description: "Configure suas credenciais de email nas configurações da conta.",
+          variant: "destructive",
+        });
+        return false;
+      }
+      
+      const emailSettings = JSON.parse(emailSettingsString);
+      
       // Generate the PDF blob
       const pdfBlob = await generatePdf(sheet, placedPieces, sheetCount, sheets, projectName);
       
       // This is a mock implementation since we don't have a backend
       // In a real app, you would send the PDF to a server endpoint that would email it
-      console.log(`Would email PDF to ${email}`);
+      console.log(`Would email PDF to ${email} using settings:`, {
+        service: emailSettings.emailService,
+        server: emailSettings.smtpServer,
+        port: emailSettings.smtpPort,
+        fromEmail: emailSettings.fromEmail,
+        fromName: emailSettings.fromName,
+        // Don't log sensitive data like username/password in production
+      });
       
       // This simulates the API call delay
       return new Promise((resolve) => {
