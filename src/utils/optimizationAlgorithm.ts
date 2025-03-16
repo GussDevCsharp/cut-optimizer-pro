@@ -48,13 +48,74 @@ const sortPiecesByArea = (pieces: Piece[]): Piece[] => {
   });
 };
 
-// Find the best position for a new piece using a more precise algorithm
+// Create a grid map of the sheet to track which areas are occupied
+const createAreaMap = (sheet: Sheet, cutWidth: number): boolean[][] => {
+  // Calculate grid dimensions based on sheet size and cut width
+  const gridWidth = Math.ceil(sheet.width / cutWidth);
+  const gridHeight = Math.ceil(sheet.height / cutWidth);
+  
+  // Create a 2D array initialized with false (all cells empty)
+  return Array(gridHeight).fill(null).map(() => Array(gridWidth).fill(false));
+};
+
+// Mark an area as occupied in the area map
+const markAreaAsOccupied = (
+  areaMap: boolean[][], 
+  piece: { x: number; y: number; width: number; height: number },
+  cutWidth: number
+): void => {
+  // Convert piece coordinates to grid cells
+  const startX = Math.floor(piece.x / cutWidth);
+  const startY = Math.floor(piece.y / cutWidth);
+  const endX = Math.ceil((piece.x + piece.width) / cutWidth);
+  const endY = Math.ceil((piece.y + piece.height) / cutWidth);
+  
+  // Mark all cells covered by the piece as occupied
+  for (let y = startY; y < endY; y++) {
+    for (let x = startX; x < endX; x++) {
+      if (y < areaMap.length && x < areaMap[0].length) {
+        areaMap[y][x] = true;
+      }
+    }
+  }
+};
+
+// Check if an area is free in the area map
+const isAreaFree = (
+  areaMap: boolean[][], 
+  piece: { x: number; y: number; width: number; height: number },
+  cutWidth: number
+): boolean => {
+  // Convert piece coordinates to grid cells
+  const startX = Math.floor(piece.x / cutWidth);
+  const startY = Math.floor(piece.y / cutWidth);
+  const endX = Math.ceil((piece.x + piece.width) / cutWidth);
+  const endY = Math.ceil((piece.y + piece.height) / cutWidth);
+  
+  // Check if any cell in the area is already occupied
+  for (let y = startY; y < endY; y++) {
+    for (let x = startX; x < endX; x++) {
+      if (
+        y >= areaMap.length || 
+        x >= areaMap[0].length || 
+        areaMap[y][x]
+      ) {
+        return false;
+      }
+    }
+  }
+  
+  return true;
+};
+
+// Find the best position for a piece using area mapping
 const findBestPosition = (
   piece: Piece,
   placedPieces: PlacedPiece[],
-  sheet: Sheet
+  sheet: Sheet,
+  areaMap: boolean[][]
 ): { x: number; y: number; rotated: boolean } | null => {
-  // Always try both orientations to maximize sheet usage
+  // Try both orientations to maximize sheet usage
   const orientations = [
     { width: piece.width, height: piece.height, rotated: false },
     { width: piece.height, height: piece.width, rotated: true }
@@ -64,9 +125,8 @@ const findBestPosition = (
   let bestY = sheet.height;
   let bestX = sheet.width;
 
-  // Consider all possible positions to avoid any overlaps
+  // Consider all possible positions with precision of cutWidth
   for (const orientation of orientations) {
-    // Try all positions with the precision of cutWidth
     for (let y = 0; y <= sheet.height - orientation.height; y += sheet.cutWidth) {
       for (let x = 0; x <= sheet.width - orientation.width; x += sheet.cutWidth) {
         const testPiece = {
@@ -75,13 +135,16 @@ const findBestPosition = (
           y
         };
 
-        // Double-check to ensure no overlap with existing pieces and within boundaries
-        if (!checkOverlap(testPiece, placedPieces) && checkBoundaries(testPiece, sheet)) {
-          // Use top-left strategy - find the topmost position, then the leftmost
-          if (y < bestY || (y === bestY && x < bestX)) {
-            bestY = y;
-            bestX = x;
-            bestFit = { x, y, rotated: orientation.rotated };
+        // First check if area is free in our grid map (fast check)
+        if (isAreaFree(areaMap, testPiece, sheet.cutWidth)) {
+          // Then do exact overlap check to be double-sure
+          if (!checkOverlap(testPiece, placedPieces) && checkBoundaries(testPiece, sheet)) {
+            // Use top-left strategy - find the topmost position, then the leftmost
+            if (y < bestY || (y === bestY && x < bestX)) {
+              bestY = y;
+              bestX = x;
+              bestFit = { x, y, rotated: orientation.rotated };
+            }
           }
         }
       }
@@ -91,7 +154,7 @@ const findBestPosition = (
   return bestFit;
 };
 
-// Main optimization function that can handle multiple sheets
+// Main optimization function that uses area mapping
 export const optimizeCutting = (
   pieces: Piece[],
   sheet: Sheet
@@ -110,16 +173,17 @@ export const optimizeCutting = (
     }
   });
   
-  // Place each piece, creating new sheets as needed
+  // Track pieces by sheet and use area mapping for each sheet
   let currentSheetIndex = 0;
   let currentSheetPieces: PlacedPiece[] = [];
+  let currentAreaMap = createAreaMap(sheet, sheet.cutWidth);
   
   for (const piece of expandedPieces) {
-    // Try to place on current sheet
-    const position = findBestPosition(piece, currentSheetPieces, sheet);
+    // Try to place piece on current sheet using the area map
+    const position = findBestPosition(piece, currentSheetPieces, sheet, currentAreaMap);
     
     if (position) {
-      // Place on current sheet
+      // Create the placed piece
       const placedPiece: PlacedPiece = {
         ...piece,
         x: position.x,
@@ -130,17 +194,22 @@ export const optimizeCutting = (
         sheetIndex: currentSheetIndex
       };
       
-      // Verify one more time there's no overlap before adding
+      // Final verification that there's no overlap
       if (!checkOverlap(placedPiece, currentSheetPieces)) {
+        // Add piece to placed pieces
         placedPieces.push(placedPiece);
         currentSheetPieces.push(placedPiece);
+        
+        // Mark area as occupied in the map
+        markAreaAsOccupied(currentAreaMap, placedPiece, sheet.cutWidth);
       } else {
-        // This is a fallback - if somehow we still have an overlap, move to new sheet
+        // Fallback: if we somehow still have an overlap, move to a new sheet
         currentSheetIndex++;
         currentSheetPieces = [];
+        currentAreaMap = createAreaMap(sheet, sheet.cutWidth);
         
-        // Try on new sheet with no other pieces
-        const newPosition = findBestPosition(piece, [], sheet);
+        // Try on new empty sheet
+        const newPosition = findBestPosition(piece, [], sheet, currentAreaMap);
         if (newPosition) {
           const newPlacedPiece: PlacedPiece = {
             ...piece,
@@ -154,15 +223,17 @@ export const optimizeCutting = (
           
           placedPieces.push(newPlacedPiece);
           currentSheetPieces.push(newPlacedPiece);
+          markAreaAsOccupied(currentAreaMap, newPlacedPiece, sheet.cutWidth);
         }
       }
     } else {
-      // Move to a new sheet
+      // No valid position found on current sheet, move to a new sheet
       currentSheetIndex++;
       currentSheetPieces = [];
+      currentAreaMap = createAreaMap(sheet, sheet.cutWidth);
       
       // Try to place on the new sheet
-      const newPosition = findBestPosition(piece, [], sheet);
+      const newPosition = findBestPosition(piece, [], sheet, currentAreaMap);
       
       if (newPosition) {
         const placedPiece: PlacedPiece = {
@@ -177,6 +248,7 @@ export const optimizeCutting = (
         
         placedPieces.push(placedPiece);
         currentSheetPieces.push(placedPiece);
+        markAreaAsOccupied(currentAreaMap, placedPiece, sheet.cutWidth);
       }
     }
   }
