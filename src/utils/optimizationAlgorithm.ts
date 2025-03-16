@@ -10,12 +10,10 @@ const generatePastelColor = () => {
 // Check if a piece at given position would overlap with existing placed pieces
 const checkOverlap = (
   piece: { width: number; height: number; x: number; y: number }, 
-  placedPieces: PlacedPiece[], 
-  cutWidth: number
+  placedPieces: PlacedPiece[]
 ): boolean => {
   for (const placedPiece of placedPieces) {
-    // Check if pieces overlap, accounting for the cut width as a buffer
-    // This ensures no pieces are placed too close together
+    // Check if pieces overlap exactly - no buffer needed as we're using precise positioning
     if (
       piece.x < placedPiece.x + placedPiece.width &&
       piece.x + piece.width > placedPiece.x &&
@@ -56,15 +54,11 @@ const findBestPosition = (
   placedPieces: PlacedPiece[],
   sheet: Sheet
 ): { x: number; y: number; rotated: boolean } | null => {
-  // Try both orientations if rotation is allowed
+  // Always try both orientations to maximize sheet usage, regardless of canRotate setting
   const orientations = [
     { width: piece.width, height: piece.height, rotated: false },
+    { width: piece.height, height: piece.width, rotated: true }
   ];
-  
-  // Only add rotated orientation if piece can be rotated
-  if (piece.canRotate) {
-    orientations.push({ width: piece.height, height: piece.width, rotated: true });
-  }
 
   let bestFit = null;
   let bestY = sheet.height;
@@ -73,6 +67,7 @@ const findBestPosition = (
   // Strategy: find the topmost, then leftmost position where the piece fits
   for (const orientation of orientations) {
     // Try positions incrementally to find optimal placement
+    // Using cut width as the step size ensures we consider all valid positions
     for (let y = 0; y <= sheet.height - orientation.height; y += sheet.cutWidth) {
       for (let x = 0; x <= sheet.width - orientation.width; x += sheet.cutWidth) {
         const testPiece = {
@@ -83,7 +78,7 @@ const findBestPosition = (
 
         // Check if position is valid (no overlap with existing pieces, within boundaries)
         if (
-          !checkOverlap(testPiece, placedPieces, sheet.cutWidth) &&
+          !checkOverlap(testPiece, placedPieces) &&
           checkBoundaries(testPiece, sheet)
         ) {
           // Found a valid position - check if it's better than our current best
