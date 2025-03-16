@@ -10,20 +10,22 @@ const generatePastelColor = () => {
 // Check if a piece at given position would overlap with existing placed pieces
 const checkOverlap = (
   piece: { width: number; height: number; x: number; y: number }, 
-  placedPieces: PlacedPiece[]
+  placedPieces: PlacedPiece[], 
+  cutWidth: number
 ): boolean => {
+  // Account for cut width in checking overlaps
   for (const placedPiece of placedPieces) {
-    // Check if pieces overlap exactly - no buffer needed as we're using precise positioning
+    // Check if pieces overlap considering the cut width
     if (
-      piece.x < placedPiece.x + placedPiece.width &&
-      piece.x + piece.width > placedPiece.x &&
-      piece.y < placedPiece.y + placedPiece.height &&
-      piece.y + piece.height > placedPiece.y
+      piece.x < placedPiece.x + placedPiece.width + cutWidth &&
+      piece.x + piece.width + cutWidth > placedPiece.x &&
+      piece.y < placedPiece.y + placedPiece.height + cutWidth &&
+      piece.y + piece.height + cutWidth > placedPiece.y
     ) {
-      return true; // Overlap detected
+      return true;
     }
   }
-  return false; // No overlap
+  return false;
 };
 
 // Check if a piece fits within the sheet boundaries
@@ -54,7 +56,8 @@ const findBestPosition = (
   placedPieces: PlacedPiece[],
   sheet: Sheet
 ): { x: number; y: number; rotated: boolean } | null => {
-  // Always try both orientations to maximize sheet usage, regardless of canRotate setting
+  // Try both orientations - always check rotation regardless of canRotate setting
+  // We'll always try both orientations for optimal placement
   const orientations = [
     { width: piece.width, height: piece.height, rotated: false },
     { width: piece.height, height: piece.width, rotated: true }
@@ -66,19 +69,17 @@ const findBestPosition = (
 
   // Strategy: find the topmost, then leftmost position where the piece fits
   for (const orientation of orientations) {
-    // Try positions incrementally to find optimal placement
-    // Using cut width as the step size ensures we consider all valid positions
-    for (let y = 0; y <= sheet.height - orientation.height; y += sheet.cutWidth) {
-      for (let x = 0; x <= sheet.width - orientation.width; x += sheet.cutWidth) {
+    // Create a grid of possible positions with cutWidth as step size
+    for (let y = 0; y <= sheet.height - orientation.height; y += 1) {
+      for (let x = 0; x <= sheet.width - orientation.width; x += 1) {
         const testPiece = {
           ...orientation,
           x,
           y
         };
 
-        // Check if position is valid (no overlap with existing pieces, within boundaries)
         if (
-          !checkOverlap(testPiece, placedPieces) &&
+          !checkOverlap(testPiece, placedPieces, sheet.cutWidth) &&
           checkBoundaries(testPiece, sheet)
         ) {
           // Found a valid position - check if it's better than our current best
@@ -142,7 +143,7 @@ export const optimizeCutting = (
       currentSheetPieces = [];
       
       // Try to place on the new sheet
-      const newPosition = findBestPosition(piece, [], sheet);
+      const newPosition = findBestPosition(piece, currentSheetPieces, sheet);
       
       if (newPosition) {
         const placedPiece: PlacedPiece = {
