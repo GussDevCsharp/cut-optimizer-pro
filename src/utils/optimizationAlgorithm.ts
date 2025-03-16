@@ -13,7 +13,7 @@ const checkOverlap = (
   placedPieces: PlacedPiece[]
 ): boolean => {
   for (const placedPiece of placedPieces) {
-    // Check if pieces overlap exactly - no buffer needed as we're using precise positioning
+    // Use strict overlap detection - even a 0.1 unit overlap is not allowed
     if (
       piece.x < placedPiece.x + placedPiece.width &&
       piece.x + piece.width > placedPiece.x &&
@@ -48,13 +48,13 @@ const sortPiecesByArea = (pieces: Piece[]): Piece[] => {
   });
 };
 
-// Find the best position for a new piece
+// Find the best position for a new piece using a more precise algorithm
 const findBestPosition = (
   piece: Piece,
   placedPieces: PlacedPiece[],
   sheet: Sheet
 ): { x: number; y: number; rotated: boolean } | null => {
-  // Always try both orientations to maximize sheet usage, regardless of canRotate setting
+  // Always try both orientations to maximize sheet usage
   const orientations = [
     { width: piece.width, height: piece.height, rotated: false },
     { width: piece.height, height: piece.width, rotated: true }
@@ -64,10 +64,9 @@ const findBestPosition = (
   let bestY = sheet.height;
   let bestX = sheet.width;
 
-  // Strategy: find the topmost, then leftmost position where the piece fits
+  // Consider all possible positions to avoid any overlaps
   for (const orientation of orientations) {
-    // Try positions incrementally to find optimal placement
-    // Using cut width as the step size ensures we consider all valid positions
+    // Try all positions with the precision of cutWidth
     for (let y = 0; y <= sheet.height - orientation.height; y += sheet.cutWidth) {
       for (let x = 0; x <= sheet.width - orientation.width; x += sheet.cutWidth) {
         const testPiece = {
@@ -76,12 +75,9 @@ const findBestPosition = (
           y
         };
 
-        // Check if position is valid (no overlap with existing pieces, within boundaries)
-        if (
-          !checkOverlap(testPiece, placedPieces) &&
-          checkBoundaries(testPiece, sheet)
-        ) {
-          // Found a valid position - check if it's better than our current best
+        // Double-check to ensure no overlap with existing pieces and within boundaries
+        if (!checkOverlap(testPiece, placedPieces) && checkBoundaries(testPiece, sheet)) {
+          // Use top-left strategy - find the topmost position, then the leftmost
           if (y < bestY || (y === bestY && x < bestX)) {
             bestY = y;
             bestX = x;
@@ -95,7 +91,7 @@ const findBestPosition = (
   return bestFit;
 };
 
-// Main optimization function that can now handle multiple sheets
+// Main optimization function that can handle multiple sheets
 export const optimizeCutting = (
   pieces: Piece[],
   sheet: Sheet
@@ -134,8 +130,32 @@ export const optimizeCutting = (
         sheetIndex: currentSheetIndex
       };
       
-      placedPieces.push(placedPiece);
-      currentSheetPieces.push(placedPiece);
+      // Verify one more time there's no overlap before adding
+      if (!checkOverlap(placedPiece, currentSheetPieces)) {
+        placedPieces.push(placedPiece);
+        currentSheetPieces.push(placedPiece);
+      } else {
+        // This is a fallback - if somehow we still have an overlap, move to new sheet
+        currentSheetIndex++;
+        currentSheetPieces = [];
+        
+        // Try on new sheet with no other pieces
+        const newPosition = findBestPosition(piece, [], sheet);
+        if (newPosition) {
+          const newPlacedPiece: PlacedPiece = {
+            ...piece,
+            x: newPosition.x,
+            y: newPosition.y,
+            rotated: newPosition.rotated,
+            width: newPosition.rotated ? piece.height : piece.width,
+            height: newPosition.rotated ? piece.width : piece.height,
+            sheetIndex: currentSheetIndex
+          };
+          
+          placedPieces.push(newPlacedPiece);
+          currentSheetPieces.push(newPlacedPiece);
+        }
+      }
     } else {
       // Move to a new sheet
       currentSheetIndex++;
