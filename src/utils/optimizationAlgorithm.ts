@@ -13,19 +13,19 @@ const checkOverlap = (
   placedPieces: PlacedPiece[], 
   cutWidth: number
 ): boolean => {
-  // Account for cut width in checking overlaps
   for (const placedPiece of placedPieces) {
-    // Check if pieces overlap considering the cut width
+    // Check if pieces overlap, accounting for the cut width as a buffer
+    // This ensures no pieces are placed too close together
     if (
-      piece.x < placedPiece.x + placedPiece.width + cutWidth &&
-      piece.x + piece.width + cutWidth > placedPiece.x &&
-      piece.y < placedPiece.y + placedPiece.height + cutWidth &&
-      piece.y + piece.height + cutWidth > placedPiece.y
+      piece.x < placedPiece.x + placedPiece.width &&
+      piece.x + piece.width > placedPiece.x &&
+      piece.y < placedPiece.y + placedPiece.height &&
+      piece.y + piece.height > placedPiece.y
     ) {
-      return true;
+      return true; // Overlap detected
     }
   }
-  return false;
+  return false; // No overlap
 };
 
 // Check if a piece fits within the sheet boundaries
@@ -56,12 +56,15 @@ const findBestPosition = (
   placedPieces: PlacedPiece[],
   sheet: Sheet
 ): { x: number; y: number; rotated: boolean } | null => {
-  // Try both orientations - always check rotation regardless of canRotate setting
-  // We'll always try both orientations for optimal placement
+  // Try both orientations if rotation is allowed
   const orientations = [
     { width: piece.width, height: piece.height, rotated: false },
-    { width: piece.height, height: piece.width, rotated: true }
   ];
+  
+  // Only add rotated orientation if piece can be rotated
+  if (piece.canRotate) {
+    orientations.push({ width: piece.height, height: piece.width, rotated: true });
+  }
 
   let bestFit = null;
   let bestY = sheet.height;
@@ -69,15 +72,16 @@ const findBestPosition = (
 
   // Strategy: find the topmost, then leftmost position where the piece fits
   for (const orientation of orientations) {
-    // Create a grid of possible positions with cutWidth as step size
-    for (let y = 0; y <= sheet.height - orientation.height; y += 1) {
-      for (let x = 0; x <= sheet.width - orientation.width; x += 1) {
+    // Try positions incrementally to find optimal placement
+    for (let y = 0; y <= sheet.height - orientation.height; y += sheet.cutWidth) {
+      for (let x = 0; x <= sheet.width - orientation.width; x += sheet.cutWidth) {
         const testPiece = {
           ...orientation,
           x,
           y
         };
 
+        // Check if position is valid (no overlap with existing pieces, within boundaries)
         if (
           !checkOverlap(testPiece, placedPieces, sheet.cutWidth) &&
           checkBoundaries(testPiece, sheet)
@@ -143,7 +147,7 @@ export const optimizeCutting = (
       currentSheetPieces = [];
       
       // Try to place on the new sheet
-      const newPosition = findBestPosition(piece, currentSheetPieces, sheet);
+      const newPosition = findBestPosition(piece, [], sheet);
       
       if (newPosition) {
         const placedPiece: PlacedPiece = {
