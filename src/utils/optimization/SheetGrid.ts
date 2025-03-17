@@ -1,51 +1,69 @@
 
-import { Sheet } from '../../hooks/useSheetData';
-
-// Class to track occupied areas on the sheet
+// Class to track occupied areas on the sheet - optimized for performance
 export class SheetGrid {
-  private grid: boolean[][];
+  private grid: Uint8Array[];
   private width: number;
   private height: number;
+  private cutWidth: number;
   
-  constructor(width: number, height: number) {
+  constructor(width: number, height: number, cutWidth: number) {
     this.width = width;
     this.height = height;
-    this.grid = Array(height).fill(null).map(() => Array(width).fill(false));
+    this.cutWidth = cutWidth;
+    
+    // Use typed arrays for better performance
+    this.grid = new Array(height);
+    for (let i = 0; i < height; i++) {
+      this.grid[i] = new Uint8Array(width);
+    }
   }
   
   // Check if an area is available for a piece (including cut width)
-  isAreaAvailable(x: number, y: number, pieceWidth: number, pieceHeight: number, cutWidth: number): boolean {
-    // Check that the piece fits within sheet boundaries
+  isAreaAvailable(x: number, y: number, pieceWidth: number, pieceHeight: number): boolean {
+    // Quick boundary check
     if (x < 0 || y < 0 || x + pieceWidth > this.width || y + pieceHeight > this.height) {
       return false;
     }
     
-    // Check each cell in the grid to ensure no overlap with the piece itself
+    // Check the piece area first - fast path
     for (let i = y; i < y + pieceHeight; i++) {
+      const row = this.grid[i];
       for (let j = x; j < x + pieceWidth; j++) {
-        if (this.grid[i] && this.grid[i][j]) {
+        if (row[j] === 1) {
           return false; // Area is already occupied
         }
       }
     }
     
-    // Check for cut width spacing to ensure no pieces are too close together
-    // We need to check a border around the piece of width cutWidth
-    const startCheckX = Math.max(0, x - cutWidth);
-    const startCheckY = Math.max(0, y - cutWidth);
-    const endCheckX = Math.min(this.width - 1, x + pieceWidth + cutWidth - 1);
-    const endCheckY = Math.min(this.height - 1, y + pieceHeight + cutWidth - 1);
+    // Check for cut width spacing - more efficient implementation
+    const startCheckX = Math.max(0, x - this.cutWidth);
+    const startCheckY = Math.max(0, y - this.cutWidth);
+    const endCheckX = Math.min(this.width - 1, x + pieceWidth + this.cutWidth - 1);
+    const endCheckY = Math.min(this.height - 1, y + pieceHeight + this.cutWidth - 1);
     
+    // Check if we're already at the piece boundaries
     for (let i = startCheckY; i <= endCheckY; i++) {
-      for (let j = startCheckX; j <= endCheckX; j++) {
-        // Skip checking the actual piece area
-        if (i >= y && i < y + pieceHeight && j >= x && j < x + pieceWidth) {
-          continue;
+      // Skip checking within the actual piece area
+      if (i >= y && i < y + pieceHeight) {
+        // Only check the borders
+        // Left border
+        for (let j = startCheckX; j < x; j++) {
+          if (this.grid[i][j] === 1) {
+            return false;
+          }
         }
-        
-        // Check if this cell is occupied
-        if (i >= 0 && i < this.height && j >= 0 && j < this.width && this.grid[i][j]) {
-          return false; // Cut width area is already occupied
+        // Right border
+        for (let j = x + pieceWidth; j <= endCheckX; j++) {
+          if (this.grid[i][j] === 1) {
+            return false;
+          }
+        }
+      } else {
+        // Full row check outside piece
+        for (let j = startCheckX; j <= endCheckX; j++) {
+          if (this.grid[i][j] === 1) {
+            return false;
+          }
         }
       }
     }
@@ -53,26 +71,14 @@ export class SheetGrid {
     return true;
   }
   
-  // Mark an area as occupied
+  // Mark an area as occupied - more efficient implementation
   occupyArea(x: number, y: number, pieceWidth: number, pieceHeight: number): void {
+    // Mark the piece area
     for (let i = y; i < y + pieceHeight; i++) {
+      const row = this.grid[i];
       for (let j = x; j < x + pieceWidth; j++) {
-        if (i >= 0 && i < this.height && j >= 0 && j < this.width) {
-          this.grid[i][j] = true;
-        }
+        row[j] = 1;
       }
-    }
-  }
-  
-  // Debug method to print the grid
-  printGrid(): void {
-    console.log("Grid state:");
-    for (let i = 0; i < this.height; i++) {
-      let row = '';
-      for (let j = 0; j < this.width; j++) {
-        row += this.grid[i][j] ? '█' : '·';
-      }
-      console.log(row);
     }
   }
 }

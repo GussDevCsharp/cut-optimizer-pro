@@ -9,51 +9,45 @@ export const optimizeCutting = (
   pieces: Piece[],
   sheet: Sheet
 ): PlacedPiece[] => {
+  console.time('optimization');
   console.log("Starting optimization with", pieces.length, "piece types");
   
-  // Sort pieces by area (largest first)
+  // Sort pieces by area (largest first) - critical for optimal packing
   const sortedPieces = sortPiecesByArea(pieces);
   const placedPieces: PlacedPiece[] = [];
   
-  // Expand pieces based on quantity
+  // Expand pieces based on quantity - do this more efficiently
   const expandedPieces: Piece[] = [];
-  sortedPieces.forEach(piece => {
+  for (const piece of sortedPieces) {
     for (let i = 0; i < piece.quantity; i++) {
       expandedPieces.push({
         ...piece,
         color: piece.color || generatePastelColor()
       });
     }
-  });
+  }
   
   console.log("Total pieces to place:", expandedPieces.length);
   
-  // Initialize sheet grids array with the first sheet
-  const sheetGrids: SheetGrid[] = [new SheetGrid(sheet.width, sheet.height)];
+  // Initialize sheet grids array with the first sheet - use a more efficient approach
+  const sheetGrids: SheetGrid[] = [new SheetGrid(sheet.width, sheet.height, sheet.cutWidth)];
   
-  // Track z-order index to ensure larger pieces are placed first and remain visible
-  let zIndex = expandedPieces.length;
-  
-  // Try to place each piece
-  for (const piece of expandedPieces) {
+  // Try to place each piece with improved performance
+  for (let i = 0; i < expandedPieces.length; i++) {
+    const piece = expandedPieces[i];
     let placed = false;
     
     // Try to place on existing sheets, starting from the first sheet
     for (let sheetIndex = 0; sheetIndex < sheetGrids.length; sheetIndex++) {
-      const position = findBestPosition(piece, sheetGrids[sheetIndex], sheet);
+      // Use the optimized findBestPosition function
+      const position = findBestPosition(piece, sheetGrids[sheetIndex]);
       
       if (position) {
         // Calculate actual dimensions after potential rotation
         const placedWidth = position.rotated ? piece.height : piece.width;
         const placedHeight = position.rotated ? piece.width : piece.height;
         
-        // Double-check that the placement is valid with these dimensions
-        if (!sheetGrids[sheetIndex].isAreaAvailable(position.x, position.y, placedWidth, placedHeight, sheet.cutWidth)) {
-          console.warn(`Position validation failed for piece ${piece.width}x${piece.height} at (${position.x},${position.y}), sheet ${sheetIndex}`);
-          continue;
-        }
-        
-        // Place on this sheet
+        // Place on this sheet without redundant checks
         const placedPiece: PlacedPiece = {
           ...piece,
           x: position.x,
@@ -62,19 +56,17 @@ export const optimizeCutting = (
           width: placedWidth,
           height: placedHeight,
           sheetIndex: sheetIndex,
-          // Add a z-index property to the piece to control layering order
-          // Larger pieces (placed first) should appear behind smaller pieces
           color: piece.color || generatePastelColor(),
         };
         
-        // Mark the area as occupied
+        // Mark the area as occupied - this is now handled more efficiently in SheetGrid
         sheetGrids[sheetIndex].occupyArea(position.x, position.y, placedPiece.width, placedPiece.height);
         placedPieces.push(placedPiece);
         placed = true;
-        zIndex--; // Decrement z-index for next piece
         
-        if (placedPieces.length < 5) { // Only log for first few pieces to avoid console spam
-          console.log(`Placed piece ${placedPiece.width}x${placedPiece.height} at (${position.x},${position.y}) on sheet ${sheetIndex}, rotated: ${position.rotated}`);
+        // Only log occasionally to reduce overhead
+        if (i < 5 || i % 100 === 0) {
+          console.log(`Placed piece ${i+1}/${expandedPieces.length} on sheet ${sheetIndex}`);
         }
         
         break; // Move to the next piece
@@ -84,24 +76,16 @@ export const optimizeCutting = (
     // If not placed on any existing sheet, create a new sheet
     if (!placed) {
       const newSheetIndex = sheetGrids.length;
-      const newSheetGrid = new SheetGrid(sheet.width, sheet.height);
+      const newSheetGrid = new SheetGrid(sheet.width, sheet.height, sheet.cutWidth);
       sheetGrids.push(newSheetGrid);
       
-      console.log("Created new sheet:", newSheetIndex);
-      
       // Try to place on the new sheet
-      const newPosition = findBestPosition(piece, newSheetGrid, sheet);
+      const newPosition = findBestPosition(piece, newSheetGrid);
       
       if (newPosition) {
         // Calculate actual dimensions after potential rotation
         const placedWidth = newPosition.rotated ? piece.height : piece.width;
         const placedHeight = newPosition.rotated ? piece.width : piece.height;
-        
-        // Double-check that the placement is valid with these dimensions
-        if (!newSheetGrid.isAreaAvailable(newPosition.x, newPosition.y, placedWidth, placedHeight, sheet.cutWidth)) {
-          console.warn(`New sheet position validation failed for piece ${piece.width}x${piece.height}`);
-          continue; // Skip this piece if there's an invalid position
-        }
         
         const placedPiece: PlacedPiece = {
           ...piece,
@@ -117,16 +101,22 @@ export const optimizeCutting = (
         // Mark the area as occupied
         newSheetGrid.occupyArea(newPosition.x, newPosition.y, placedPiece.width, placedPiece.height);
         placedPieces.push(placedPiece);
-        zIndex--; // Decrement z-index for next piece
         
-        console.log(`Placed piece ${placedPiece.width}x${placedPiece.height} at (${newPosition.x},${newPosition.y}) on new sheet ${newSheetIndex}, rotated: ${newPosition.rotated}`);
+        console.log(`Created new sheet ${newSheetIndex} for piece ${i+1}/${expandedPieces.length}`);
       } else {
-        console.warn(`Failed to place piece ${piece.width}x${piece.height} even on a new sheet!`);
+        console.warn(`Failed to place piece ${i+1}/${expandedPieces.length}`);
       }
+    }
+    
+    // Early progress reporting for better UX
+    if (expandedPieces.length > 50 && i % 20 === 0) {
+      const progress = Math.round((i / expandedPieces.length) * 100);
+      console.log(`Optimization progress: ${progress}%`);
     }
   }
   
   console.log("Optimization complete. Placed", placedPieces.length, "pieces on", sheetGrids.length, "sheets");
+  console.timeEnd('optimization');
   
   // Sort the pieces to ensure proper z-index rendering (larger pieces behind smaller ones)
   return placedPieces.sort((a, b) => {
