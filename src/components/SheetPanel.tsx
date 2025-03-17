@@ -32,6 +32,11 @@ export const SheetPanel = () => {
     }
   }, [user]);
 
+  // Reset localSheet when sheet changes (e.g., when loading a project)
+  useEffect(() => {
+    setLocalSheet(sheet);
+  }, [sheet]);
+
   const loadMaterials = async () => {
     if (!user) return;
     
@@ -52,11 +57,17 @@ export const SheetPanel = () => {
   };
 
   const handleWidthChange = (width: number) => {
-    setLocalSheet({ ...localSheet, width, materialId: undefined });
+    // Only allow width changes if no material is selected
+    if (!localSheet.materialId) {
+      setLocalSheet({ ...localSheet, width });
+    }
   };
 
   const handleHeightChange = (height: number) => {
-    setLocalSheet({ ...localSheet, height, materialId: undefined });
+    // Only allow height changes if no material is selected
+    if (!localSheet.materialId) {
+      setLocalSheet({ ...localSheet, height });
+    }
   };
 
   const handleCutWidthChange = (value: number[]) => {
@@ -78,12 +89,21 @@ export const SheetPanel = () => {
         title: "Material selecionado",
         description: `Dimensões da chapa ajustadas para ${selectedMaterial.width} x ${selectedMaterial.height} mm.`
       });
+    } else if (materialId === "") {
+      // If user deselects material, allow custom dimensions
+      setLocalSheet({
+        ...localSheet,
+        materialId: undefined
+      });
     }
   };
 
   const updateSheet = () => {
     setSheet(localSheet);
   };
+
+  // Determine if dimensions should be locked (when a material is selected)
+  const isDimensionsLocked = !!localSheet.materialId;
 
   return (
     <Card className="w-full shadow-subtle border animate-fade-in">
@@ -105,6 +125,7 @@ export const SheetPanel = () => {
                 <SelectValue placeholder="Selecione um material" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="">Personalizado</SelectItem>
                 {materials.map((material) => (
                   <SelectItem key={material.id} value={material.id}>
                     {material.description} ({material.width} x {material.height} mm)
@@ -112,6 +133,11 @@ export const SheetPanel = () => {
                 ))}
               </SelectContent>
             </Select>
+            {isDimensionsLocked && (
+              <p className="text-xs text-muted-foreground mt-1">
+                As dimensões da chapa estão bloqueadas pois um material foi selecionado.
+              </p>
+            )}
           </div>
         )}
 
@@ -121,12 +147,14 @@ export const SheetPanel = () => {
             label="Largura (mm)"
             value={localSheet.width}
             onChange={handleWidthChange}
+            disabled={isDimensionsLocked}
           />
           <SheetDimensionInput
             id="height"
             label="Altura (mm)"
             value={localSheet.height}
             onChange={handleHeightChange}
+            disabled={isDimensionsLocked}
           />
         </div>
 

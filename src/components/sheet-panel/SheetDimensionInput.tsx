@@ -10,9 +10,16 @@ interface SheetDimensionInputProps {
   value: number;
   onChange: (value: number) => void;
   id: string;
+  disabled?: boolean;
 }
 
-export const SheetDimensionInput = ({ label, value, onChange, id }: SheetDimensionInputProps) => {
+export const SheetDimensionInput = ({ 
+  label, 
+  value, 
+  onChange, 
+  id, 
+  disabled = false 
+}: SheetDimensionInputProps) => {
   return (
     <div className="space-y-2">
       <Label htmlFor={id}>{label}</Label>
@@ -22,6 +29,7 @@ export const SheetDimensionInput = ({ label, value, onChange, id }: SheetDimensi
           size="icon" 
           className="rounded-r-none h-10"
           onClick={() => onChange(Math.max(1, value - 10))}
+          disabled={disabled}
         >
           <Minus size={16} />
         </Button>
@@ -31,12 +39,14 @@ export const SheetDimensionInput = ({ label, value, onChange, id }: SheetDimensi
           value={value}
           onChange={(e) => onChange(Number(e.target.value))}
           className="rounded-none text-center h-10"
+          disabled={disabled}
         />
         <Button 
           variant="outline" 
           size="icon" 
           className="rounded-l-none h-10"
           onClick={() => onChange(value + 10)}
+          disabled={disabled}
         >
           <Plus size={16} />
         </Button>
