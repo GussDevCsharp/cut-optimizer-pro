@@ -53,6 +53,7 @@ export const processTextContent = (content: string): {
       for (let q = 0; q < quantity; q++) {
         importedPieces.push({
           id: uuidv4(),
+          label: `${width}x${height}`, // Added a generated label from dimensions
           width,
           height,
           quantity: 1, // Each piece now has quantity 1

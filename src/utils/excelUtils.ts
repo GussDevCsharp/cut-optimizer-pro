@@ -17,6 +17,7 @@ export interface ColumnIndexes {
   height?: number;
   quantity?: number;
   canRotate?: number;
+  label?: number;
 }
 
 // Find a row that contains headers
@@ -64,6 +65,9 @@ export const getColumnIndexes = (headerInfo: HeaderInfo): ColumnIndexes => {
     }
     else if (headerLower.includes('rot')) {
       result.canRotate = index;
+    }
+    else if (headerLower.includes('label') || headerLower.includes('nome') || headerLower.includes('desc')) {
+      result.label = index;
     }
   });
   
@@ -161,6 +165,7 @@ const processRowsWithSimpleIndexes = (
     for (let q = 0; q < quantity; q++) {
       pieces.push({
         id: uuidv4(),
+        label: `${width}x${height}`, // Generate a label from dimensions
         width,
         height,
         quantity: 1, // Each piece now has quantity 1
@@ -204,6 +209,11 @@ const processRowsWithHeaderIndexes = (
       ? Boolean(row[columnIndexes.canRotate])
       : true;
     
+    // Get label if available, otherwise generate one from dimensions
+    const label = columnIndexes.label !== undefined && row[columnIndexes.label]
+      ? String(row[columnIndexes.label])
+      : `${width}x${height}`;
+    
     console.log(`Row ${i} - width: ${width}, height: ${height}, quantity: ${quantity}`);
     
     if (isNaN(width) || isNaN(height) || width <= 0 || height <= 0) {
@@ -215,6 +225,7 @@ const processRowsWithHeaderIndexes = (
     for (let q = 0; q < quantity; q++) {
       pieces.push({
         id: uuidv4(),
+        label,
         width,
         height,
         quantity: 1, // Each piece now has quantity 1

@@ -3,19 +3,19 @@ import { createContext, useContext, useState } from "react";
 
 export interface Piece {
   id: string;
-  label: string;
+  label?: string; // Changed to optional
   width: number;
   height: number;
   quantity: number;
   color?: string;
-  canRotate?: boolean; // Added this property
+  canRotate?: boolean;
 }
 
 export interface PlacedPiece extends Piece {
   x: number;
   y: number;
-  rotated?: boolean; // Changed from rotation to rotated
-  sheetIndex: number; // Added this property
+  rotated?: boolean;
+  sheetIndex: number;
 }
 
 export interface Sheet {
@@ -32,6 +32,8 @@ export interface OptimizationStats {
   wasteArea: number;
   wastePercentage: number;
   sheetsUsed: number;
+  efficiency: number; // Added this property
+  sheetCount: number; // Added this property
 }
 
 interface SheetDataContextType {
@@ -39,9 +41,9 @@ interface SheetDataContextType {
   pieces: Piece[];
   placedPieces: PlacedPiece[];
   projectName: string;
-  stats?: OptimizationStats; // Added stats property
-  currentSheetIndex: number; // Added currentSheetIndex property
-  setCurrentSheetIndex: (index: number) => void; // Added setCurrentSheetIndex method
+  stats?: OptimizationStats;
+  currentSheetIndex: number;
+  setCurrentSheetIndex: (index: number) => void;
   setSheet: (sheet: Sheet) => void;
   setPieces: (pieces: Piece[]) => void;
   setPlacedPieces: (pieces: PlacedPiece[]) => void;
@@ -64,7 +66,7 @@ export const SheetDataProvider = ({ children }: { children: React.ReactNode }) =
   const [pieces, setPieces] = useState<Piece[]>([]);
   const [placedPieces, setPlacedPieces] = useState<PlacedPiece[]>([]);
   const [projectName, setProjectName] = useState<string>("");
-  const [currentSheetIndex, setCurrentSheetIndex] = useState<number>(0); // Added currentSheetIndex state
+  const [currentSheetIndex, setCurrentSheetIndex] = useState<number>(0);
   
   // Calculate stats based on current state
   const calculateStats = (): OptimizationStats => {
@@ -74,7 +76,9 @@ export const SheetDataProvider = ({ children }: { children: React.ReactNode }) =
         usedArea: 0,
         wasteArea: 0,
         wastePercentage: 0,
-        sheetsUsed: 0
+        sheetsUsed: 0,
+        efficiency: 0,
+        sheetCount: 0
       };
     }
     
@@ -92,13 +96,16 @@ export const SheetDataProvider = ({ children }: { children: React.ReactNode }) =
     // Calculate waste
     const wasteArea = totalArea - usedArea;
     const wastePercentage = (wasteArea / totalArea) * 100;
+    const efficiency = 100 - wastePercentage;
     
     return {
       totalArea,
       usedArea,
       wasteArea,
       wastePercentage,
-      sheetsUsed
+      sheetsUsed,
+      efficiency,
+      sheetCount: sheetsUsed
     };
   };
   
