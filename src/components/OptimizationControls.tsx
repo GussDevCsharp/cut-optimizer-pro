@@ -6,7 +6,7 @@ import { optimizeCutting } from '../utils/optimizationAlgorithm';
 import { toast } from "sonner";
 import { useProjectActions } from "@/hooks/useProjectActions";
 import { useLocation } from 'react-router-dom';
-import { useState } from "react";
+import { useState, useRef } from "react";
 import OptimizationLoadingDialog from './OptimizationLoadingDialog';
 
 export const OptimizationControls = () => {
@@ -14,6 +14,7 @@ export const OptimizationControls = () => {
   const { saveProject } = useProjectActions();
   const location = useLocation();
   const [isOptimizing, setIsOptimizing] = useState(false);
+  const optimizationAbortRef = useRef<AbortController | null>(null);
   
   // Get projectId from URL params or location state
   const searchParams = new URLSearchParams(window.location.search);
@@ -27,86 +28,72 @@ export const OptimizationControls = () => {
       return;
     }
     
+    // Create abort controller for cancellation
+    optimizationAbortRef.current = new AbortController();
+    
     // Show loading dialog
     setIsOptimizing(true);
     
     try {
-      // Slight delay to ensure the loading dialog is shown before heavy computation starts
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Run optimization in a non-blocking way using the web worker
+      const optimizedPieces = await optimizeCutting(pieces, sheet);
       
-      // Run optimization in a non-blocking way if possible
-      setTimeout(() => {
-        try {
-          // Set up a progress reporting mechanism
-          const reportProgress = (percent: number) => {
-            window.dispatchEvent(new CustomEvent('optimization-progress', {
-              detail: { progress: percent }
-            }));
-          };
-          
-          // Listen for console.log progress messages
-          const originalConsoleLog = console.log;
-          console.log = function(...args) {
-            originalConsoleLog.apply(console, args);
-            
-            // Check if it's a progress message
-            if (typeof args[0] === 'string' && args[0].includes('Optimization progress')) {
-              const percentMatch = args[0].match(/(\d+)%/);
-              if (percentMatch && percentMatch[1]) {
-                const percent = parseInt(percentMatch[1], 10);
-                reportProgress(percent);
-              }
-            }
-          };
-          
-          const optimizedPieces = optimizeCutting(pieces, sheet);
-          
-          // Restore console.log
-          console.log = originalConsoleLog;
-          
-          setPlacedPieces(optimizedPieces);
-          
-          // Report completion
-          reportProgress(100);
-          
-          // Show toast with result
-          const placedCount = optimizedPieces.length;
-          const totalCount = pieces.reduce((total, piece) => total + piece.quantity, 0);
-          
-          if (placedCount === totalCount) {
-            toast.success("Otimização concluída com sucesso!", {
-              description: `Todas as ${totalCount} peças foram posicionadas na chapa.`
-            });
-          } else {
-            toast.warning("Otimização parcial!", {
-              description: `Foram posicionadas ${placedCount} de ${totalCount} peças na chapa.`
-            });
-          }
-          
-          // Save the project with optimized pieces
-          if (projectName && projectId) {
-            saveProject(projectId, projectName, {
-              sheet,
-              pieces,
-              placedPieces: optimizedPieces
-            }).catch(error => {
-              console.error("Error saving project after optimization:", error);
-            });
-          }
-          
-          // Hide loading dialog
-          setIsOptimizing(false);
-        } catch (error) {
-          console.error("Optimization error:", error);
-          toast.error("Erro na otimização", {
-            description: "Ocorreu um erro ao otimizar o corte. Tente novamente."
-          });
-          setIsOptimizing(false);
-        }
-      }, 150);
+      // Check if operation was cancelled
+      if (optimizationAbortRef.current?.signal.aborted) {
+        return;
+      }
+      
+      setPlacedPieces(optimizedPieces);
+      
+      // Show toast with result
+      const placedCount = optimizedPieces.length;
+      const totalCount = pieces.reduce((total, piece) => total + piece.quantity, 0);
+      
+      if (placedCount === totalCount) {
+        toast.success("Otimização concluída com sucesso!", {
+          description: `Todas as ${totalCount} peças foram posicionadas na chapa.`
+        });
+      } else {
+        toast.warning("Otimização parcial!", {
+          description: `Foram posicionadas ${placedCount} de ${totalCount} peças na chapa.`
+        });
+      }
+      
+      // Save the project with optimized pieces
+      if (projectName && projectId) {
+        saveProject(projectId, projectName, {
+          sheet,
+          pieces,
+          placedPieces: optimizedPieces
+        }).catch(error => {
+          console.error("Error saving project after optimization:", error);
+        });
+      }
     } catch (error) {
-      console.error("Optimization error:", error);
+      // Only show error if not cancelled
+      if (!optimizationAbortRef.current?.signal.aborted) {
+        console.error("Optimization error:", error);
+        toast.error("Erro na otimização", {
+          description: "Ocorreu um erro ao otimizar o corte. Tente novamente."
+        });
+      }
+    } finally {
+      // Only hide dialog if not cancelled
+      if (!optimizationAbortRef.current?.signal.aborted) {
+        setIsOptimizing(false);
+        optimizationAbortRef.current = null;
+      }
+    }
+  };
+  
+  const handleCancelOptimization = () => {
+    if (optimizationAbortRef.current) {
+      optimizationAbortRef.current.abort();
       setIsOptimizing(false);
+      toast.info("Otimização cancelada", {
+        description: "O processo de otimização foi interrompido."
+      });
+      optimizationAbortRef.current = null;
     }
   };
   
@@ -169,8 +156,11 @@ export const OptimizationControls = () => {
         </div>
       </div>
       
-      {/* Loading dialog */}
-      <OptimizationLoadingDialog isOpen={isOptimizing} />
+      {/* Loading dialog with cancel option */}
+      <OptimizationLoadingDialog 
+        isOpen={isOptimizing} 
+        onCancel={handleCancelOptimization}
+      />
     </>
   );
 };
