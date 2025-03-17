@@ -20,34 +20,30 @@ export class SheetGrid {
       return false;
     }
     
-    // Account for cut width by checking a slightly expanded area
-    const startX = Math.max(0, x);
-    const startY = Math.max(0, y);
-    const endX = Math.min(this.width - 1, x + pieceWidth - 1);
-    const endY = Math.min(this.height - 1, y + pieceHeight - 1);
-    
-    // Check each cell in the grid to ensure no overlap
-    for (let i = startY; i <= endY; i++) {
-      for (let j = startX; j <= endX; j++) {
-        if (this.grid[i][j]) {
+    // Check each cell in the grid to ensure no overlap with the piece itself
+    for (let i = y; i < y + pieceHeight; i++) {
+      for (let j = x; j < x + pieceWidth; j++) {
+        if (this.grid[i] && this.grid[i][j]) {
           return false; // Area is already occupied
         }
       }
     }
     
-    // Also check for cut width spacing to ensure no pieces are too close together
-    const cutStartX = Math.max(0, x - cutWidth);
-    const cutStartY = Math.max(0, y - cutWidth);
-    const cutEndX = Math.min(this.width - 1, x + pieceWidth + cutWidth - 1);
-    const cutEndY = Math.min(this.height - 1, y + pieceHeight + cutWidth - 1);
+    // Check for cut width spacing to ensure no pieces are too close together
+    // We need to check a border around the piece of width cutWidth
+    const startCheckX = Math.max(0, x - cutWidth);
+    const startCheckY = Math.max(0, y - cutWidth);
+    const endCheckX = Math.min(this.width - 1, x + pieceWidth + cutWidth - 1);
+    const endCheckY = Math.min(this.height - 1, y + pieceHeight + cutWidth - 1);
     
-    // Check the border of the piece with cut width
-    for (let i = cutStartY; i <= cutEndY; i++) {
-      for (let j = cutStartX; j <= cutEndX; j++) {
+    for (let i = startCheckY; i <= endCheckY; i++) {
+      for (let j = startCheckX; j <= endCheckX; j++) {
         // Skip checking the actual piece area
-        if (i >= startY && i <= endY && j >= startX && j <= endX) {
+        if (i >= y && i < y + pieceHeight && j >= x && j < x + pieceWidth) {
           continue;
         }
+        
+        // Check if this cell is occupied
         if (i >= 0 && i < this.height && j >= 0 && j < this.width && this.grid[i][j]) {
           return false; // Cut width area is already occupied
         }
@@ -70,6 +66,7 @@ export class SheetGrid {
   
   // Debug method to print the grid
   printGrid(): void {
+    console.log("Grid state:");
     for (let i = 0; i < this.height; i++) {
       let row = '';
       for (let j = 0; j < this.width; j++) {
