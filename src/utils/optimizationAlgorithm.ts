@@ -27,16 +27,35 @@ class SheetGrid {
     }
     
     // Account for cut width by checking a slightly expanded area
-    const startX = Math.max(0, x - cutWidth);
-    const startY = Math.max(0, y - cutWidth);
-    const endX = Math.min(this.width - 1, x + pieceWidth + cutWidth);
-    const endY = Math.min(this.height - 1, y + pieceHeight + cutWidth);
+    const startX = Math.max(0, x);
+    const startY = Math.max(0, y);
+    const endX = Math.min(this.width - 1, x + pieceWidth - 1);
+    const endY = Math.min(this.height - 1, y + pieceHeight - 1);
     
-    // Check each cell in the grid
+    // Check each cell in the grid to ensure no overlap
     for (let i = startY; i <= endY; i++) {
       for (let j = startX; j <= endX; j++) {
         if (this.grid[i][j]) {
           return false; // Area is already occupied
+        }
+      }
+    }
+    
+    // Also check for cut width spacing to ensure no pieces are too close together
+    const cutStartX = Math.max(0, x - cutWidth);
+    const cutStartY = Math.max(0, y - cutWidth);
+    const cutEndX = Math.min(this.width - 1, x + pieceWidth + cutWidth - 1);
+    const cutEndY = Math.min(this.height - 1, y + pieceHeight + cutWidth - 1);
+    
+    // Check the border of the piece with cut width
+    for (let i = cutStartY; i <= cutEndY; i++) {
+      for (let j = cutStartX; j <= cutEndX; j++) {
+        // Skip checking the actual piece area
+        if (i >= startY && i <= endY && j >= startX && j <= endX) {
+          continue;
+        }
+        if (i >= 0 && i < this.height && j >= 0 && j < this.width && this.grid[i][j]) {
+          return false; // Cut width area is already occupied
         }
       }
     }
@@ -54,6 +73,17 @@ class SheetGrid {
       }
     }
   }
+  
+  // Debug method to print the grid
+  printGrid(): void {
+    for (let i = 0; i < this.height; i++) {
+      let row = '';
+      for (let j = 0; j < this.width; j++) {
+        row += this.grid[i][j] ? '█' : '·';
+      }
+      console.log(row);
+    }
+  }
 }
 
 // Sort pieces by area (largest first) to improve packing efficiency
@@ -65,40 +95,55 @@ const sortPiecesByArea = (pieces: Piece[]): Piece[] => {
   });
 };
 
-// Find the best position for a new piece using the sheet grid
+// Try all possible positions for a piece
 const findBestPosition = (
   piece: Piece,
   sheetGrid: SheetGrid,
   sheet: Sheet
 ): { x: number; y: number; rotated: boolean } | null => {
-  // Try both orientations regardless of canRotate setting for optimal placement
+  // Try both orientations
   const orientations = [
     { width: piece.width, height: piece.height, rotated: false },
-    { width: piece.height, height: piece.width, rotated: true }
-  ];
+    { width: piece.height, height: piece.width, rotated: true && piece.canRotate } // Only rotate if allowed
+  ].filter(o => !o.rotated || piece.canRotate); // Filter out rotated option if rotation not allowed
+  
+  let bestPosition = null;
+  let lowestY = Number.MAX_SAFE_INTEGER;
+  let lowestX = Number.MAX_SAFE_INTEGER;
 
-  let bestFit = null;
-  let bestY = sheet.height;
-  let bestX = sheet.width;
-
-  // Strategy: find the topmost, then leftmost position where the piece fits
+  // Try every possible position on the sheet
   for (const orientation of orientations) {
-    // Create a grid of possible positions
-    for (let y = 0; y <= sheet.height - orientation.height; y += 1) {
-      for (let x = 0; x <= sheet.width - orientation.width; x += 1) {
+    for (let y = 0; y <= sheet.height - orientation.height; y++) {
+      for (let x = 0; x <= sheet.width - orientation.width; x++) {
         if (sheetGrid.isAreaAvailable(x, y, orientation.width, orientation.height, sheet.cutWidth)) {
-          // Found a valid position - check if it's better than our current best
-          if (y < bestY || (y === bestY && x < bestX)) {
-            bestY = y;
-            bestX = x;
-            bestFit = { x, y, rotated: orientation.rotated };
+          // We found a valid position - check if it's "better" than our current best
+          // Better means closer to the top-left corner
+          if (y < lowestY || (y === lowestY && x < lowestX)) {
+            lowestY = y;
+            lowestX = x;
+            bestPosition = { x, y, rotated: orientation.rotated };
+            
+            // If we found a position at y=0, we can break early as this is already optimal
+            if (y === 0) {
+              break;
+            }
           }
         }
       }
+      
+      // If we found a position at the current y, we can move to the next piece
+      if (bestPosition && bestPosition.y === y) {
+        break;
+      }
+    }
+    
+    // If we found a position in the first orientation, try the next orientation
+    if (bestPosition) {
+      break;
     }
   }
 
-  return bestFit;
+  return bestPosition;
 };
 
 // Main optimization function that handles multiple sheets
@@ -106,6 +151,8 @@ export const optimizeCutting = (
   pieces: Piece[],
   sheet: Sheet
 ): PlacedPiece[] => {
+  console.log("Starting optimization with", pieces.length, "piece types");
+  
   const sortedPieces = sortPiecesByArea(pieces);
   const placedPieces: PlacedPiece[] = [];
   
@@ -119,6 +166,8 @@ export const optimizeCutting = (
       });
     }
   });
+  
+  console.log("Total pieces to place:", expandedPieces.length);
   
   // Place each piece, creating new sheets as needed
   let currentSheetIndex = 0;
@@ -140,14 +189,27 @@ export const optimizeCutting = (
         sheetIndex: currentSheetIndex
       };
       
+      // Double-check there's no overlap (safety check)
+      if (!currentSheetGrid.isAreaAvailable(position.x, position.y, placedPiece.width, placedPiece.height, sheet.cutWidth)) {
+        console.error("Overlap detected for piece", placedPiece);
+        continue; // Skip this piece if there's an overlap
+      }
+      
       // Mark the area as occupied
       currentSheetGrid.occupyArea(position.x, position.y, placedPiece.width, placedPiece.height);
       
       placedPieces.push(placedPiece);
+      
+      // Debug grid after placement
+      if (placedPieces.length < 5) { // Only log for first few pieces to avoid console spam
+        console.log(`Placed piece ${placedPiece.width}x${placedPiece.height} at (${position.x},${position.y}) rotated: ${position.rotated}`);
+        // currentSheetGrid.printGrid();
+      }
     } else {
       // Move to a new sheet
       currentSheetIndex++;
       currentSheetGrid = new SheetGrid(sheet.width, sheet.height);
+      console.log("Moving to sheet", currentSheetIndex);
       
       // Try to place on the new sheet
       const newPosition = findBestPosition(piece, currentSheetGrid, sheet);
@@ -163,6 +225,12 @@ export const optimizeCutting = (
           sheetIndex: currentSheetIndex
         };
         
+        // Double-check there's no overlap (safety check)
+        if (!currentSheetGrid.isAreaAvailable(newPosition.x, newPosition.y, placedPiece.width, placedPiece.height, sheet.cutWidth)) {
+          console.error("Overlap detected for piece on new sheet", placedPiece);
+          continue; // Skip this piece if there's an overlap
+        }
+        
         // Mark the area as occupied
         currentSheetGrid.occupyArea(newPosition.x, newPosition.y, placedPiece.width, placedPiece.height);
         
@@ -171,5 +239,6 @@ export const optimizeCutting = (
     }
   }
   
+  console.log("Optimization complete. Placed", placedPieces.length, "pieces on", currentSheetIndex + 1, "sheets");
   return placedPieces;
 };

@@ -15,6 +15,9 @@ export const SheetPiece = ({ piece, scale, isMobile }: SheetPieceProps) => {
     ? Math.max(Math.min(minDimension / 8, 12), 7) // Smaller text on mobile
     : Math.max(Math.min(minDimension / 6, 14), 8);
   
+  // Calculate rotation transform
+  const rotation = piece.rotated ? '90deg' : '0deg';
+  
   return (
     <div
       style={{
@@ -30,10 +33,11 @@ export const SheetPiece = ({ piece, scale, isMobile }: SheetPieceProps) => {
         alignItems: 'center',
         justifyContent: 'center',
         overflow: 'hidden',
-        transform: `rotate(${piece.rotated ? '90deg' : '0deg'})`,
-        transformOrigin: 'center',
+        transform: `rotate(${rotation})`,
+        transformOrigin: piece.rotated ? 'center' : '0 0',
         boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
         borderRadius: '2px',
+        zIndex: 10, // Add z-index to ensure pieces don't overlap visually
       }}
     >
       {/* Display width at the bottom of the piece */}
