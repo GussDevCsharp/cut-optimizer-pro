@@ -68,6 +68,10 @@ export const ProjectLoader: React.FC<{ children: React.ReactNode }> = ({ childre
               
               // Load sheet dimensions if available
               if (projectData.sheet) {
+                // If the project has a material_id, use it to set the sheet's materialId
+                if (project.material_id) {
+                  projectData.sheet.materialId = project.material_id;
+                }
                 setSheet(projectData.sheet);
               }
               
