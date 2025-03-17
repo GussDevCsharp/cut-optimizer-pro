@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Puzzle, Scissors } from 'lucide-react';
 import { useSheetData, Piece } from '../hooks/useSheetData';
@@ -15,7 +16,7 @@ import { useState } from "react";
 import OptimizationLoadingDialog from './OptimizationLoadingDialog';
 
 export const PiecesAndOptimizationPanel = () => {
-  const { sheet, pieces, placedPieces, setPlacedPieces, projectName } = useSheetData();
+  const { sheet, pieces, placedPieces, setPlacedPieces, projectName, addPiece, updatePiece, removePiece } = useSheetData();
   const { saveProject } = useProjectActions();
   const location = useLocation();
   const [isOptimizing, setIsOptimizing] = useState(false);

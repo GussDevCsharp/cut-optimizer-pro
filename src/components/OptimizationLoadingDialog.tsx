@@ -10,7 +10,7 @@ interface OptimizationLoadingDialogProps {
 export const OptimizationLoadingDialog = ({ isOpen }: OptimizationLoadingDialogProps) => {
   return (
     <Dialog open={isOpen}>
-      <DialogContent className="sm:max-w-md" showCloseButton={false}>
+      <DialogContent className="sm:max-w-md">
         <div className="flex flex-col items-center justify-center py-4 space-y-4">
           <h3 className="text-lg font-medium">Otimizando Corte</h3>
           <p className="text-center text-muted-foreground">
