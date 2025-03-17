@@ -1,10 +1,11 @@
+
 import { useState } from 'react';
 import { Database, Copy, Check } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent } from '@/components/ui/card';
-import { materialService } from '@/services/materialService';
+import { materialService } from '@/services/material';
 
 interface TableErrorAlertProps {
   error: string | null;

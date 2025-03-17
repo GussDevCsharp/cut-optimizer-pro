@@ -5,7 +5,7 @@ import Layout from '@/components/Layout';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { materialService } from '@/services/materialService';
+import { materialService } from '@/services/material';
 import type { Material } from '@/types/material';
 
 import { MaterialsHeader } from '@/components/materials/MaterialsHeader';
