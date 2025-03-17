@@ -11,10 +11,11 @@ import type { Material } from '@/types/material';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Layers, Plus, ArrowLeft } from 'lucide-react';
+import { Layers, Plus, ArrowLeft, Database } from 'lucide-react';
 import { MaterialForm } from '@/components/materials/MaterialForm';
 import { MaterialsTable } from '@/components/materials/MaterialsTable';
 import { UserMenu } from '@/components/dashboard/UserMenu';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function Materials() {
   const { user, logout } = useAuth();
@@ -26,6 +27,7 @@ export default function Materials() {
   const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('list');
+  const [tableError, setTableError] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -37,10 +39,12 @@ export default function Materials() {
     if (!user) return;
     
     setIsLoading(true);
+    setTableError(null);
     try {
       const { data, error } = await materialService.getMaterials(user.id);
       
       if (error) {
+        setTableError(error);
         toast({
           variant: 'destructive',
           title: 'Erro ao carregar materiais',
@@ -49,8 +53,9 @@ export default function Materials() {
       } else if (data) {
         setMaterials(data);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load materials', error);
+      setTableError('Erro ao carregar materiais');
       toast({
         variant: 'destructive',
         title: 'Erro ao carregar materiais',
@@ -85,6 +90,56 @@ export default function Materials() {
     navigate('/dashboard');
   };
 
+  const getSqlScript = () => {
+    return `
+-- Criar a tabela de materiais
+CREATE TABLE IF NOT EXISTS public.materials (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES auth.users(id),
+  description TEXT NOT NULL,
+  thickness NUMERIC NOT NULL,
+  width NUMERIC NOT NULL,
+  height NUMERIC NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- Configurar RLS (Row Level Security)
+ALTER TABLE public.materials ENABLE ROW LEVEL SECURITY;
+
+-- Política para permitir que usuários vejam apenas seus próprios materiais
+CREATE POLICY "Users can view their own materials" 
+ON public.materials FOR SELECT 
+USING (auth.uid() = user_id);
+
+-- Política para permitir que usuários criem seus próprios materiais
+CREATE POLICY "Users can insert their own materials" 
+ON public.materials FOR INSERT 
+WITH CHECK (auth.uid() = user_id);
+
+-- Política para permitir que usuários atualizem seus próprios materiais
+CREATE POLICY "Users can update their own materials" 
+ON public.materials FOR UPDATE
+USING (auth.uid() = user_id);
+
+-- Política para permitir que usuários excluam seus próprios materiais
+CREATE POLICY "Users can delete their own materials" 
+ON public.materials FOR DELETE
+USING (auth.uid() = user_id);
+
+-- Conceder permissões ao papel anônimo e autenticado
+GRANT ALL ON public.materials TO anon, authenticated;
+    `;
+  };
+
+  const handleCopyScript = () => {
+    navigator.clipboard.writeText(getSqlScript());
+    toast({
+      title: 'Script SQL copiado',
+      description: 'Agora você pode executá-lo no painel do Supabase'
+    });
+  };
+
   return (
     <Layout>
       <div className={`${isMobile ? 'px-2 py-2' : 'container mx-auto p-4'}`}>
@@ -110,6 +165,26 @@ export default function Materials() {
           
           {!isMobile && <UserMenu userName={user?.name} onLogout={handleLogout} />}
         </div>
+
+        {tableError && tableError.includes("tabela") && (
+          <Alert variant="destructive" className="mb-6">
+            <Database className="h-4 w-4" />
+            <AlertTitle>A tabela de materiais não existe</AlertTitle>
+            <AlertDescription>
+              <p className="mb-2">
+                É necessário criar a tabela de materiais no banco de dados Supabase. 
+                Copie o script SQL abaixo e execute-o no painel do Supabase (SQL Editor).
+              </p>
+              <Button 
+                variant="outline" 
+                onClick={handleCopyScript}
+                className="mt-2"
+              >
+                Copiar Script SQL
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="flex justify-between items-center mb-4">

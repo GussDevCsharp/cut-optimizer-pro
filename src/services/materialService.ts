@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Material, MaterialFormValues } from "@/types/material";
 import type { ApiResponse } from "@/types/project";
+import { toast } from "@/hooks/use-toast";
 
 // Directly access the materials table using our typed Supabase client
 const materialsTable = () => supabase.from('materials');
@@ -20,13 +21,18 @@ export const materialService = {
       const { data: materials, error } = await query;
 
       if (error) {
+        if (error.message.includes('does not exist')) {
+          // Table doesn't exist yet - return empty array instead of error
+          console.log("Materials table doesn't exist yet. Returning empty array.");
+          return { data: [], error: null };
+        }
         throw new Error(error.message);
       }
 
-      return { data: materials, error: null };
+      return { data: materials || [], error: null };
     } catch (error: any) {
       console.error("Error fetching materials:", error);
-      return { data: null, error: error.message };
+      return { data: [], error: error.message };
     }
   },
   
@@ -39,6 +45,9 @@ export const materialService = {
         .single();
 
       if (error) {
+        if (error.message.includes('does not exist')) {
+          throw new Error("A tabela de materiais ainda não foi criada no banco de dados.");
+        }
         throw new Error(error.message);
       }
 
@@ -65,6 +74,9 @@ export const materialService = {
         .single();
 
       if (error) {
+        if (error.message.includes('does not exist')) {
+          throw new Error("A tabela de materiais ainda não foi criada no banco de dados. Por favor, execute o script SQL fornecido.");
+        }
         throw new Error(error.message);
       }
 
@@ -90,6 +102,9 @@ export const materialService = {
         .single();
 
       if (error) {
+        if (error.message.includes('does not exist')) {
+          throw new Error("A tabela de materiais ainda não foi criada no banco de dados.");
+        }
         throw new Error(error.message);
       }
 
@@ -108,6 +123,9 @@ export const materialService = {
         .eq('id', id);
 
       if (error) {
+        if (error.message.includes('does not exist')) {
+          throw new Error("A tabela de materiais ainda não foi criada no banco de dados.");
+        }
         throw new Error(error.message);
       }
 

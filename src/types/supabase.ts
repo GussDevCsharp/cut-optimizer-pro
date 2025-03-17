@@ -1,49 +1,132 @@
 
-import type { Database as OriginalDatabase } from "@/integrations/supabase/types";
-import type { Material } from "./material";
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
-// Extend the original Database type with our custom tables
-export interface Database extends OriginalDatabase {
+export interface Database {
   public: {
     Tables: {
       materials: {
-        Row: Material;
-        Insert: Omit<Material, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Omit<Material, 'id' | 'created_at' | 'updated_at'>>;
-      };
+        Row: {
+          id: string
+          user_id: string
+          description: string
+          thickness: number
+          width: number
+          height: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          description: string
+          thickness: number
+          width: number
+          height: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          description?: string
+          thickness?: number
+          width?: number
+          height?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
       projects: {
         Row: {
-          id: string;
-          name: string;
-          user_id: string;
-          created_at: string;
-          updated_at: string;
-          description?: string;
-          preview_url?: string;
-        };
-        Insert: Omit<{
-          id: string;
-          name: string;
-          user_id: string;
-          created_at: string;
-          updated_at: string;
-          description?: string;
-          preview_url?: string;
-        }, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Omit<{
-          id: string;
-          name: string;
-          user_id: string;
-          created_at: string;
-          updated_at: string;
-          description?: string;
-          preview_url?: string;
-        }, 'id' | 'created_at' | 'updated_at'>>;
-      };
-    } & OriginalDatabase['public']['Tables'];
-    Views: OriginalDatabase['public']['Views'];
-    Functions: OriginalDatabase['public']['Functions'];
-    Enums: OriginalDatabase['public']['Enums'];
-    CompositeTypes: OriginalDatabase['public']['CompositeTypes'];
-  };
+          id: string
+          user_id: string
+          name: string
+          data: Json
+          created_at: string
+          updated_at: string
+          is_public: boolean
+          access_token: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          data: Json
+          created_at?: string
+          updated_at?: string
+          is_public?: boolean
+          access_token?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          data?: Json
+          created_at?: string
+          updated_at?: string
+          is_public?: boolean
+          access_token?: string | null
+        }
+      }
+      users: {
+        Row: {
+          id: string
+          email: string
+          name: string
+          created_at: string
+          updated_at: string
+          role: string
+          is_email_verified: boolean
+        }
+        Insert: {
+          id: string
+          email: string
+          name: string
+          created_at?: string
+          updated_at?: string
+          role?: string
+          is_email_verified?: boolean
+        }
+        Update: {
+          id?: string
+          email?: string
+          name?: string
+          created_at?: string
+          updated_at?: string
+          role?: string
+          is_email_verified?: boolean
+        }
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
 }
+
+// Helper to extract the Row type from a table
+export type TableRow<T extends keyof Database['public']['Tables']> = 
+  Database['public']['Tables'][T]['Row'];
+
+// Helper to extract the Insert type from a table
+export type TableInsert<T extends keyof Database['public']['Tables']> = 
+  Database['public']['Tables'][T]['Insert'];
+
+// Helper to extract the Update type from a table
+export type TableUpdate<T extends keyof Database['public']['Tables']> = 
+  Database['public']['Tables'][T]['Update'];
