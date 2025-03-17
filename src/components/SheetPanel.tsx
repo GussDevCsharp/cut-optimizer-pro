@@ -89,8 +89,8 @@ export const SheetPanel = () => {
         title: "Material selecionado",
         description: `Dimensões da chapa ajustadas para ${selectedMaterial.width} x ${selectedMaterial.height} mm.`
       });
-    } else if (materialId === "") {
-      // If user deselects material, allow custom dimensions
+    } else if (materialId === "custom") {
+      // If user selects "custom", allow custom dimensions
       setLocalSheet({
         ...localSheet,
         materialId: undefined
@@ -125,7 +125,7 @@ export const SheetPanel = () => {
                 <SelectValue placeholder="Selecione um material" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Personalizado</SelectItem>
+                <SelectItem value="custom">Personalizado</SelectItem>
                 {materials.map((material) => (
                   <SelectItem key={material.id} value={material.id}>
                     {material.description} ({material.width} x {material.height} mm)
