@@ -6,7 +6,7 @@ import { optimizeCutting } from '../utils/optimizationAlgorithm';
 import { toast } from "sonner";
 import { useProjectActions } from "@/hooks/useProjectActions";
 import { useLocation } from 'react-router-dom';
-import { useState, useRef } from "react";
+import { useState } from "react";
 import OptimizationLoadingDialog from './OptimizationLoadingDialog';
 
 export const OptimizationControls = () => {
@@ -14,7 +14,6 @@ export const OptimizationControls = () => {
   const { saveProject } = useProjectActions();
   const location = useLocation();
   const [isOptimizing, setIsOptimizing] = useState(false);
-  const optimizationAbortRef = useRef<AbortController | null>(null);
   
   // Get projectId from URL params or location state
   const searchParams = new URLSearchParams(window.location.search);
@@ -28,21 +27,14 @@ export const OptimizationControls = () => {
       return;
     }
     
-    // Create abort controller for cancellation
-    optimizationAbortRef.current = new AbortController();
-    
     // Show loading dialog
     setIsOptimizing(true);
     
     try {
-      // Run optimization in a non-blocking way using the web worker
-      const optimizedPieces = await optimizeCutting(pieces, sheet);
+      // Slight delay to ensure the loading dialog is shown
+      await new Promise(resolve => setTimeout(resolve, 100));
       
-      // Check if operation was cancelled
-      if (optimizationAbortRef.current?.signal.aborted) {
-        return;
-      }
-      
+      const optimizedPieces = optimizeCutting(pieces, sheet);
       setPlacedPieces(optimizedPieces);
       
       // Show toast with result
@@ -61,39 +53,22 @@ export const OptimizationControls = () => {
       
       // Save the project with optimized pieces
       if (projectName && projectId) {
-        saveProject(projectId, projectName, {
-          sheet,
-          pieces,
-          placedPieces: optimizedPieces
-        }).catch(error => {
+        try {
+          const projectData = {
+            sheet,
+            pieces,
+            placedPieces: optimizedPieces
+          };
+          
+          await saveProject(projectId, projectName, projectData);
+          console.log("Project saved after optimization");
+        } catch (error) {
           console.error("Error saving project after optimization:", error);
-        });
-      }
-    } catch (error) {
-      // Only show error if not cancelled
-      if (!optimizationAbortRef.current?.signal.aborted) {
-        console.error("Optimization error:", error);
-        toast.error("Erro na otimização", {
-          description: "Ocorreu um erro ao otimizar o corte. Tente novamente."
-        });
+        }
       }
     } finally {
-      // Only hide dialog if not cancelled
-      if (!optimizationAbortRef.current?.signal.aborted) {
-        setIsOptimizing(false);
-        optimizationAbortRef.current = null;
-      }
-    }
-  };
-  
-  const handleCancelOptimization = () => {
-    if (optimizationAbortRef.current) {
-      optimizationAbortRef.current.abort();
+      // Hide loading dialog
       setIsOptimizing(false);
-      toast.info("Otimização cancelada", {
-        description: "O processo de otimização foi interrompido."
-      });
-      optimizationAbortRef.current = null;
     }
   };
   
@@ -128,7 +103,7 @@ export const OptimizationControls = () => {
         <Button 
           className="w-full gap-2" 
           onClick={handleOptimize}
-          disabled={pieces.length === 0 || isOptimizing}
+          disabled={pieces.length === 0}
         >
           <Sparkles size={16} />
           Otimizar Corte
@@ -138,7 +113,6 @@ export const OptimizationControls = () => {
           variant="outline" 
           className="w-full gap-2" 
           onClick={handleClear}
-          disabled={isOptimizing}
         >
           <RectangleHorizontal size={16} />
           Limpar Visualização
@@ -156,11 +130,8 @@ export const OptimizationControls = () => {
         </div>
       </div>
       
-      {/* Loading dialog with cancel option */}
-      <OptimizationLoadingDialog 
-        isOpen={isOptimizing} 
-        onCancel={handleCancelOptimization}
-      />
+      {/* Loading dialog */}
+      <OptimizationLoadingDialog isOpen={isOptimizing} />
     </>
   );
 };

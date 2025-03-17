@@ -1,10 +1,11 @@
+
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Piece } from '../../../hooks/useSheetData';
 import { ErrorMessage } from './ErrorMessage';
 import { ExampleDownloader } from './ExampleDownloader';
 import { FileInput } from './FileInput';
-import { loadXLSXLibrary, processExcelData } from '../../../utils/excel';
+import { loadXLSXLibrary, processExcelData } from '../../../utils/excelUtils';
 
 interface ExcelImportTabProps {
   onImportSuccess: (pieces: Piece[]) => void;

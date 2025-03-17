@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Piece } from '../../../hooks/useSheetData';
 import { ErrorMessage } from './ErrorMessage';
 import { TextInput } from './TextInput';
-import { processTextContent, readTextFile } from '../../../utils/textImport';
+import { processTextContent, readTextFile } from '../../../utils/textImportUtils';
 
 interface TextImportTabProps {
   onImportSuccess: (pieces: Piece[]) => void;
@@ -72,4 +72,3 @@ export const TextImportTab = ({ onImportSuccess }: TextImportTabProps) => {
     </div>
   );
 };
-

@@ -1,4 +1,4 @@
-import { Piece } from '../../hooks/useSheetData';
+import { Piece, Sheet } from '../../hooks/useSheetData';
 import { SheetGrid } from './SheetGrid';
 
 // Sort pieces by area (largest first) to improve packing efficiency
@@ -10,109 +10,60 @@ export const sortPiecesByArea = (pieces: Piece[]): Piece[] => {
   });
 };
 
-// Cache for position checks to avoid redundant calculations
-const positionCache = new Map<string, {x: number, y: number, rotated: boolean} | null>();
-
-// Optimized function to find the best position for a piece on a sheet
+// Try all possible positions for a piece on a specific sheet grid
 export const findBestPosition = (
   piece: Piece,
   sheetGrid: SheetGrid,
+  sheet: Sheet
 ): { x: number; y: number; rotated: boolean } | null => {
-  // Generate cache key based on piece dimensions and sheet state
-  const cacheKey = `${piece.width}-${piece.height}-${piece.canRotate}-${sheetGrid.getOccupancyHash()}`;
-  
-  // Check if we have a cached result
-  if (positionCache.has(cacheKey)) {
-    return positionCache.get(cacheKey);
-  }
-  
-  // Try both orientations if rotation is allowed
+  // Always try both orientations, prioritizing the one that fits better
   const orientations = [
-    { width: piece.width, height: piece.height, rotated: false }
-  ];
-  
-  // Only add rotated option if rotation is allowed
-  if (piece.canRotate !== false) {
-    orientations.push({ width: piece.height, height: piece.width, rotated: true });
-  }
+    { width: piece.width, height: piece.height, rotated: false },
+    { width: piece.height, height: piece.width, rotated: true }
+  ].filter(o => !o.rotated || piece.canRotate); // Filter out rotated option if rotation not allowed
   
   let bestPosition = null;
-  let bestScore = Number.MAX_SAFE_INTEGER;
+  let lowestY = Number.MAX_SAFE_INTEGER;
+  let lowestX = Number.MAX_SAFE_INTEGER;
+  let bestFit = Number.MAX_SAFE_INTEGER; // Measure of wasted space
 
-  // For large pieces, use smaller step sizes to ensure precise placement
-  const stepSize = piece.width > 300 || piece.height > 300 ? 1 : 
-                  Math.min(5, Math.floor(Math.min(piece.width, piece.height) / 4)) || 1;
-  
-  // Process each orientation
+  // Try every possible position on the sheet, for each orientation
   for (const orientation of orientations) {
-    // Skip if this orientation won't fit on sheet
-    if (orientation.width > sheetGrid.width || orientation.height > sheetGrid.height) {
+    // Skip orientation if it doesn't fit in the sheet dimensions
+    if (orientation.width > sheet.width || orientation.height > sheet.height) {
       continue;
     }
     
-    // First try to place at (0,0) - this is often the best position
-    if (sheetGrid.isAreaAvailable(0, 0, orientation.width, orientation.height)) {
-      const position = { x: 0, y: 0, rotated: orientation.rotated };
-      positionCache.set(cacheKey, position);
-      return position;
-    }
-    
-    // Use a smarter scanning approach for efficiency
-    const scanPoints = sheetGrid.getScanPoints();
-    
-    for (const { x, y } of scanPoints) {
-      if (x + orientation.width <= sheetGrid.width && 
-          y + orientation.height <= sheetGrid.height &&
-          sheetGrid.isAreaAvailable(x, y, orientation.width, orientation.height)) {
-        
-        // Simple score function - prioritize top-left positions
-        const score = y * 1000 + x;
-        
-        // If we find a position at the top edge, it's usually good
-        if (y === 0) {
-          const position = { x, y, rotated: orientation.rotated };
-          positionCache.set(cacheKey, position);
-          return position;
-        }
-        
-        // Otherwise, keep the best position
-        if (score < bestScore) {
-          bestPosition = { x, y, rotated: orientation.rotated };
-          bestScore = score;
-        }
-      }
-    }
-    
-    // Fall back to traditional scanning if scan points didn't work
-    if (!bestPosition) {
-      for (let y = 0; y <= sheetGrid.height - orientation.height; y += stepSize) {
-        // Boundary check for last step
-        if (y + orientation.height > sheetGrid.height) continue;
-        
-        for (let x = 0; x <= sheetGrid.width - orientation.width; x += stepSize) {
-          // Boundary check for last step
-          if (x + orientation.width > sheetGrid.width) continue;
+    for (let y = 0; y <= sheet.height - orientation.height; y += 1) {
+      for (let x = 0; x <= sheet.width - orientation.width; x += 1) {
+        if (sheetGrid.isAreaAvailable(x, y, orientation.width, orientation.height, sheet.cutWidth)) {
+          // Calculate a "fit score" - lower is better
+          // This prioritizes positions that are closer to the top-left and use space efficiently
+          const fitScore = y * 1000 + x; // Prioritize top positions, then left positions
           
-          if (sheetGrid.isAreaAvailable(x, y, orientation.width, orientation.height)) {
-            const score = y * 1000 + x;
+          // Check if this position is better than our current best
+          if (bestPosition === null || fitScore < bestFit) {
+            lowestY = y;
+            lowestX = x;
+            bestPosition = { x, y, rotated: orientation.rotated };
+            bestFit = fitScore;
             
-            if (score < bestScore) {
-              bestPosition = { x, y, rotated: orientation.rotated };
-              bestScore = score;
+            // If we found a position at y=0, this is already good
+            // but keep searching for potentially better x positions
+            if (y === 0 && x === 0) {
+              break; // Perfect top-left corner position
             }
           }
         }
       }
+      
+      // If we found a good position at the current y level, we can move on
+      // to try the next orientation
+      if (bestPosition && bestPosition.y === y && bestFit < 100) {
+        break;
+      }
     }
   }
-  
-  // Cache result before returning
-  positionCache.set(cacheKey, bestPosition);
-  
-  // Clear cache if it gets too large
-  if (positionCache.size > 10000) {
-    positionCache.clear();
-  }
-  
+
   return bestPosition;
 };

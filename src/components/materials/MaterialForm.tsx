@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useAuth } from '@/context/AuthContext';
-import { materialService } from '@/services/material';
+import { materialService } from '@/services/materialService';
 import { useToast } from '@/hooks/use-toast';
 import type { Material, MaterialFormValues } from '@/types/material';
 

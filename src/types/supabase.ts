@@ -52,7 +52,6 @@ export interface Database {
           updated_at: string
           is_public: boolean
           access_token: string | null
-          material_id: string | null
         }
         Insert: {
           id?: string
@@ -63,7 +62,6 @@ export interface Database {
           updated_at?: string
           is_public?: boolean
           access_token?: string | null
-          material_id?: string | null
         }
         Update: {
           id?: string
@@ -74,7 +72,6 @@ export interface Database {
           updated_at?: string
           is_public?: boolean
           access_token?: string | null
-          material_id?: string | null
         }
       }
       users: {

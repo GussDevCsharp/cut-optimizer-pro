@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Edit, Trash2, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { materialService } from '@/services/material';
+import { materialService } from '@/services/materialService';
 import type { Material } from '@/types/material';
 
 import {

@@ -39,8 +39,7 @@ export function SaveProjectButton({
       projectId, 
       projectName, 
       projectData,
-      selectedImage || undefined,
-      sheet.materialId
+      selectedImage || undefined
     );
     
     if (savedProject) {

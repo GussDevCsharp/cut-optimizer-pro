@@ -17,8 +17,7 @@ export function useProjectActions() {
     projectId: string | null, 
     projectName: string, 
     projectData: any, 
-    imageFile?: File,
-    materialId?: string
+    imageFile?: File
   ) => {
     if (!user) {
       toast({
@@ -54,8 +53,7 @@ export function useProjectActions() {
       if (projectId) {
         const updateData: any = {
           name: projectName,
-          description: JSON.stringify(projectData), // Store the data as a serialized JSON string
-          material_id: materialId || null
+          description: JSON.stringify(projectData) // Store the data as a serialized JSON string
         };
         
         // Only update preview_url if we have a new image
@@ -79,8 +77,7 @@ export function useProjectActions() {
           name: projectName,
           user_id: user.id,
           description: JSON.stringify(projectData), // Store the data as a serialized JSON string
-          preview_url: preview_url || "/placeholder.svg", // Use uploaded image or placeholder
-          material_id: materialId || null
+          preview_url: preview_url || "/placeholder.svg" // Use uploaded image or placeholder
         });
         
         if (error) throw new Error(error);

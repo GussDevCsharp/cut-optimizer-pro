@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Download } from 'lucide-react';
 import { useState } from 'react';
-import { createAndDownloadExampleFile, loadXLSXLibrary } from '../../../utils/excel';
+import { createAndDownloadExampleFile, loadXLSXLibrary } from '../../../utils/excelUtils';
 import { ErrorMessage } from './ErrorMessage';
 
 export const ExampleDownloader = () => {
