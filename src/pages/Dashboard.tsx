@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -12,6 +11,7 @@ import type { Project } from "@/types/project";
 import { UserMenu } from "@/components/dashboard/UserMenu";
 import { ProjectsGrid } from "@/components/dashboard/ProjectsGrid";
 import { NewProjectDialog } from "@/components/dashboard/NewProjectDialog";
+import { MaterialsCard } from "@/components/dashboard/MaterialsCard";
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -143,6 +143,10 @@ export default function Dashboard() {
           </div>
           
           {!isMobile && <UserMenu userName={user?.name} onLogout={handleLogout} />}
+        </div>
+
+        <div className="mb-6">
+          <MaterialsCard />
         </div>
 
         <ProjectsGrid 
