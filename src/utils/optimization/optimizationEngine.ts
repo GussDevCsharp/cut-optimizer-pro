@@ -31,9 +31,6 @@ export const optimizeCutting = (
   // Initialize sheet grids array with the first sheet
   const sheetGrids: SheetGrid[] = [new SheetGrid(sheet.width, sheet.height)];
   
-  // Track z-order index to ensure larger pieces are placed first and remain visible
-  let zIndex = expandedPieces.length;
-  
   // Try to place each piece
   for (const piece of expandedPieces) {
     let placed = false;
@@ -43,35 +40,21 @@ export const optimizeCutting = (
       const position = findBestPosition(piece, sheetGrids[sheetIndex], sheet);
       
       if (position) {
-        // Calculate actual dimensions after potential rotation
-        const placedWidth = position.rotated ? piece.height : piece.width;
-        const placedHeight = position.rotated ? piece.width : piece.height;
-        
-        // Double-check that the placement is valid with these dimensions
-        if (!sheetGrids[sheetIndex].isAreaAvailable(position.x, position.y, placedWidth, placedHeight, sheet.cutWidth)) {
-          console.warn(`Position validation failed for piece ${piece.width}x${piece.height} at (${position.x},${position.y}), sheet ${sheetIndex}`);
-          continue;
-        }
-        
         // Place on this sheet
         const placedPiece: PlacedPiece = {
           ...piece,
           x: position.x,
           y: position.y,
           rotated: position.rotated,
-          width: placedWidth,
-          height: placedHeight,
-          sheetIndex: sheetIndex,
-          // Add a z-index property to the piece to control layering order
-          // Larger pieces (placed first) should appear behind smaller pieces
-          color: piece.color || generatePastelColor(),
+          width: position.rotated ? piece.height : piece.width,
+          height: position.rotated ? piece.width : piece.height,
+          sheetIndex: sheetIndex
         };
         
         // Mark the area as occupied
         sheetGrids[sheetIndex].occupyArea(position.x, position.y, placedPiece.width, placedPiece.height);
         placedPieces.push(placedPiece);
         placed = true;
-        zIndex--; // Decrement z-index for next piece
         
         if (placedPieces.length < 5) { // Only log for first few pieces to avoid console spam
           console.log(`Placed piece ${placedPiece.width}x${placedPiece.height} at (${position.x},${position.y}) on sheet ${sheetIndex}, rotated: ${position.rotated}`);
@@ -93,31 +76,19 @@ export const optimizeCutting = (
       const newPosition = findBestPosition(piece, newSheetGrid, sheet);
       
       if (newPosition) {
-        // Calculate actual dimensions after potential rotation
-        const placedWidth = newPosition.rotated ? piece.height : piece.width;
-        const placedHeight = newPosition.rotated ? piece.width : piece.height;
-        
-        // Double-check that the placement is valid with these dimensions
-        if (!newSheetGrid.isAreaAvailable(newPosition.x, newPosition.y, placedWidth, placedHeight, sheet.cutWidth)) {
-          console.warn(`New sheet position validation failed for piece ${piece.width}x${piece.height}`);
-          continue; // Skip this piece if there's an invalid position
-        }
-        
         const placedPiece: PlacedPiece = {
           ...piece,
           x: newPosition.x,
           y: newPosition.y,
           rotated: newPosition.rotated,
-          width: placedWidth,
-          height: placedHeight,
-          sheetIndex: newSheetIndex,
-          color: piece.color || generatePastelColor(),
+          width: newPosition.rotated ? piece.height : piece.width,
+          height: newPosition.rotated ? piece.width : piece.height,
+          sheetIndex: newSheetIndex
         };
         
         // Mark the area as occupied
         newSheetGrid.occupyArea(newPosition.x, newPosition.y, placedPiece.width, placedPiece.height);
         placedPieces.push(placedPiece);
-        zIndex--; // Decrement z-index for next piece
         
         console.log(`Placed piece ${placedPiece.width}x${placedPiece.height} at (${newPosition.x},${newPosition.y}) on new sheet ${newSheetIndex}, rotated: ${newPosition.rotated}`);
       } else {
@@ -127,17 +98,5 @@ export const optimizeCutting = (
   }
   
   console.log("Optimization complete. Placed", placedPieces.length, "pieces on", sheetGrids.length, "sheets");
-  
-  // Sort the pieces to ensure proper z-index rendering (larger pieces behind smaller ones)
-  return placedPieces.sort((a, b) => {
-    // First sort by sheet index
-    if (a.sheetIndex !== b.sheetIndex) {
-      return a.sheetIndex - b.sheetIndex;
-    }
-    
-    // Then sort by area (larger pieces should be placed first/behind)
-    const areaA = a.width * a.height;
-    const areaB = b.width * b.height;
-    return areaB - areaA;
-  });
+  return placedPieces;
 };

@@ -18,10 +18,6 @@ export const SheetPiece = ({ piece, scale, isMobile }: SheetPieceProps) => {
   // Calculate rotation transform
   const rotation = piece.rotated ? '90deg' : '0deg';
   
-  // Calculate z-index based on piece area - smaller pieces should appear on top of larger ones
-  const pieceArea = piece.width * piece.height;
-  const zIndex = Math.max(10, 1000 - pieceArea); // Inverse relationship - smaller area = higher z-index
-  
   return (
     <div
       style={{
@@ -41,7 +37,7 @@ export const SheetPiece = ({ piece, scale, isMobile }: SheetPieceProps) => {
         transformOrigin: piece.rotated ? 'center' : '0 0',
         boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
         borderRadius: '2px',
-        zIndex: zIndex, // Use calculated z-index to control layering
+        zIndex: 10, // Add z-index to ensure pieces don't overlap visually
       }}
     >
       {/* Display width at the bottom of the piece */}

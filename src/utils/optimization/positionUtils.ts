@@ -1,3 +1,4 @@
+
 import { Piece, Sheet } from '../../hooks/useSheetData';
 import { SheetGrid } from './SheetGrid';
 
@@ -16,52 +17,45 @@ export const findBestPosition = (
   sheetGrid: SheetGrid,
   sheet: Sheet
 ): { x: number; y: number; rotated: boolean } | null => {
-  // Always try both orientations, prioritizing the one that fits better
+  // Try both orientations
   const orientations = [
     { width: piece.width, height: piece.height, rotated: false },
-    { width: piece.height, height: piece.width, rotated: true }
+    { width: piece.height, height: piece.width, rotated: true && piece.canRotate } // Only rotate if allowed
   ].filter(o => !o.rotated || piece.canRotate); // Filter out rotated option if rotation not allowed
   
   let bestPosition = null;
   let lowestY = Number.MAX_SAFE_INTEGER;
   let lowestX = Number.MAX_SAFE_INTEGER;
-  let bestFit = Number.MAX_SAFE_INTEGER; // Measure of wasted space
 
-  // Try every possible position on the sheet, for each orientation
+  // Try every possible position on the sheet
   for (const orientation of orientations) {
-    // Skip orientation if it doesn't fit in the sheet dimensions
-    if (orientation.width > sheet.width || orientation.height > sheet.height) {
-      continue;
-    }
-    
-    for (let y = 0; y <= sheet.height - orientation.height; y += 1) {
-      for (let x = 0; x <= sheet.width - orientation.width; x += 1) {
+    for (let y = 0; y <= sheet.height - orientation.height; y++) {
+      for (let x = 0; x <= sheet.width - orientation.width; x++) {
         if (sheetGrid.isAreaAvailable(x, y, orientation.width, orientation.height, sheet.cutWidth)) {
-          // Calculate a "fit score" - lower is better
-          // This prioritizes positions that are closer to the top-left and use space efficiently
-          const fitScore = y * 1000 + x; // Prioritize top positions, then left positions
-          
-          // Check if this position is better than our current best
-          if (bestPosition === null || fitScore < bestFit) {
+          // We found a valid position - check if it's "better" than our current best
+          // Better means closer to the top-left corner
+          if (y < lowestY || (y === lowestY && x < lowestX)) {
             lowestY = y;
             lowestX = x;
             bestPosition = { x, y, rotated: orientation.rotated };
-            bestFit = fitScore;
             
-            // If we found a position at y=0, this is already good
-            // but keep searching for potentially better x positions
-            if (y === 0 && x === 0) {
-              break; // Perfect top-left corner position
+            // If we found a position at y=0, we can break early as this is already optimal
+            if (y === 0) {
+              break;
             }
           }
         }
       }
       
-      // If we found a good position at the current y level, we can move on
-      // to try the next orientation
-      if (bestPosition && bestPosition.y === y && bestFit < 100) {
+      // If we found a position at the current y, we can move to the next piece
+      if (bestPosition && bestPosition.y === y) {
         break;
       }
+    }
+    
+    // If we found a position in the first orientation, try the next orientation
+    if (bestPosition) {
+      break;
     }
   }
 

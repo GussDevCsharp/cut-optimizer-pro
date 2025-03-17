@@ -1,4 +1,6 @@
 
+import type { Database } from "@/integrations/supabase/types";
+
 // Project-related types
 export interface Project {
   id: string;
@@ -14,4 +16,21 @@ export interface Project {
 export interface ApiResponse<T> {
   data: T | null;
   error: string | null;
+}
+
+// Extend the Database type with our projects table (without modifying the original file)
+export interface ExtendedDatabase extends Database {
+  public: {
+    Tables: {
+      projects: {
+        Row: Project;
+        Insert: Omit<Project, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<Project, 'id' | 'created_at'>>;
+      };
+    } & Database['public']['Tables'];
+    Views: Database['public']['Views'];
+    Functions: Database['public']['Functions'];
+    Enums: Database['public']['Enums'];
+    CompositeTypes: Database['public']['CompositeTypes'];
+  }
 }

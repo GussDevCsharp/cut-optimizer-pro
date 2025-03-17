@@ -1,10 +1,14 @@
+
 import { supabase } from "@/integrations/supabase/client";
-import type { Project, ApiResponse } from "@/types/project";
+import type { Project, ApiResponse, ExtendedDatabase } from "@/types/project";
 import { createClient } from '@supabase/supabase-js';
 import { v4 as uuidv4 } from 'uuid';
 
-// We can access the projects table directly since we've updated the database types
-const projectsTable = () => supabase.from('projects');
+// Create a typed client that knows about our projects table
+const typedSupabase = supabase as unknown as ReturnType<typeof createClient<ExtendedDatabase>>;
+
+// Now we can use the typed client to access the projects table with proper typing
+const projectsTable = () => typedSupabase.from('projects');
 
 export const projectService = {
   async getProjects(): Promise<ApiResponse<Project[]>> {
@@ -99,6 +103,7 @@ export const projectService = {
     }
   },
   
+  // New method to retain only the 5 most recent projects for a user
   async retainOnlyRecentProjects(userId: string): Promise<void> {
     try {
       // Get all projects for this user, ordered by creation date
@@ -122,7 +127,8 @@ export const projectService = {
       // We don't want to break the app flow if this fails, so just log the error
     }
   },
-  
+
+  // New function to upload project images
   async uploadProjectImage(file: File): Promise<ApiResponse<{ path: string }>> {
     try {
       // Generate a unique filename with original extension
