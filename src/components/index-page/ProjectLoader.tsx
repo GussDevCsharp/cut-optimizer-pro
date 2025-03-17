@@ -7,7 +7,12 @@ import { Progress } from "@/components/ui/progress";
 
 // Define the structure of our saved project data
 interface ProjectData {
-  sheet?: any;
+  sheet?: {
+    width: number;
+    height: number;
+    cutWidth: number;
+    materialId?: string;
+  };
   pieces?: any[];
   placedPieces?: any[];
 }
