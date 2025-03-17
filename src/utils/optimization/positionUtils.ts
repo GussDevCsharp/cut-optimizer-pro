@@ -46,7 +46,7 @@ export const findBestPosition = (
   // Process each orientation
   for (const orientation of orientations) {
     // Skip if this orientation won't fit on sheet
-    if (orientation.width > sheetGrid['width'] || orientation.height > sheetGrid['height']) {
+    if (orientation.width > sheetGrid.width || orientation.height > sheetGrid.height) {
       continue;
     }
     
@@ -61,8 +61,8 @@ export const findBestPosition = (
     const scanPoints = sheetGrid.getScanPoints();
     
     for (const { x, y } of scanPoints) {
-      if (x + orientation.width <= sheetGrid['width'] && 
-          y + orientation.height <= sheetGrid['height'] &&
+      if (x + orientation.width <= sheetGrid.width && 
+          y + orientation.height <= sheetGrid.height &&
           sheetGrid.isAreaAvailable(x, y, orientation.width, orientation.height)) {
         
         // Simple score function - prioritize top-left positions
@@ -85,13 +85,13 @@ export const findBestPosition = (
     
     // Fall back to traditional scanning if scan points didn't work
     if (!bestPosition) {
-      for (let y = 0; y <= sheetGrid['height'] - orientation.height; y += stepSize) {
+      for (let y = 0; y <= sheetGrid.height - orientation.height; y += stepSize) {
         // Boundary check for last step
-        if (y + orientation.height > sheetGrid['height']) continue;
+        if (y + orientation.height > sheetGrid.height) continue;
         
-        for (let x = 0; x <= sheetGrid['width'] - orientation.width; x += stepSize) {
+        for (let x = 0; x <= sheetGrid.width - orientation.width; x += stepSize) {
           // Boundary check for last step
-          if (x + orientation.width > sheetGrid['width']) continue;
+          if (x + orientation.width > sheetGrid.width) continue;
           
           if (sheetGrid.isAreaAvailable(x, y, orientation.width, orientation.height)) {
             const score = y * 1000 + x;

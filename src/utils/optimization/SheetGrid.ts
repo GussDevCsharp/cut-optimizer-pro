@@ -1,15 +1,16 @@
+
 // Class to track occupied areas on the sheet - optimized for performance
 export class SheetGrid {
   private grid: Uint8Array[];
-  private width: number;
-  private height: number;
+  private _width: number;
+  private _height: number;
   private cutWidth: number;
   private occupancyHash: string = '';
   private scanPoints: Array<{x: number, y: number}> = [];
   
   constructor(width: number, height: number, cutWidth: number) {
-    this.width = width;
-    this.height = height;
+    this._width = width;
+    this._height = height;
     this.cutWidth = cutWidth;
     
     // Use typed arrays for better performance
@@ -24,12 +25,12 @@ export class SheetGrid {
   
   // Get width property for external use
   get width(): number {
-    return this.width;
+    return this._width;
   }
   
   // Get height property for external use
   get height(): number {
-    return this.height;
+    return this._height;
   }
   
   // Get current occupancy hash for caching
@@ -47,17 +48,17 @@ export class SheetGrid {
     // Start with corners and edges which are efficient places to check
     this.scanPoints = [
       { x: 0, y: 0 }, // Top-left
-      { x: this.width - 1, y: 0 }, // Top-right
-      { x: 0, y: this.height - 1 }, // Bottom-left
-      { x: this.width - 1, y: this.height - 1 } // Bottom-right
+      { x: this._width - 1, y: 0 }, // Top-right
+      { x: 0, y: this._height - 1 }, // Bottom-left
+      { x: this._width - 1, y: this._height - 1 } // Bottom-right
     ];
     
     // Add points along top and left edges
-    for (let x = 100; x < this.width - 100; x += 100) {
+    for (let x = 100; x < this._width - 100; x += 100) {
       this.scanPoints.push({ x, y: 0 });
     }
     
-    for (let y = 100; y < this.height - 100; y += 100) {
+    for (let y = 100; y < this._height - 100; y += 100) {
       this.scanPoints.push({ x: 0, y });
     }
   }
@@ -65,7 +66,7 @@ export class SheetGrid {
   // Check if an area is available for a piece (including cut width)
   isAreaAvailable(x: number, y: number, pieceWidth: number, pieceHeight: number): boolean {
     // Quick boundary check
-    if (x < 0 || y < 0 || x + pieceWidth > this.width || y + pieceHeight > this.height) {
+    if (x < 0 || y < 0 || x + pieceWidth > this._width || y + pieceHeight > this._height) {
       return false;
     }
     
@@ -82,8 +83,8 @@ export class SheetGrid {
     // Check for cut width spacing - more efficient implementation
     const startCheckX = Math.max(0, x - this.cutWidth);
     const startCheckY = Math.max(0, y - this.cutWidth);
-    const endCheckX = Math.min(this.width - 1, x + pieceWidth + this.cutWidth - 1);
-    const endCheckY = Math.min(this.height - 1, y + pieceHeight + this.cutWidth - 1);
+    const endCheckX = Math.min(this._width - 1, x + pieceWidth + this.cutWidth - 1);
+    const endCheckY = Math.min(this._height - 1, y + pieceHeight + this.cutWidth - 1);
     
     // Check if we're already at the piece boundaries
     for (let i = startCheckY; i <= endCheckY; i++) {

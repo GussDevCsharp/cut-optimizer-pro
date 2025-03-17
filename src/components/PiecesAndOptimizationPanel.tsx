@@ -5,22 +5,13 @@ import { useSheetData, Piece } from '../hooks/useSheetData';
 import { PieceForm } from './pieces-panel/PieceForm';
 import { PiecesList } from './pieces-panel/PiecesList';
 import { ImportPiecesForm } from './pieces-panel/ImportPiecesForm';
-import { optimizeCutting } from '../utils/optimizationAlgorithm';
-import { Button } from "@/components/ui/button";
-import { Sparkles, RectangleHorizontal } from 'lucide-react';
-import { toast } from "sonner";
-import { useProjectActions } from "@/hooks/useProjectActions";
 import { useLocation } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useState, useRef } from "react";
-import OptimizationLoadingDialog from './OptimizationLoadingDialog';
+import OptimizationControls from './OptimizationControls';
 
 export const PiecesAndOptimizationPanel = () => {
-  const { sheet, pieces, placedPieces, setPlacedPieces, projectName, addPiece, updatePiece, removePiece } = useSheetData();
-  const { saveProject } = useProjectActions();
+  const { pieces, addPiece, updatePiece, removePiece } = useSheetData();
   const location = useLocation();
-  const [isOptimizing, setIsOptimizing] = useState(false);
-  const optimizationAbortRef = useRef<AbortController | null>(null);
   
   // Get the projectId from URL params or location state
   const searchParams = new URLSearchParams(window.location.search);
@@ -32,113 +23,6 @@ export const PiecesAndOptimizationPanel = () => {
       addPiece(piece);
     });
   };
-  
-  const handleOptimize = async () => {
-    if (pieces.length === 0) {
-      toast.error("Adicione peças antes de otimizar", {
-        description: "Você precisa adicionar pelo menos uma peça para otimizar o corte."
-      });
-      return;
-    }
-    
-    // Create abort controller for cancellation
-    optimizationAbortRef.current = new AbortController();
-    
-    // Show loading dialog
-    setIsOptimizing(true);
-    
-    try {
-      // Run optimization in a non-blocking way using the web worker
-      const optimizedPieces = await optimizeCutting(pieces, sheet);
-      
-      // Check if operation was cancelled
-      if (optimizationAbortRef.current?.signal.aborted) {
-        return;
-      }
-      
-      setPlacedPieces(optimizedPieces);
-      
-      // Show toast with result
-      const placedCount = optimizedPieces.length;
-      const totalCount = pieces.reduce((total, piece) => total + piece.quantity, 0);
-      
-      if (placedCount === totalCount) {
-        toast.success("Otimização concluída com sucesso!", {
-          description: `Todas as ${totalCount} peças foram posicionadas na chapa.`
-        });
-      } else {
-        toast.warning("Otimização parcial!", {
-          description: `Foram posicionadas ${placedCount} de ${totalCount} peças na chapa.`
-        });
-      }
-      
-      // Save the project with optimized pieces
-      if (projectName && projectId) {
-        try {
-          const projectData = {
-            sheet,
-            pieces,
-            placedPieces: optimizedPieces
-          };
-          
-          await saveProject(projectId, projectName, projectData);
-          console.log("Project saved after optimization");
-        } catch (error) {
-          console.error("Error saving project after optimization:", error);
-        }
-      }
-    } catch (error) {
-      // Only show error if not cancelled
-      if (!optimizationAbortRef.current?.signal.aborted) {
-        console.error("Optimization error:", error);
-        toast.error("Erro na otimização", {
-          description: "Ocorreu um erro ao otimizar o corte. Tente novamente."
-        });
-      }
-    } finally {
-      // Only hide dialog if not cancelled
-      if (!optimizationAbortRef.current?.signal.aborted) {
-        setIsOptimizing(false);
-        optimizationAbortRef.current = null;
-      }
-    }
-  };
-  
-  const handleCancelOptimization = () => {
-    if (optimizationAbortRef.current) {
-      optimizationAbortRef.current.abort();
-      setIsOptimizing(false);
-      toast.info("Otimização cancelada", {
-        description: "O processo de otimização foi interrompido."
-      });
-      optimizationAbortRef.current = null;
-    }
-  };
-  
-  const handleClear = async () => {
-    setPlacedPieces([]);
-    toast.info("Visualização limpa", {
-      description: "Todas as peças foram removidas da visualização."
-    });
-    
-    // Save the project with cleared placed pieces
-    if (projectName && projectId) {
-      try {
-        const projectData = {
-          sheet,
-          pieces,
-          placedPieces: []
-        };
-        
-        await saveProject(projectId, projectName, projectData);
-        console.log("Project saved after clearing");
-      } catch (error) {
-        console.error("Error saving project after clearing:", error);
-      }
-    }
-  };
-
-  const totalPieces = pieces.reduce((total, piece) => total + piece.quantity, 0);
 
   return (
     <>
@@ -181,45 +65,11 @@ export const PiecesAndOptimizationPanel = () => {
             </TabsContent>
             
             <TabsContent value="optimization" className="pt-4 space-y-4">
-              <Button 
-                className="w-full gap-2" 
-                onClick={handleOptimize}
-                disabled={pieces.length === 0 || isOptimizing}
-              >
-                <Sparkles size={16} />
-                Otimizar Corte
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                className="w-full gap-2" 
-                onClick={handleClear}
-                disabled={isOptimizing}
-              >
-                <RectangleHorizontal size={16} />
-                Limpar Visualização
-              </Button>
-              
-              <div className="bg-secondary rounded-md p-3 text-sm">
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Total de peças:</span>
-                  <span className="font-medium">{totalPieces}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Tipos de peças:</span>
-                  <span className="font-medium">{pieces.length}</span>
-                </div>
-              </div>
+              <OptimizationControls />
             </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
-      
-      {/* Loading dialog with cancel option */}
-      <OptimizationLoadingDialog 
-        isOpen={isOptimizing}
-        onCancel={handleCancelOptimization}
-      />
     </>
   );
 };
