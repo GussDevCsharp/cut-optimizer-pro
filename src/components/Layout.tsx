@@ -1,7 +1,7 @@
 
 import { PropsWithChildren } from 'react';
 import Header from './Header';
-import { SheetProvider } from '../hooks/useSheetData';
+import { SheetDataProvider } from '../hooks/useSheetData';
 import { useIsMobile } from '../hooks/use-mobile';
 import OfflineIndicator from './OfflineIndicator';
 
@@ -9,7 +9,7 @@ export const Layout = ({ children }: PropsWithChildren) => {
   const isMobile = useIsMobile();
   
   return (
-    <SheetProvider>
+    <SheetDataProvider>
       <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-50 to-gray-100">
         <Header />
         <main className={`flex-1 ${isMobile ? 'pt-16 pb-6 px-2' : 'pt-20 pb-12 px-4 sm:px-6'}`}>
@@ -24,7 +24,7 @@ export const Layout = ({ children }: PropsWithChildren) => {
         </footer>
         <OfflineIndicator />
       </div>
-    </SheetProvider>
+    </SheetDataProvider>
   );
 };
 
