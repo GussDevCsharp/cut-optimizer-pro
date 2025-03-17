@@ -8,10 +8,9 @@ import { Card, CardContent } from '@/components/ui/card';
 
 interface TableErrorAlertProps {
   error: string | null;
-  onCreateTable?: () => void;
 }
 
-export function TableErrorAlert({ error, onCreateTable }: TableErrorAlertProps) {
+export function TableErrorAlert({ error }: TableErrorAlertProps) {
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
   const [showScript, setShowScript] = useState(false);
@@ -109,16 +108,6 @@ GRANT ALL ON public.materials TO anon, authenticated;
             {copied ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
             {copied ? 'Copiado!' : 'Copiar Script SQL'}
           </Button>
-          
-          {onCreateTable && (
-            <Button 
-              variant="default"
-              onClick={onCreateTable}
-              className="mt-2"
-            >
-              Tentar criar tabela
-            </Button>
-          )}
         </div>
         
         {showScript && (

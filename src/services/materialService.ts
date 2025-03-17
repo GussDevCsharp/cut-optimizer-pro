@@ -2,7 +2,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Material, MaterialFormValues } from "@/types/material";
 import type { ApiResponse } from "@/types/project";
-import { toast } from "@/hooks/use-toast";
 
 // Directly access the materials table using our typed Supabase client
 const materialsTable = () => supabase.from('materials');
@@ -137,22 +136,6 @@ export const materialService = {
       return { data: null, error: null };
     } catch (error: any) {
       console.error("Error deleting material:", error);
-      return { data: null, error: error.message };
-    }
-  },
-  
-  // Create the materials table in the database
-  createMaterialsTable: async (): Promise<ApiResponse<null>> => {
-    try {
-      // This function is just a placeholder as we can't directly create tables from the client
-      // We'll display instructions for the user to run the SQL script in Supabase
-      
-      return { 
-        data: null, 
-        error: "Para criar a tabela de materiais, você precisa executar o script SQL no painel de administração do Supabase." 
-      };
-    } catch (error: any) {
-      console.error("Error checking materials table:", error);
       return { data: null, error: error.message };
     }
   }
