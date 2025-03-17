@@ -77,7 +77,10 @@ export default function Materials() {
           isMobile={isMobile}
         />
 
-        <TableErrorAlert error={tableError} />
+        <TableErrorAlert 
+          error={tableError}
+          onRefresh={loadMaterials}
+        />
 
         <MaterialsTabs 
           materials={materials}

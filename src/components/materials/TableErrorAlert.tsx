@@ -5,15 +5,18 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent } from '@/components/ui/card';
+import { materialService } from '@/services/materialService';
 
 interface TableErrorAlertProps {
   error: string | null;
+  onRefresh: () => void;
 }
 
-export function TableErrorAlert({ error }: TableErrorAlertProps) {
+export function TableErrorAlert({ error, onRefresh }: TableErrorAlertProps) {
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
   const [showScript, setShowScript] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
   
   // Only show if there's a table-related error
   if (!error || !error.includes("tabela")) {
@@ -75,23 +78,47 @@ GRANT ALL ON public.materials TO anon, authenticated;
     }, 2000);
   };
 
+  const handleCreateTable = async () => {
+    setIsCreating(true);
+    try {
+      const { error } = await materialService.createMaterialsTable();
+      
+      if (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Erro ao criar tabela',
+          description: error
+        });
+      } else {
+        toast({
+          title: 'Tabela criada com sucesso',
+          description: 'A tabela de materiais foi criada no banco de dados'
+        });
+        
+        // Refresh to check if the table now exists
+        onRefresh();
+      }
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao criar tabela',
+        description: error.message || 'Ocorreu um erro ao criar a tabela de materiais'
+      });
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   return (
     <Alert variant="destructive" className="mb-6">
       <Database className="h-4 w-4" />
       <AlertTitle>A tabela de materiais não existe</AlertTitle>
       <AlertDescription>
         <p className="mb-4">
-          É necessário criar a tabela de materiais no banco de dados Supabase. Siga os passos:
+          A tabela de materiais precisa ser criada no banco de dados Supabase.
         </p>
         
-        <ol className="list-decimal ml-5 mb-4 space-y-2">
-          <li>Acesse o painel de administração do Supabase</li>
-          <li>Vá para a seção "SQL Editor"</li>
-          <li>Cole o script SQL abaixo e execute</li>
-          <li>Volte para esta aplicação e atualize a página</li>
-        </ol>
-        
-        <div className="flex space-x-2 mb-4">
+        <div className="flex flex-wrap gap-2 mb-4">
           <Button 
             variant="outline" 
             onClick={() => setShowScript(!showScript)}
@@ -101,12 +128,21 @@ GRANT ALL ON public.materials TO anon, authenticated;
           </Button>
           
           <Button 
-            variant="default" 
+            variant="outline" 
             onClick={handleCopyScript}
             className="mt-2"
           >
             {copied ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
             {copied ? 'Copiado!' : 'Copiar Script SQL'}
+          </Button>
+
+          <Button 
+            variant="default"
+            onClick={handleCreateTable}
+            disabled={isCreating}
+            className="mt-2"
+          >
+            {isCreating ? 'Criando...' : 'Criar Tabela'}
           </Button>
         </div>
         
