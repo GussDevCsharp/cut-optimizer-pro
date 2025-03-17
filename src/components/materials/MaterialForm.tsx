@@ -2,12 +2,12 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useToast } from '@/hooks/use-toast';
+import * as z from 'zod';
+import { useAuth } from '@/context/AuthContext';
 import { materialService } from '@/services/materialService';
+import { useToast } from '@/hooks/use-toast';
 import type { Material, MaterialFormValues } from '@/types/material';
 
-import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -17,101 +17,82 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Save } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
-// Validation schema for the material form
+// Schema for form validation
 const formSchema = z.object({
-  description: z.string().min(3, {
-    message: 'Descrição deve ter pelo menos 3 caracteres',
-  }),
-  thickness: z.coerce.number().min(0.1, {
-    message: 'Espessura deve ser maior que 0',
-  }),
-  width: z.coerce.number().min(1, {
-    message: 'Largura deve ser maior que 0',
-  }),
-  height: z.coerce.number().min(1, {
-    message: 'Altura deve ser maior que 0',
-  }),
+  description: z.string().min(2, 'Description must be at least 2 characters'),
+  thickness: z.coerce.number().positive('Thickness must be positive'),
+  width: z.coerce.number().positive('Width must be positive'),
+  height: z.coerce.number().positive('Height must be positive'),
 });
 
 interface MaterialFormProps {
   material?: Material;
-  onSuccess?: (material: Material) => void;
+  onSuccess: () => void;
 }
 
 export function MaterialForm({ material, onSuccess }: MaterialFormProps) {
+  const { user } = useAuth();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Initialize form with default values or existing material data
+  // Prepare default values for the form
+  const defaultValues: MaterialFormValues = {
+    description: material?.description || '',
+    thickness: material?.thickness || 15,
+    width: material?.width || 2750,
+    height: material?.height || 1830,
+  };
+
+  // Initialize the form with react-hook-form
   const form = useForm<MaterialFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: material ? {
-      description: material.description,
-      thickness: material.thickness,
-      width: material.width,
-      height: material.height,
-    } : {
-      description: '',
-      thickness: 15, // Default MDF thickness
-      width: 1220, // Default width
-      height: 2440, // Default height
-    },
+    defaultValues,
   });
 
   const onSubmit = async (data: MaterialFormValues) => {
-    setLoading(true);
+    if (!user) {
+      toast({
+        variant: 'destructive',
+        title: 'Authentication error',
+        description: 'You must be logged in to save materials',
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
     try {
-      let response;
-      
-      if (material?.id) {
-        // Update existing material
-        response = await materialService.updateMaterial(material.id, data);
-      } else {
-        // Create new material
-        response = await materialService.createMaterial(data);
-      }
-      
+      // If material exists, update it; otherwise, create a new one
+      const response = material
+        ? await materialService.updateMaterial(material.id, data)
+        : await materialService.createMaterial({ ...data, user_id: user.id });
+
       if (response.error) {
         throw new Error(response.error);
       }
-      
-      if (response.data) {
-        toast({
-          title: material?.id ? 'Material atualizado' : 'Material cadastrado',
-          description: `${data.description} foi ${material?.id ? 'atualizado' : 'cadastrado'} com sucesso.`,
-        });
-        
-        if (onSuccess) {
-          onSuccess(response.data);
-        }
-        
-        if (!material?.id) {
-          // Reset form after successful creation
-          form.reset({
-            description: '',
-            thickness: 15,
-            width: 1220,
-            height: 2440,
-          });
-        }
-      }
+
+      toast({
+        title: material ? 'Material updated' : 'Material created',
+        description: 'Your material has been saved successfully.',
+      });
+
+      onSuccess();
     } catch (error: any) {
       toast({
         variant: 'destructive',
-        title: 'Erro',
-        description: error.message || 'Ocorreu um erro ao salvar o material.',
+        title: 'Error',
+        description: error.message || 'Failed to save material',
       });
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
           name="description"
@@ -119,16 +100,13 @@ export function MaterialForm({ material, onSuccess }: MaterialFormProps) {
             <FormItem>
               <FormLabel>Descrição</FormLabel>
               <FormControl>
-                <Textarea 
-                  placeholder="Ex: MDF Ultra Branco" 
-                  {...field} 
-                />
+                <Input placeholder="MDF 15mm Branco" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <FormField
             control={form.control}
@@ -137,18 +115,13 @@ export function MaterialForm({ material, onSuccess }: MaterialFormProps) {
               <FormItem>
                 <FormLabel>Espessura (mm)</FormLabel>
                 <FormControl>
-                  <Input
-                    type="number"
-                    min="0.1"
-                    step="0.1"
-                    {...field}
-                  />
+                  <Input type="number" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="width"
@@ -156,17 +129,13 @@ export function MaterialForm({ material, onSuccess }: MaterialFormProps) {
               <FormItem>
                 <FormLabel>Largura (mm)</FormLabel>
                 <FormControl>
-                  <Input
-                    type="number"
-                    min="1"
-                    {...field}
-                  />
+                  <Input type="number" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="height"
@@ -174,22 +143,36 @@ export function MaterialForm({ material, onSuccess }: MaterialFormProps) {
               <FormItem>
                 <FormLabel>Altura (mm)</FormLabel>
                 <FormControl>
-                  <Input
-                    type="number"
-                    min="1"
-                    {...field}
-                  />
+                  <Input type="number" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
-        
-        <Button type="submit" disabled={loading} className="w-full">
-          <Save className="mr-2 h-4 w-4" />
-          {loading ? 'Salvando...' : (material?.id ? 'Atualizar' : 'Cadastrar')} Material
-        </Button>
+
+        <div className="flex justify-end space-x-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onSuccess()}
+            disabled={isSubmitting}
+          >
+            Cancelar
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <>
+                <span className="animate-spin mr-2">⚪</span>
+                Salvando...
+              </>
+            ) : material ? (
+              'Atualizar'
+            ) : (
+              'Salvar'
+            )}
+          </Button>
+        </div>
       </form>
     </Form>
   );

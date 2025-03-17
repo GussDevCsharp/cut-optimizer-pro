@@ -28,7 +28,9 @@ export default function Materials() {
   const [activeTab, setActiveTab] = useState('list');
 
   useEffect(() => {
-    loadMaterials();
+    if (user) {
+      loadMaterials();
+    }
   }, [user]);
 
   const loadMaterials = async () => {
@@ -36,7 +38,7 @@ export default function Materials() {
     
     setIsLoading(true);
     try {
-      const { data, error } = await materialService.getMaterials();
+      const { data, error } = await materialService.getMaterials(user.id);
       
       if (error) {
         toast({
