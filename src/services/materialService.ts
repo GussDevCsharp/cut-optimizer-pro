@@ -45,8 +45,9 @@ export const materialService = {
         .single();
 
       if (error) {
-        if (error.message.includes('does not exist')) {
-          throw new Error("A tabela de materiais ainda não foi criada no banco de dados.");
+        if (error.code === 'PGRST116') {
+          // Table doesn't exist yet
+          return { data: null, error: "A tabela de materiais ainda não foi criada no banco de dados." };
         }
         throw new Error(error.message);
       }
@@ -74,8 +75,9 @@ export const materialService = {
         .single();
 
       if (error) {
-        if (error.message.includes('does not exist')) {
-          throw new Error("A tabela de materiais ainda não foi criada no banco de dados. Por favor, execute o script SQL fornecido.");
+        if (error.code === 'PGRST116') {
+          // Table doesn't exist yet
+          return { data: null, error: "A tabela de materiais ainda não foi criada no banco de dados. Por favor, execute o script SQL fornecido." };
         }
         throw new Error(error.message);
       }
@@ -102,8 +104,9 @@ export const materialService = {
         .single();
 
       if (error) {
-        if (error.message.includes('does not exist')) {
-          throw new Error("A tabela de materiais ainda não foi criada no banco de dados.");
+        if (error.code === 'PGRST116') {
+          // Table doesn't exist yet
+          return { data: null, error: "A tabela de materiais ainda não foi criada no banco de dados." };
         }
         throw new Error(error.message);
       }
@@ -123,8 +126,9 @@ export const materialService = {
         .eq('id', id);
 
       if (error) {
-        if (error.message.includes('does not exist')) {
-          throw new Error("A tabela de materiais ainda não foi criada no banco de dados.");
+        if (error.code === 'PGRST116') {
+          // Table doesn't exist yet
+          return { data: null, error: "A tabela de materiais ainda não foi criada no banco de dados." };
         }
         throw new Error(error.message);
       }
