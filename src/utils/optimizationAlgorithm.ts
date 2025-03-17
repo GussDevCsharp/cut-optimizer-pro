@@ -95,7 +95,7 @@ const sortPiecesByArea = (pieces: Piece[]): Piece[] => {
   });
 };
 
-// Try all possible positions for a piece
+// Try all possible positions for a piece on a specific sheet grid
 const findBestPosition = (
   piece: Piece,
   sheetGrid: SheetGrid,
@@ -146,13 +146,14 @@ const findBestPosition = (
   return bestPosition;
 };
 
-// Main optimization function that handles multiple sheets
+// Main optimization function that handles multiple sheets and prioritizes filling existing sheets
 export const optimizeCutting = (
   pieces: Piece[],
   sheet: Sheet
 ): PlacedPiece[] => {
   console.log("Starting optimization with", pieces.length, "piece types");
   
+  // Sort pieces by area (largest first)
   const sortedPieces = sortPiecesByArea(pieces);
   const placedPieces: PlacedPiece[] = [];
   
@@ -169,50 +170,52 @@ export const optimizeCutting = (
   
   console.log("Total pieces to place:", expandedPieces.length);
   
-  // Place each piece, creating new sheets as needed
-  let currentSheetIndex = 0;
-  let currentSheetGrid = new SheetGrid(sheet.width, sheet.height);
+  // Initialize sheet grids array with the first sheet
+  const sheetGrids: SheetGrid[] = [new SheetGrid(sheet.width, sheet.height)];
   
+  // Try to place each piece
   for (const piece of expandedPieces) {
-    // Try to place on current sheet
-    const position = findBestPosition(piece, currentSheetGrid, sheet);
+    let placed = false;
     
-    if (position) {
-      // Place on current sheet
-      const placedPiece: PlacedPiece = {
-        ...piece,
-        x: position.x,
-        y: position.y,
-        rotated: position.rotated,
-        width: position.rotated ? piece.height : piece.width,
-        height: position.rotated ? piece.width : piece.height,
-        sheetIndex: currentSheetIndex
-      };
+    // Try to place on existing sheets, starting from the first sheet
+    for (let sheetIndex = 0; sheetIndex < sheetGrids.length; sheetIndex++) {
+      const position = findBestPosition(piece, sheetGrids[sheetIndex], sheet);
       
-      // Double-check there's no overlap (safety check)
-      if (!currentSheetGrid.isAreaAvailable(position.x, position.y, placedPiece.width, placedPiece.height, sheet.cutWidth)) {
-        console.error("Overlap detected for piece", placedPiece);
-        continue; // Skip this piece if there's an overlap
+      if (position) {
+        // Place on this sheet
+        const placedPiece: PlacedPiece = {
+          ...piece,
+          x: position.x,
+          y: position.y,
+          rotated: position.rotated,
+          width: position.rotated ? piece.height : piece.width,
+          height: position.rotated ? piece.width : piece.height,
+          sheetIndex: sheetIndex
+        };
+        
+        // Mark the area as occupied
+        sheetGrids[sheetIndex].occupyArea(position.x, position.y, placedPiece.width, placedPiece.height);
+        placedPieces.push(placedPiece);
+        placed = true;
+        
+        if (placedPieces.length < 5) { // Only log for first few pieces to avoid console spam
+          console.log(`Placed piece ${placedPiece.width}x${placedPiece.height} at (${position.x},${position.y}) on sheet ${sheetIndex}, rotated: ${position.rotated}`);
+        }
+        
+        break; // Move to the next piece
       }
+    }
+    
+    // If not placed on any existing sheet, create a new sheet
+    if (!placed) {
+      const newSheetIndex = sheetGrids.length;
+      const newSheetGrid = new SheetGrid(sheet.width, sheet.height);
+      sheetGrids.push(newSheetGrid);
       
-      // Mark the area as occupied
-      currentSheetGrid.occupyArea(position.x, position.y, placedPiece.width, placedPiece.height);
-      
-      placedPieces.push(placedPiece);
-      
-      // Debug grid after placement
-      if (placedPieces.length < 5) { // Only log for first few pieces to avoid console spam
-        console.log(`Placed piece ${placedPiece.width}x${placedPiece.height} at (${position.x},${position.y}) rotated: ${position.rotated}`);
-        // currentSheetGrid.printGrid();
-      }
-    } else {
-      // Move to a new sheet
-      currentSheetIndex++;
-      currentSheetGrid = new SheetGrid(sheet.width, sheet.height);
-      console.log("Moving to sheet", currentSheetIndex);
+      console.log("Created new sheet:", newSheetIndex);
       
       // Try to place on the new sheet
-      const newPosition = findBestPosition(piece, currentSheetGrid, sheet);
+      const newPosition = findBestPosition(piece, newSheetGrid, sheet);
       
       if (newPosition) {
         const placedPiece: PlacedPiece = {
@@ -222,23 +225,20 @@ export const optimizeCutting = (
           rotated: newPosition.rotated,
           width: newPosition.rotated ? piece.height : piece.width,
           height: newPosition.rotated ? piece.width : piece.height,
-          sheetIndex: currentSheetIndex
+          sheetIndex: newSheetIndex
         };
         
-        // Double-check there's no overlap (safety check)
-        if (!currentSheetGrid.isAreaAvailable(newPosition.x, newPosition.y, placedPiece.width, placedPiece.height, sheet.cutWidth)) {
-          console.error("Overlap detected for piece on new sheet", placedPiece);
-          continue; // Skip this piece if there's an overlap
-        }
-        
         // Mark the area as occupied
-        currentSheetGrid.occupyArea(newPosition.x, newPosition.y, placedPiece.width, placedPiece.height);
-        
+        newSheetGrid.occupyArea(newPosition.x, newPosition.y, placedPiece.width, placedPiece.height);
         placedPieces.push(placedPiece);
+        
+        console.log(`Placed piece ${placedPiece.width}x${placedPiece.height} at (${newPosition.x},${newPosition.y}) on new sheet ${newSheetIndex}, rotated: ${newPosition.rotated}`);
+      } else {
+        console.warn(`Failed to place piece ${piece.width}x${piece.height} even on a new sheet!`);
       }
     }
   }
   
-  console.log("Optimization complete. Placed", placedPieces.length, "pieces on", currentSheetIndex + 1, "sheets");
+  console.log("Optimization complete. Placed", placedPieces.length, "pieces on", sheetGrids.length, "sheets");
   return placedPieces;
 };
