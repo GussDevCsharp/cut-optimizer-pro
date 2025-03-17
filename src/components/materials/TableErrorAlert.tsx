@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Database, Copy, Check } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -18,8 +17,8 @@ export function TableErrorAlert({ error, onRefresh }: TableErrorAlertProps) {
   const [showScript, setShowScript] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   
-  // Only show if there's a table-related error
-  if (!error || !error.includes("tabela")) {
+  // Only show if there's a table-related error about the table not existing
+  if (!error || !error.includes("tabela") || !error.includes("não existe")) {
     return null;
   }
 

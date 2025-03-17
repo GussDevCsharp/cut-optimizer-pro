@@ -22,7 +22,7 @@ export const materialService = {
         if (error.code === 'PGRST116' || error.message.includes('does not exist')) {
           // Table doesn't exist yet - return empty array instead of error
           console.log("Materials table doesn't exist yet. Returning empty array.");
-          return { data: [], error: "A tabela de materiais ainda não foi criada no banco de dados. Por favor, execute o script SQL fornecido." };
+          return { data: [], error: "A tabela de materiais não existe no banco de dados." };
         }
         throw new Error(error.message);
       }
@@ -45,7 +45,7 @@ export const materialService = {
       if (error) {
         if (error.code === 'PGRST116' || error.message.includes('does not exist')) {
           // Table doesn't exist yet
-          return { data: null, error: "A tabela de materiais ainda não foi criada no banco de dados." };
+          return { data: null, error: "A tabela de materiais não existe no banco de dados." };
         }
         throw new Error(error.message);
       }
@@ -76,7 +76,7 @@ export const materialService = {
         console.error("Error in createMaterial:", error);
         if (error.code === 'PGRST116' || error.message.includes('does not exist')) {
           // Table doesn't exist yet
-          return { data: null, error: "A tabela de materiais ainda não foi criada no banco de dados. Por favor, execute o script SQL fornecido." };
+          return { data: null, error: "A tabela de materiais não existe no banco de dados. Por favor, execute o script SQL fornecido." };
         }
         throw new Error(error.message);
       }
@@ -105,7 +105,7 @@ export const materialService = {
       if (error) {
         if (error.code === 'PGRST116' || error.message.includes('does not exist')) {
           // Table doesn't exist yet
-          return { data: null, error: "A tabela de materiais ainda não foi criada no banco de dados." };
+          return { data: null, error: "A tabela de materiais não existe no banco de dados." };
         }
         throw new Error(error.message);
       }
@@ -127,7 +127,7 @@ export const materialService = {
       if (error) {
         if (error.code === 'PGRST116' || error.message.includes('does not exist')) {
           // Table doesn't exist yet
-          return { data: null, error: "A tabela de materiais ainda não foi criada no banco de dados." };
+          return { data: null, error: "A tabela de materiais não existe no banco de dados." };
         }
         throw new Error(error.message);
       }
