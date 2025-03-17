@@ -63,6 +63,37 @@ export default function Materials() {
     loadMaterials();
   };
 
+  const handleCreateTable = async () => {
+    setIsLoading(true);
+    try {
+      const { error } = await materialService.createMaterialsTable();
+      
+      if (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Erro ao criar tabela',
+          description: error
+        });
+      } else {
+        toast({
+          title: 'Verificação concluída',
+          description: 'Verifique se a tabela foi criada executando o script SQL no Supabase'
+        });
+        
+        // Reload materials to check if the table now exists
+        await loadMaterials();
+      }
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao criar tabela',
+        description: error.message || 'Ocorreu um erro ao verificar a tabela de materiais'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleLogout = () => {
     logout();
     navigate('/login');
@@ -77,7 +108,10 @@ export default function Materials() {
           isMobile={isMobile}
         />
 
-        <TableErrorAlert error={tableError} />
+        <TableErrorAlert 
+          error={tableError} 
+          onCreateTable={handleCreateTable}
+        />
 
         <MaterialsTabs 
           materials={materials}

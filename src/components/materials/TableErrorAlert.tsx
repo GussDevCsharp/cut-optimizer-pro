@@ -1,16 +1,20 @@
 
 import { useState } from 'react';
-import { Database } from 'lucide-react';
+import { Database, Copy, Check } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface TableErrorAlertProps {
   error: string | null;
+  onCreateTable?: () => void;
 }
 
-export function TableErrorAlert({ error }: TableErrorAlertProps) {
+export function TableErrorAlert({ error, onCreateTable }: TableErrorAlertProps) {
   const { toast } = useToast();
+  const [copied, setCopied] = useState(false);
+  const [showScript, setShowScript] = useState(false);
   
   // Only show if there's a table-related error
   if (!error || !error.includes("tabela")) {
@@ -61,10 +65,15 @@ GRANT ALL ON public.materials TO anon, authenticated;
 
   const handleCopyScript = () => {
     navigator.clipboard.writeText(getSqlScript());
+    setCopied(true);
     toast({
       title: 'Script SQL copiado',
       description: 'Agora você pode executá-lo no painel do Supabase'
     });
+    
+    setTimeout(() => {
+      setCopied(false);
+    }, 2000);
   };
 
   return (
@@ -72,17 +81,55 @@ GRANT ALL ON public.materials TO anon, authenticated;
       <Database className="h-4 w-4" />
       <AlertTitle>A tabela de materiais não existe</AlertTitle>
       <AlertDescription>
-        <p className="mb-2">
-          É necessário criar a tabela de materiais no banco de dados Supabase. 
-          Copie o script SQL abaixo e execute-o no painel do Supabase (SQL Editor).
+        <p className="mb-4">
+          É necessário criar a tabela de materiais no banco de dados Supabase. Siga os passos:
         </p>
-        <Button 
-          variant="outline" 
-          onClick={handleCopyScript}
-          className="mt-2"
-        >
-          Copiar Script SQL
-        </Button>
+        
+        <ol className="list-decimal ml-5 mb-4 space-y-2">
+          <li>Acesse o painel de administração do Supabase</li>
+          <li>Vá para a seção "SQL Editor"</li>
+          <li>Cole o script SQL abaixo e execute</li>
+          <li>Volte para esta aplicação e atualize a página</li>
+        </ol>
+        
+        <div className="flex space-x-2 mb-4">
+          <Button 
+            variant="outline" 
+            onClick={() => setShowScript(!showScript)}
+            className="mt-2"
+          >
+            {showScript ? 'Ocultar Script SQL' : 'Mostrar Script SQL'}
+          </Button>
+          
+          <Button 
+            variant="default" 
+            onClick={handleCopyScript}
+            className="mt-2"
+          >
+            {copied ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
+            {copied ? 'Copiado!' : 'Copiar Script SQL'}
+          </Button>
+          
+          {onCreateTable && (
+            <Button 
+              variant="default"
+              onClick={onCreateTable}
+              className="mt-2"
+            >
+              Tentar criar tabela
+            </Button>
+          )}
+        </div>
+        
+        {showScript && (
+          <Card className="mt-4">
+            <CardContent className="p-4">
+              <pre className="text-xs overflow-auto whitespace-pre-wrap bg-muted p-2 rounded">
+                {getSqlScript()}
+              </pre>
+            </CardContent>
+          </Card>
+        )}
       </AlertDescription>
     </Alert>
   );

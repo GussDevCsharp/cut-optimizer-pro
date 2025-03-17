@@ -21,10 +21,10 @@ export const materialService = {
       const { data: materials, error } = await query;
 
       if (error) {
-        if (error.message.includes('does not exist')) {
+        if (error.code === 'PGRST116' || error.message.includes('does not exist')) {
           // Table doesn't exist yet - return empty array instead of error
           console.log("Materials table doesn't exist yet. Returning empty array.");
-          return { data: [], error: null };
+          return { data: [], error: "A tabela de materiais ainda não foi criada no banco de dados. Por favor, execute o script SQL fornecido." };
         }
         throw new Error(error.message);
       }
@@ -45,7 +45,7 @@ export const materialService = {
         .single();
 
       if (error) {
-        if (error.code === 'PGRST116') {
+        if (error.code === 'PGRST116' || error.message.includes('does not exist')) {
           // Table doesn't exist yet
           return { data: null, error: "A tabela de materiais ainda não foi criada no banco de dados." };
         }
@@ -75,7 +75,8 @@ export const materialService = {
         .single();
 
       if (error) {
-        if (error.code === 'PGRST116') {
+        console.error("Error in createMaterial:", error);
+        if (error.code === 'PGRST116' || error.message.includes('does not exist')) {
           // Table doesn't exist yet
           return { data: null, error: "A tabela de materiais ainda não foi criada no banco de dados. Por favor, execute o script SQL fornecido." };
         }
@@ -104,7 +105,7 @@ export const materialService = {
         .single();
 
       if (error) {
-        if (error.code === 'PGRST116') {
+        if (error.code === 'PGRST116' || error.message.includes('does not exist')) {
           // Table doesn't exist yet
           return { data: null, error: "A tabela de materiais ainda não foi criada no banco de dados." };
         }
@@ -126,7 +127,7 @@ export const materialService = {
         .eq('id', id);
 
       if (error) {
-        if (error.code === 'PGRST116') {
+        if (error.code === 'PGRST116' || error.message.includes('does not exist')) {
           // Table doesn't exist yet
           return { data: null, error: "A tabela de materiais ainda não foi criada no banco de dados." };
         }
@@ -136,6 +137,22 @@ export const materialService = {
       return { data: null, error: null };
     } catch (error: any) {
       console.error("Error deleting material:", error);
+      return { data: null, error: error.message };
+    }
+  },
+  
+  // Create the materials table in the database
+  createMaterialsTable: async (): Promise<ApiResponse<null>> => {
+    try {
+      // This function is just a placeholder as we can't directly create tables from the client
+      // We'll display instructions for the user to run the SQL script in Supabase
+      
+      return { 
+        data: null, 
+        error: "Para criar a tabela de materiais, você precisa executar o script SQL no painel de administração do Supabase." 
+      };
+    } catch (error: any) {
+      console.error("Error checking materials table:", error);
       return { data: null, error: error.message };
     }
   }
