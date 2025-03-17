@@ -10,11 +10,22 @@ export const sortPiecesByArea = (pieces: Piece[]): Piece[] => {
   });
 };
 
+// Cache for position checks to avoid redundant calculations
+const positionCache = new Map<string, {x: number, y: number, rotated: boolean} | null>();
+
 // Optimized function to find the best position for a piece on a sheet
 export const findBestPosition = (
   piece: Piece,
   sheetGrid: SheetGrid,
 ): { x: number; y: number; rotated: boolean } | null => {
+  // Generate cache key based on piece dimensions and sheet state
+  const cacheKey = `${piece.width}-${piece.height}-${piece.canRotate}-${sheetGrid.getOccupancyHash()}`;
+  
+  // Check if we have a cached result
+  if (positionCache.has(cacheKey)) {
+    return positionCache.get(cacheKey);
+  }
+  
   // Try both orientations if rotation is allowed
   const orientations = [
     { width: piece.width, height: piece.height, rotated: false }
@@ -28,9 +39,9 @@ export const findBestPosition = (
   let bestPosition = null;
   let bestScore = Number.MAX_SAFE_INTEGER;
 
-  // Optimization: Use fast paths for common piece sizes
-  // Try every position on the sheet with an optimized step size
-  const stepSize = Math.min(5, Math.floor(Math.min(piece.width, piece.height) / 4)) || 1;
+  // For large pieces, use smaller step sizes to ensure precise placement
+  const stepSize = piece.width > 300 || piece.height > 300 ? 1 : 
+                  Math.min(5, Math.floor(Math.min(piece.width, piece.height) / 4)) || 1;
   
   // Process each orientation
   for (const orientation of orientations) {
@@ -41,36 +52,66 @@ export const findBestPosition = (
     
     // First try to place at (0,0) - this is often the best position
     if (sheetGrid.isAreaAvailable(0, 0, orientation.width, orientation.height)) {
-      return { x: 0, y: 0, rotated: orientation.rotated };
+      const position = { x: 0, y: 0, rotated: orientation.rotated };
+      positionCache.set(cacheKey, position);
+      return position;
     }
     
-    // Scan from top to bottom for efficiency
-    for (let y = 0; y <= sheetGrid['height'] - orientation.height; y++) {
-      // Fast scan - we don't need to check every single pixel
-      // Try every position on the sheet, with an optimized increment
-      for (let x = 0; x <= sheetGrid['width'] - orientation.width; x++) {
-        if (sheetGrid.isAreaAvailable(x, y, orientation.width, orientation.height)) {
-          // Simple score function - prioritize top-left positions
-          const score = y * 1000 + x;
+    // Use a smarter scanning approach for efficiency
+    const scanPoints = sheetGrid.getScanPoints();
+    
+    for (const { x, y } of scanPoints) {
+      if (x + orientation.width <= sheetGrid['width'] && 
+          y + orientation.height <= sheetGrid['height'] &&
+          sheetGrid.isAreaAvailable(x, y, orientation.width, orientation.height)) {
+        
+        // Simple score function - prioritize top-left positions
+        const score = y * 1000 + x;
+        
+        // If we find a position at the top edge, it's usually good
+        if (y === 0) {
+          const position = { x, y, rotated: orientation.rotated };
+          positionCache.set(cacheKey, position);
+          return position;
+        }
+        
+        // Otherwise, keep the best position
+        if (score < bestScore) {
+          bestPosition = { x, y, rotated: orientation.rotated };
+          bestScore = score;
+        }
+      }
+    }
+    
+    // Fall back to traditional scanning if scan points didn't work
+    if (!bestPosition) {
+      for (let y = 0; y <= sheetGrid['height'] - orientation.height; y += stepSize) {
+        // Boundary check for last step
+        if (y + orientation.height > sheetGrid['height']) continue;
+        
+        for (let x = 0; x <= sheetGrid['width'] - orientation.width; x += stepSize) {
+          // Boundary check for last step
+          if (x + orientation.width > sheetGrid['width']) continue;
           
-          // If we find a position at the top edge, it's usually good
-          if (y === 0) {
-            return { x, y, rotated: orientation.rotated };
-          }
-          
-          // Otherwise, keep the best position
-          if (score < bestScore) {
-            bestPosition = { x, y, rotated: orientation.rotated };
-            bestScore = score;
+          if (sheetGrid.isAreaAvailable(x, y, orientation.width, orientation.height)) {
+            const score = y * 1000 + x;
+            
+            if (score < bestScore) {
+              bestPosition = { x, y, rotated: orientation.rotated };
+              bestScore = score;
+            }
           }
         }
       }
-      
-      // Early termination - if we found a good position in the first few rows, use it
-      if (bestPosition && bestPosition.y < 3) {
-        return bestPosition;
-      }
     }
+  }
+  
+  // Cache result before returning
+  positionCache.set(cacheKey, bestPosition);
+  
+  // Clear cache if it gets too large
+  if (positionCache.size > 10000) {
+    positionCache.clear();
   }
   
   return bestPosition;

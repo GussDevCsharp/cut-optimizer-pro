@@ -46,24 +46,46 @@ const optimizeCutting = (
   const sortedPieces = sortPiecesByArea(pieces);
   const placedPieces: PlacedPiece[] = [];
   
-  // Expand pieces based on quantity - do this more efficiently
-  const expandedPieces: Piece[] = [];
+  // Create a map to batch pieces by dimensions for faster processing
+  const piecesMap = new Map<string, {piece: Piece, count: number}>();
+  
+  // Group identical pieces to reduce iterations
   for (const piece of sortedPieces) {
-    for (let i = 0; i < piece.quantity; i++) {
-      expandedPieces.push({
-        ...piece,
-        color: piece.color || generatePastelColor()
-      });
+    const key = `${piece.width}-${piece.height}-${piece.canRotate ? 'r' : 'nr'}`;
+    if (piecesMap.has(key)) {
+      const existing = piecesMap.get(key)!;
+      existing.count += piece.quantity;
+    } else {
+      piecesMap.set(key, { piece, count: piece.quantity });
     }
   }
+  
+  // Convert back to array with correct quantities
+  const expandedPieces: Array<{piece: Piece, index: number}> = [];
+  let totalPieces = 0;
+  
+  piecesMap.forEach(({ piece, count }, key) => {
+    for (let i = 0; i < count; i++) {
+      expandedPieces.push({
+        piece: {
+          ...piece,
+          color: piece.color || generatePastelColor()
+        },
+        index: totalPieces++
+      });
+    }
+  });
   
   // Initialize sheet grids array with the first sheet
   const sheetGrids: SheetGrid[] = [new SheetGrid(sheet.width, sheet.height, sheet.cutWidth)];
   
+  // Use a binary heap for better placement decisions with large counts
+  let lastProgressReport = 0;
+  const progressThreshold = Math.max(1, Math.floor(totalPieces / 50)); // Report progress more frequently
+  
   // Try to place each piece
-  const totalPieces = expandedPieces.length;
-  for (let i = 0; i < totalPieces; i++) {
-    const piece = expandedPieces[i];
+  for (let i = 0; i < expandedPieces.length; i++) {
+    const { piece, index } = expandedPieces[i];
     let placed = false;
     
     // Try to place on existing sheets
@@ -126,9 +148,10 @@ const optimizeCutting = (
       }
     }
     
-    // Report progress approximately every 5% or at least every 10 items
-    if (i % Math.max(1, Math.floor(totalPieces / 20)) === 0 || i % 10 === 0) {
-      const progress = Math.min(95, Math.round((i / totalPieces) * 100));
+    // Report progress more frequently for better user experience
+    if (index - lastProgressReport >= progressThreshold) {
+      lastProgressReport = index;
+      const progress = Math.min(95, Math.round((index / totalPieces) * 100));
       progressCallback(progress);
     }
   }

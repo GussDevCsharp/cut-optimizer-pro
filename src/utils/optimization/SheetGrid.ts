@@ -1,10 +1,11 @@
-
 // Class to track occupied areas on the sheet - optimized for performance
 export class SheetGrid {
   private grid: Uint8Array[];
   private width: number;
   private height: number;
   private cutWidth: number;
+  private occupancyHash: string = '';
+  private scanPoints: Array<{x: number, y: number}> = [];
   
   constructor(width: number, height: number, cutWidth: number) {
     this.width = width;
@@ -15,6 +16,49 @@ export class SheetGrid {
     this.grid = new Array(height);
     for (let i = 0; i < height; i++) {
       this.grid[i] = new Uint8Array(width);
+    }
+    
+    // Initialize scan points with corners and edges
+    this.updateScanPoints();
+  }
+  
+  // Get width property for external use
+  get width(): number {
+    return this.width;
+  }
+  
+  // Get height property for external use
+  get height(): number {
+    return this.height;
+  }
+  
+  // Get current occupancy hash for caching
+  getOccupancyHash(): string {
+    return this.occupancyHash;
+  }
+  
+  // Get strategic scan points for faster placement
+  getScanPoints(): Array<{x: number, y: number}> {
+    return this.scanPoints;
+  }
+  
+  // Update scan points after placing a piece
+  private updateScanPoints(): void {
+    // Start with corners and edges which are efficient places to check
+    this.scanPoints = [
+      { x: 0, y: 0 }, // Top-left
+      { x: this.width - 1, y: 0 }, // Top-right
+      { x: 0, y: this.height - 1 }, // Bottom-left
+      { x: this.width - 1, y: this.height - 1 } // Bottom-right
+    ];
+    
+    // Add points along top and left edges
+    for (let x = 100; x < this.width - 100; x += 100) {
+      this.scanPoints.push({ x, y: 0 });
+    }
+    
+    for (let y = 100; y < this.height - 100; y += 100) {
+      this.scanPoints.push({ x: 0, y });
     }
   }
   
@@ -79,6 +123,21 @@ export class SheetGrid {
       for (let j = x; j < x + pieceWidth; j++) {
         row[j] = 1;
       }
+    }
+    
+    // Update occupancy hash
+    this.occupancyHash = `${this.occupancyHash}-${x},${y},${pieceWidth},${pieceHeight}`;
+    
+    // Add new scan points at the corners of the placed piece
+    this.scanPoints.push(
+      { x: x + pieceWidth, y }, // Right top
+      { x, y: y + pieceHeight }, // Left bottom
+      { x: x + pieceWidth, y: y + pieceHeight } // Right bottom
+    );
+    
+    // Keep scan points list manageable
+    if (this.scanPoints.length > 200) {
+      this.scanPoints = this.scanPoints.slice(-100);
     }
   }
 }

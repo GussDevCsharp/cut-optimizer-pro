@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { Loader2 } from "lucide-react";
@@ -14,12 +14,25 @@ export const OptimizationLoadingDialog = ({ isOpen, onCancel }: OptimizationLoad
   const [progress, setProgress] = useState(5);
   const [timeElapsed, setTimeElapsed] = useState(0);
   const [showCancelOption, setShowCancelOption] = useState(false);
+  const timerRef = useRef<number | null>(null);
+  const progressRef = useRef(5);
+  const startTimeRef = useRef<number | null>(null);
+  
+  // Update the ref whenever progress changes
+  useEffect(() => {
+    progressRef.current = progress;
+  }, [progress]);
   
   useEffect(() => {
     if (isOpen) {
-      // Reset progress and timers when dialog opens
-      setProgress(5);
-      setTimeElapsed(0);
+      // Only initialize progress and timer if this is a new optimization
+      if (!startTimeRef.current) {
+        progressRef.current = 5;
+        setProgress(5);
+        startTimeRef.current = Date.now();
+        setTimeElapsed(0);
+      }
+      
       setShowCancelOption(false);
       
       // Create a global listener for progress updates
@@ -32,22 +45,37 @@ export const OptimizationLoadingDialog = ({ isOpen, onCancel }: OptimizationLoad
       // Listen for progress events 
       window.addEventListener('optimization-progress', handleProgressUpdate as EventListener);
       
-      // Timer to show estimated time
-      const timer = setInterval(() => {
-        setTimeElapsed(prev => {
-          const newTime = prev + 1;
+      // Timer to show elapsed time
+      timerRef.current = window.setInterval(() => {
+        if (startTimeRef.current) {
+          const newTime = Math.floor((Date.now() - startTimeRef.current) / 1000);
+          setTimeElapsed(newTime);
+          
           // Show cancel option after 10 seconds
           if (newTime >= 10 && !showCancelOption) {
             setShowCancelOption(true);
           }
-          return newTime;
-        });
+        }
       }, 1000);
       
       return () => {
         window.removeEventListener('optimization-progress', handleProgressUpdate as EventListener);
-        clearInterval(timer);
+        
+        // Only clear timer if dialog is closed
+        if (!isOpen && timerRef.current !== null) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
       };
+    } else {
+      // Reset timer and progress when dialog is fully closed
+      if (timerRef.current !== null) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      
+      // Reset start time reference when optimization is done
+      startTimeRef.current = null;
     }
   }, [isOpen, showCancelOption]);
   
