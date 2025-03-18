@@ -18,6 +18,7 @@ export interface Material {
   color?: string;
   stock_quantity?: number;
   supplier?: string;
+  availability?: "Disponível" | "Indisponível" | "Sob Encomenda";
 }
 
 // Type for our API responses

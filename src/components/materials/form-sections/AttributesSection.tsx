@@ -2,6 +2,7 @@
 import React from "react";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UseFormReturn } from "react-hook-form";
 import { MaterialFormValues } from "../schema/materialSchema";
 
@@ -37,6 +38,33 @@ export function AttributesSection({ form }: AttributesSectionProps) {
             <FormControl>
               <Input placeholder="Nome do fornecedor" {...field} />
             </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      {/* Availability */}
+      <FormField
+        control={form.control}
+        name="availability"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Disponibilidade</FormLabel>
+            <Select
+              onValueChange={field.onChange}
+              defaultValue={field.value}
+            >
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a disponibilidade" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="Disponível">Disponível</SelectItem>
+                <SelectItem value="Indisponível">Indisponível</SelectItem>
+                <SelectItem value="Sob Encomenda">Sob Encomenda</SelectItem>
+              </SelectContent>
+            </Select>
             <FormMessage />
           </FormItem>
         )}
