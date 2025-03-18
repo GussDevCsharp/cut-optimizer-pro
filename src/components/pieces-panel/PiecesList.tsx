@@ -41,9 +41,9 @@ export const PiecesList = ({ pieces, onUpdatePiece, onRemovePiece }: PiecesListP
   };
 
   return (
-    <div className="max-h-[250px] overflow-y-auto border rounded-md">
+    <div className="w-full border rounded-md overflow-hidden">
       <table className="w-full text-sm">
-        <thead className="bg-muted/50 sticky top-0">
+        <thead className="bg-muted/50 sticky top-0 z-10">
           <tr>
             <th className="text-left py-2 px-3 font-medium">Peça</th>
             <th className="text-center py-2 px-3 font-medium">Dimensões</th>

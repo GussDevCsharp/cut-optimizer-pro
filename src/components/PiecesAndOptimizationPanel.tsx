@@ -3,7 +3,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Puzzle, Scissors, Sparkles, RectangleHorizontal, Upload, Plus } from 'lucide-react';
 import { useSheetData, Piece } from '../hooks/useSheetData';
 import { PieceForm } from './pieces-panel/PieceForm';
-import { PiecesList } from './pieces-panel/PiecesList';
 import { ImportPiecesForm } from './pieces-panel/ImportPiecesForm';
 import { optimizeCutting } from '../utils/optimizationAlgorithm';
 import { Button } from "@/components/ui/button";
@@ -166,17 +165,6 @@ export const PiecesAndOptimizationPanel = () => {
               <span className="font-medium">{pieces.length}</span>
             </div>
           </div>
-          
-          {/* Pieces List */}
-          {pieces.length > 0 && (
-            <div className="pt-2">
-              <PiecesList
-                pieces={pieces}
-                onUpdatePiece={updatePiece}
-                onRemovePiece={removePiece}
-              />
-            </div>
-          )}
         </CardContent>
       </Card>
       
