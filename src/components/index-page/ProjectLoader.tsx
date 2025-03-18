@@ -23,13 +23,14 @@ export const ProjectLoader: React.FC<{ children: React.ReactNode }> = ({ childre
   
   useEffect(() => {
     if (loading) {
-      // Simulate loading progress
+      // Create a smoother loading progress animation
       const interval = setInterval(() => {
         setProgress((prevProgress) => {
-          const newProgress = prevProgress + 10;
-          return newProgress >= 100 ? 100 : newProgress;
+          // Cap at 98% to show it's still waiting for final data
+          const newProgress = prevProgress + (100 - prevProgress) * 0.1;
+          return newProgress >= 98 ? 98 : newProgress;
         });
-      }, 200);
+      }, 150);
       
       return () => clearInterval(interval);
     }
