@@ -60,6 +60,36 @@ export function drawShape(ctx: CanvasRenderingContext2D, shape: Shape): void {
   if (shape.type !== 'line') {
     drawDimensions(ctx, shape);
   }
+  
+  // Add dashed rectangle outline for non-rectangular shapes
+  if (shape.type !== 'square' && shape.type !== 'line') {
+    drawDashedBoundingBox(ctx, shape);
+  }
+}
+
+// New function to draw dashed bounding box for non-rectangular shapes
+export function drawDashedBoundingBox(ctx: CanvasRenderingContext2D, shape: Shape): void {
+  const { startX, startY, endX = startX, endY = startY } = shape;
+  
+  // Calculate the bounding box
+  const minX = Math.min(startX, endX);
+  const minY = Math.min(startY, endY);
+  const width = Math.abs(endX - startX);
+  const height = Math.abs(endY - startY);
+  
+  // Save current context state
+  ctx.save();
+  
+  // Set dashed line properties
+  ctx.strokeStyle = 'rgba(255, 0, 0, 0.7)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([5, 3]); // Dashed line pattern
+  
+  // Draw the rectangle
+  ctx.strokeRect(minX, minY, width, height);
+  
+  // Restore context
+  ctx.restore();
 }
 
 // New function to draw dimensions
