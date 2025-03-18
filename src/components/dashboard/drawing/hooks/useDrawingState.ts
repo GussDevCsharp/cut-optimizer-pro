@@ -1,5 +1,5 @@
 
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { Shape } from '../types/drawingTypes';
 
 export function useDrawingState() {
@@ -8,6 +8,15 @@ export function useDrawingState() {
   const undoHistoryRef = useRef<Shape[][]>([]);
   const redoHistoryRef = useRef<Shape[][]>([]);
   const currentShapeRef = useRef<Shape | null>(null);
+  const isTouchDeviceRef = useRef<boolean>(false);
+  
+  // Detect if the user is on a touch device
+  useEffect(() => {
+    isTouchDeviceRef.current = 'ontouchstart' in window || 
+      navigator.maxTouchPoints > 0 ||
+      // @ts-ignore
+      navigator.msMaxTouchPoints > 0;
+  }, []);
 
   return {
     isDrawingRef,
@@ -15,5 +24,6 @@ export function useDrawingState() {
     undoHistoryRef,
     redoHistoryRef,
     currentShapeRef,
+    isTouchDeviceRef,
   };
 }

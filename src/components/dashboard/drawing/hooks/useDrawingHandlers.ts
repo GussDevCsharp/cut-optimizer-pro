@@ -39,13 +39,39 @@ export function useDrawingHandlers({
     shapesRef.current.forEach(shape => drawShape(ctx, shape));
   };
 
-  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!canvasRef.current) return;
+  // Get coordinates from either mouse or touch event
+  const getCoordinates = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!canvasRef.current) return { x: 0, y: 0 };
     
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    
+    // Check if it's a touch event
+    if ('touches' in e) {
+      // Handle touch event
+      const touch = e.touches[0] || e.changedTouches[0];
+      return {
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top
+      };
+    } else {
+      // Handle mouse event
+      return {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      };
+    }
+  };
+
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!canvasRef.current) return;
+    
+    // Prevent default behavior for touch events to avoid scrolling
+    if ('touches' in e) {
+      e.preventDefault();
+    }
+    
+    const { x, y } = getCoordinates(e);
     
     isDrawingRef.current = true;
     
@@ -68,13 +94,15 @@ export function useDrawingHandlers({
     }
   };
 
-  const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (!isDrawingRef.current || !contextRef.current || !canvasRef.current) return;
     
-    const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    // Prevent default behavior for touch events to avoid scrolling
+    if ('touches' in e) {
+      e.preventDefault();
+    }
+    
+    const { x, y } = getCoordinates(e);
     
     if (activeTool === 'pencil') {
       contextRef.current.lineTo(x, y);
@@ -94,13 +122,22 @@ export function useDrawingHandlers({
     }
   };
 
-  const finishDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const finishDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (!isDrawingRef.current || !contextRef.current || !canvasRef.current) return;
     
-    const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    let x, y;
+    
+    // For touch events, we need to use changedTouches since there may not be any active touches
+    if ('changedTouches' in e) {
+      const touch = e.changedTouches[0];
+      const rect = canvasRef.current.getBoundingClientRect();
+      x = touch.clientX - rect.left;
+      y = touch.clientY - rect.top;
+    } else {
+      const rect = canvasRef.current.getBoundingClientRect();
+      x = e.clientX - rect.left;
+      y = e.clientY - rect.top;
+    }
     
     isDrawingRef.current = false;
     

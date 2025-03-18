@@ -25,3 +25,8 @@ export interface DrawingCanvasRef {
   setDrawingColor: (color: string) => void;
   setDrawingTool: (tool: string) => void;
 }
+
+// Define the union type for both mouse and touch events
+export type DrawingEvent = 
+  | React.MouseEvent<HTMLCanvasElement> 
+  | React.TouchEvent<HTMLCanvasElement>;

@@ -1,3 +1,4 @@
+
 import React, { useImperativeHandle, forwardRef } from "react";
 import { useCanvasSetup } from "./hooks/useCanvasSetup";
 import { useDrawingState } from "./hooks/useDrawingState";
@@ -25,7 +26,7 @@ const DrawingCanvas = forwardRef<any, DrawingCanvasProps>(
       activeTool,
       activeColor
     });
-    
+
     // Set up drawing actions
     const { clearCanvas, undo, redo, saveAsImage, setDrawingColor } = useDrawingActions({
       canvasRef,
@@ -51,11 +52,17 @@ const DrawingCanvas = forwardRef<any, DrawingCanvasProps>(
     return (
       <canvas
         ref={canvasRef}
-        className="w-full h-full border border-gray-200 rounded-md cursor-crosshair"
+        className="w-full h-full border border-gray-200 rounded-md cursor-crosshair touch-none"
+        // Mouse events
         onMouseDown={startDrawing}
         onMouseMove={draw}
         onMouseUp={finishDrawing}
         onMouseLeave={finishDrawing}
+        // Touch events
+        onTouchStart={startDrawing}
+        onTouchMove={draw}
+        onTouchEnd={finishDrawing}
+        onTouchCancel={finishDrawing}
       />
     );
   }
