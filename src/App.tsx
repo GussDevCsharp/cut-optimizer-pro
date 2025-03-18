@@ -107,7 +107,7 @@ const AppRoutes = () => {
       />
       <Route 
         path="/" 
-        element={<Navigate to="/home" replace />} 
+        element={<Home />} 
       />
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
