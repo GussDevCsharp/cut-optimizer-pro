@@ -8,11 +8,13 @@ import { PricingPlans } from "@/components/home/PricingPlans";
 import { CTASection } from "@/components/home/CTASection";
 import { HomeFooter } from "@/components/home/HomeFooter";
 import { HomeHeader } from "@/components/home/HomeHeader";
+import { ArchitecturalHeader } from "@/components/home/ArchitecturalHeader";
 
 const Home = () => {
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen bg-background font-work-sans">
       <HomeHeader />
+      <ArchitecturalHeader />
       <Hero />
       <Features />
       <Benefits />

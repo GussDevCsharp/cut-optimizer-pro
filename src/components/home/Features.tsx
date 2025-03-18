@@ -1,103 +1,72 @@
 
 import React from "react";
-import { LayoutDashboard, Target, Zap, Clock } from "lucide-react";
+import { Ruler, Compass, Grid3X3, Layers, Scale, PenTool } from "lucide-react";
 
 export const Features = () => {
   return (
-    <section id="features" className="py-16 md:py-24">
+    <section id="features" className="py-16 md:py-24 bg-gradient-to-r from-gray-50 to-gray-100/50">
       <div className="container px-4 md:px-6">
         <div className="text-center space-y-4 mb-12">
-          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-            Recursos Poderosos para seu Negócio
+          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl font-playfair text-charcoal-dark">
+            Ferramentas de Precisão Arquitetônica
           </h2>
-          <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
-            Transforme a maneira como você planeja seus cortes e maximize o aproveitamento de material.
+          <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl font-work-sans">
+            Recursos desenvolvidos por arquitetos para arquitetos e profissionais que exigem excelência em cada corte.
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <div className="flex flex-col p-6 bg-card rounded-lg shadow-sm hover:shadow-md transition-shadow">
-            <div className="rounded-full w-12 h-12 flex items-center justify-center bg-primary/10 mb-4">
-              <Target className="h-6 w-6 text-primary" />
+          <div className="flex flex-col p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-light/50">
+            <div className="rounded-full w-12 h-12 flex items-center justify-center bg-lilac-light/30 mb-4">
+              <Compass className="h-6 w-6 text-lilac-dark" />
             </div>
-            <h3 className="text-xl font-bold mb-2">Otimização Inteligente</h3>
-            <p className="text-muted-foreground flex-1">
-              Algoritmo avançado que encontra a melhor distribuição de peças para minimizar desperdício.
+            <h3 className="text-xl font-bold mb-2 font-playfair">Precisão Milimétrica</h3>
+            <p className="text-muted-foreground flex-1 font-work-sans">
+              Algoritmo baseado em princípios arquitetônicos que otimiza cada corte com precisão de 0.1mm.
             </p>
           </div>
-          <div className="flex flex-col p-6 bg-card rounded-lg shadow-sm hover:shadow-md transition-shadow">
-            <div className="rounded-full w-12 h-12 flex items-center justify-center bg-primary/10 mb-4">
-              <LayoutDashboard className="h-6 w-6 text-primary" />
+          <div className="flex flex-col p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-light/50">
+            <div className="rounded-full w-12 h-12 flex items-center justify-center bg-lilac-light/30 mb-4">
+              <Layers className="h-6 w-6 text-lilac-dark" />
             </div>
-            <h3 className="text-xl font-bold mb-2">Visualização em Tempo Real</h3>
-            <p className="text-muted-foreground flex-1">
-              Veja instantaneamente como suas peças serão dispostas na chapa, facilitando o planejamento.
+            <h3 className="text-xl font-bold mb-2 font-playfair">Visualização em Camadas</h3>
+            <p className="text-muted-foreground flex-1 font-work-sans">
+              Veja cada camada do seu projeto em tempo real, facilitando a compreensão espacial de cada corte.
             </p>
           </div>
-          <div className="flex flex-col p-6 bg-card rounded-lg shadow-sm hover:shadow-md transition-shadow">
-            <div className="rounded-full w-12 h-12 flex items-center justify-center bg-primary/10 mb-4">
-              <Zap className="h-6 w-6 text-primary" />
+          <div className="flex flex-col p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-light/50">
+            <div className="rounded-full w-12 h-12 flex items-center justify-center bg-lilac-light/30 mb-4">
+              <Grid3X3 className="h-6 w-6 text-lilac-dark" />
             </div>
-            <h3 className="text-xl font-bold mb-2">Cálculos Automáticos</h3>
-            <p className="text-muted-foreground flex-1">
-              Esqueça planilhas complexas. Nosso sistema calcula tudo para você, incluindo custos e economia.
+            <h3 className="text-xl font-bold mb-2 font-playfair">Grade Paramétrica</h3>
+            <p className="text-muted-foreground flex-1 font-work-sans">
+              Utilize grades paramêtricas para otimizar ainda mais seus projetos, criando padrões eficientes de corte.
             </p>
           </div>
-          <div className="flex flex-col p-6 bg-card rounded-lg shadow-sm hover:shadow-md transition-shadow">
-            <div className="rounded-full w-12 h-12 flex items-center justify-center bg-primary/10 mb-4">
-              <Clock className="h-6 w-6 text-primary" />
+          <div className="flex flex-col p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-light/50">
+            <div className="rounded-full w-12 h-12 flex items-center justify-center bg-lilac-light/30 mb-4">
+              <Ruler className="h-6 w-6 text-lilac-dark" />
             </div>
-            <h3 className="text-xl font-bold mb-2">Economize Tempo</h3>
-            <p className="text-muted-foreground flex-1">
-              Reduza drasticamente o tempo gasto planejando cortes manualmente e foque no que importa.
+            <h3 className="text-xl font-bold mb-2 font-playfair">Especificações Técnicas</h3>
+            <p className="text-muted-foreground flex-1 font-work-sans">
+              Documente cada especificação técnica de corte, garantindo que sua equipe execute com exatidão.
             </p>
           </div>
-          <div className="flex flex-col p-6 bg-card rounded-lg shadow-sm hover:shadow-md transition-shadow">
-            <div className="rounded-full w-12 h-12 flex items-center justify-center bg-primary/10 mb-4">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="h-6 w-6 text-primary"
-              >
-                <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
-                <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
-                <path d="M18 12a2 2 0 0 0 0 4h4v-4Z" />
-              </svg>
+          <div className="flex flex-col p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-light/50">
+            <div className="rounded-full w-12 h-12 flex items-center justify-center bg-lilac-light/30 mb-4">
+              <PenTool className="h-6 w-6 text-lilac-dark" />
             </div>
-            <h3 className="text-xl font-bold mb-2">Exportação Profissional</h3>
-            <p className="text-muted-foreground flex-1">
-              Gere relatórios detalhados e envie diretamente para sua equipe ou clientes.
+            <h3 className="text-xl font-bold mb-2 font-playfair">Detalhamento Arquitetônico</h3>
+            <p className="text-muted-foreground flex-1 font-work-sans">
+              Crie detalhamentos precisos para cada projeto, facilitando a comunicação com fornecedores e clientes.
             </p>
           </div>
-          <div className="flex flex-col p-6 bg-card rounded-lg shadow-sm hover:shadow-md transition-shadow">
-            <div className="rounded-full w-12 h-12 flex items-center justify-center bg-primary/10 mb-4">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="h-6 w-6 text-primary"
-              >
-                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-                <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-              </svg>
+          <div className="flex flex-col p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-light/50">
+            <div className="rounded-full w-12 h-12 flex items-center justify-center bg-lilac-light/30 mb-4">
+              <Scale className="h-6 w-6 text-lilac-dark" />
             </div>
-            <h3 className="text-xl font-bold mb-2">Colaboração em Equipe</h3>
-            <p className="text-muted-foreground flex-1">
-              Compartilhe projetos facilmente entre sua equipe e mantenha todos alinhados.
+            <h3 className="text-xl font-bold mb-2 font-playfair">Otimização de Recursos</h3>
+            <p className="text-muted-foreground flex-1 font-work-sans">
+              Maximize o uso de cada material, reduzindo desperdícios e aumentando a sustentabilidade dos seus projetos.
             </p>
           </div>
         </div>
