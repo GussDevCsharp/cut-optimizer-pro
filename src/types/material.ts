@@ -28,7 +28,7 @@ export interface ApiResponse<T> {
   error: string | null;
 }
 
-// Define our MaterialsDatabase type without modifying the original Database type
+// Define our MaterialsDatabase type by extending the original Database type
 export type MaterialsDatabase = {
   public: {
     Tables: {
@@ -39,7 +39,12 @@ export type MaterialsDatabase = {
       };
     } & Database['public']['Tables'];
     Views: Database['public']['Views'];
-    Functions: Database['public']['Functions'];
+    Functions: {
+      init_materials_table: {
+        Args: Record<string, never>;
+        Returns: void;
+      };
+    } & Database['public']['Functions'];
     Enums: Database['public']['Enums'];
     CompositeTypes: Database['public']['CompositeTypes'];
   };

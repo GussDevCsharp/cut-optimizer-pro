@@ -1,4 +1,3 @@
-
 import { Material, ApiResponse, MaterialsDatabase } from "@/types/material";
 import { createClient } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,35 +14,18 @@ const filterNonDatabaseFields = (material: Partial<Material>) => {
 // Create the materials table if it doesn't exist
 export const initializeMaterialsTable = async (): Promise<boolean> => {
   try {
-    // Check if the table exists
-    const { error: checkError } = await supabase
-      .from('materials')
-      .select('id')
-      .limit(1);
+    // Try to call the RPC function to initialize the materials table
+    const { error } = await typedSupabase.rpc('init_materials_table');
     
-    // If table exists, return true
-    if (!checkError) {
-      console.log('Materials table already exists');
-      return true;
-    }
-    
-    // If error is not related to missing table, throw it
-    if (checkError.code !== 'PGRST204') {
-      throw checkError;
-    }
-    
-    // Table doesn't exist, create it manually with SQL
-    const { error: createError } = await supabase.rpc('init_materials_table');
-    
-    if (createError) {
-      console.error('Error creating materials table:', createError);
+    if (error) {
+      console.error('Error initializing materials table:', error);
       return false;
     }
     
-    console.log('Materials table created successfully');
+    console.log('Materials table initialization complete');
     return true;
   } catch (error) {
-    console.error('Error checking/creating materials table:', error);
+    console.error('Error initializing materials table:', error);
     return false;
   }
 };
