@@ -1,4 +1,3 @@
-
 import React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -44,9 +43,7 @@ export function MaterialForm({ initialData, onSubmit, onCancel }: MaterialFormPr
   // Handle form submission
   const handleSubmit = async (values: MaterialFormValues) => {
     try {
-      // Filter out fields that don't exist in the database
-      const { color, availability, ...dataToSubmit } = values;
-      await onSubmit(dataToSubmit as MaterialFormValues);
+      await onSubmit(values);
     } catch (error) {
       toast.error("Erro ao salvar material", {
         description: "Tente novamente mais tarde",
