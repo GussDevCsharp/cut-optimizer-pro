@@ -35,7 +35,7 @@ export const DesktopLayout = () => {
         <CuttingBoard />
       </div>
       
-      {/* Right Column - Collapsible Pieces List */}
+      {/* Right Column - Pieces List */}
       <div className="lg:col-span-1 h-full">
         <CollapsiblePiecesList 
           pieces={pieces}
