@@ -1,5 +1,5 @@
 
-import { Material, ApiResponse, ExtendedDatabase } from "@/types/material";
+import { Material, ApiResponse } from "@/types/material";
 import { supabase } from '@/integrations/supabase/client';
 
 // Fetch all materials for a user
