@@ -1,51 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
-import { Piece, Sheet, PlacedPiece } from '../hooks/useSheetData';
-import { getRandomColor } from './colorUtils';
-
-interface ProjectData {
-  projectName: string;
-  sheet: Sheet;
-  pieces: Piece[];
-  placedPieces: PlacedPiece[];
-}
-
-// Define line prefixes for the file format
-const LINE_PREFIXES = {
-  PROJECT_INFO: "P",
-  SHEET_DATA: "S",
-  PIECE: "R",
-  PLACED: "C"
-};
-
-/**
- * Generates a text file content representing the entire project
- */
-export const exportProjectToText = (projectData: ProjectData): string => {
-  const { projectName, sheet, pieces, placedPieces } = projectData;
-  let output = "";
-  
-  // Project Info Line
-  output += `${LINE_PREFIXES.PROJECT_INFO};${projectName};1.0;${new Date().toISOString()}\n`;
-  
-  // Sheet Data Line
-  output += `${LINE_PREFIXES.SHEET_DATA};${sheet.width};${sheet.height};${sheet.cutWidth}`;
-  if (sheet.materialId) {
-    output += `;${sheet.materialId}`;
-  }
-  output += '\n';
-  
-  // Pieces Data Lines
-  pieces.forEach(piece => {
-    output += `${LINE_PREFIXES.PIECE};${piece.width};${piece.height};${piece.quantity};${piece.canRotate}\n`;
-  });
-  
-  // Placed Pieces Data Lines
-  placedPieces.forEach(piece => {
-    output += `${LINE_PREFIXES.PLACED};${piece.width};${piece.height};${piece.x};${piece.y};${piece.rotated};${piece.sheetIndex}\n`;
-  });
-  
-  return output;
-};
+import { Piece, Sheet, PlacedPiece } from '../../hooks/useSheetData';
+import { ProjectData, LINE_PREFIXES } from './types';
+import { getRandomColor } from '../colorUtils';
 
 /**
  * Parses a text file content to extract project data
@@ -159,82 +115,5 @@ const processPlacedPieceDataLine = (data: string[], projectData: ProjectData) =>
     if (placedPiece.width > 0 && placedPiece.height > 0) {
       projectData.placedPieces.push(placedPiece);
     }
-  }
-};
-
-/**
- * Generates an example text file content
- */
-export const generateExampleProject = (): string => {
-  const exampleData: ProjectData = {
-    projectName: "Exemplo de Projeto",
-    sheet: {
-      width: 1220,
-      height: 2440,
-      cutWidth: 4,
-      materialId: "example-material-id"
-    },
-    pieces: [
-      {
-        id: "piece-1",
-        width: 500,
-        height: 300,
-        quantity: 2,
-        canRotate: true,
-        color: "#FF5733"
-      },
-      {
-        id: "piece-2",
-        width: 400,
-        height: 200,
-        quantity: 3,
-        canRotate: false,
-        color: "#33FF57"
-      }
-    ],
-    placedPieces: [
-      {
-        id: "piece-1-placed",
-        width: 500,
-        height: 300,
-        quantity: 1,
-        canRotate: true,
-        x: 10,
-        y: 10,
-        rotated: false,
-        sheetIndex: 0,
-        color: "#FF5733"
-      }
-    ]
-  };
-  
-  return exportProjectToText(exampleData);
-};
-
-/**
- * Creates and downloads an example text project file
- */
-export const downloadExampleProjectFile = () => {
-  const content = generateExampleProject();
-  const blob = new Blob([content], { type: 'text/plain' });
-  const url = URL.createObjectURL(blob);
-  
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'exemplo_projeto_corte.txt';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-};
-
-/**
- * Reads the contents of a text file
- */
-export const readProjectFile = async (file: File): Promise<string> => {
-  try {
-    return await file.text();
-  } catch (err) {
-    throw new Error(`Erro ao ler arquivo: ${err instanceof Error ? err.message : 'Erro desconhecido'}`);
   }
 };

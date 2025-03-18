@@ -7,7 +7,7 @@ import { ErrorMessage } from './ErrorMessage';
 import { TextInput } from './TextInput';
 import { processTextContent, readTextFile } from '../../../utils/textImportUtils';
 import { FileFormatDocumentation } from './FileFormatDocumentation';
-import { importProjectFromText } from '../../../utils/projectExportUtils';
+import { importProjectFromText } from '../../../utils/project';
 import { toast } from "sonner";
 
 interface TextImportTabProps {

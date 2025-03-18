@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { FileTerminal, Download } from "lucide-react";
-import { downloadExampleProjectFile } from "../../../utils/projectExportUtils";
+import { downloadExampleProjectFile } from "../../../utils/project";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export const FileFormatDocumentation: React.FC = () => {
