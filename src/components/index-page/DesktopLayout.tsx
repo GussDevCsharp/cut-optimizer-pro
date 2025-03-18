@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, List } from 'lucide-react';
 import SheetPanel from '../SheetPanel';
@@ -17,16 +17,8 @@ export const DesktopLayout = () => {
     <div className="space-y-4">
       {/* Project Name Card - more narrow and right-aligned */}
       <div className="flex justify-end">
-        <Card className="animate-fade-in shadow-subtle border w-1/3">
-          <CardHeader className="pb-2">
-            <CardTitle>Projeto</CardTitle>
-            <CardDescription>
-              Identifique seu projeto de corte
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ProjectNameInput />
-          </CardContent>
+        <Card className="animate-fade-in shadow-subtle border w-1/3 p-4">
+          <ProjectNameInput />
         </Card>
       </div>
       

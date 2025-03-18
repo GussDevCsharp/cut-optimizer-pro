@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, Settings, List } from 'lucide-react';
 import SheetPanel from '../SheetPanel';
@@ -17,16 +17,8 @@ export const MobileLayout = () => {
     <div className="w-full space-y-4">
       {/* Project Name Card - more compact */}
       <div className="flex justify-end">
-        <Card className="animate-fade-in shadow-subtle border w-4/5">
-          <CardHeader className="pb-2">
-            <CardTitle>Projeto</CardTitle>
-            <CardDescription>
-              Identifique seu projeto de corte
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ProjectNameInput />
-          </CardContent>
+        <Card className="animate-fade-in shadow-subtle border w-4/5 p-4">
+          <ProjectNameInput />
         </Card>
       </div>
 
