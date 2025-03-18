@@ -27,8 +27,8 @@ export interface ApiResponse<T> {
   error: string | null;
 }
 
-// Extend the Database type with our materials table
-export type ExtendedDatabase = Database & {
+// Define the database structure with materials table
+export type MaterialsDatabase = Database & {
   public: {
     Tables: {
       materials: {
@@ -36,6 +36,6 @@ export type ExtendedDatabase = Database & {
         Insert: Omit<Material, 'id' | 'created_at' | 'updated_at'>;
         Update: Partial<Omit<Material, 'id' | 'created_at'>>;
       };
-    } & Database['public']['Tables'];
-  }
-}
+    };
+  };
+};
