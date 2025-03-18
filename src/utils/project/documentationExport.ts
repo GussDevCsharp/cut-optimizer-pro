@@ -33,8 +33,7 @@ export const exportDocumentationToPdf = () => {
     'P;Nome do Projeto;1.0;2023-06-25T12:30:45.000Z',
     'S;1220;2440;4;opcional-id-material',
     'R;500;300;2;true',
-    'R;400;200;3;false',
-    'C;500;300;10;10;false;0'
+    'R;400;200;3;false'
   ];
   
   // Draw a box for the example
@@ -90,23 +89,6 @@ export const exportDocumentationToPdf = () => {
   pdf.text('- Quantidade de peças', 25, y); y += lineHeight;
   pdf.text('- Indica se a peça pode ser rotacionada (true/false)', 25, y); y += lineHeight * 1.5;
   
-  // C Line
-  pdf.setFont(undefined, 'bold');
-  pdf.text('C: Peça posicionada na chapa', 20, y); y += lineHeight;
-  pdf.setFont(undefined, 'normal');
-  pdf.text('- Largura da peça em mm', 25, y); y += lineHeight;
-  pdf.text('- Altura da peça em mm', 25, y); y += lineHeight;
-  pdf.text('- Posição X na chapa (coordenada do canto superior esquerdo)', 25, y); y += lineHeight;
-  pdf.text('- Posição Y na chapa (coordenada do canto superior esquerdo)', 25, y); y += lineHeight;
-  pdf.text('- Indica se a peça está rotacionada (true/false)', 25, y); y += lineHeight;
-  pdf.text('- Índice da chapa onde a peça está posicionada (0, 1, 2, ...)', 25, y); y += lineHeight * 1.5;
-  
-  // Check if need new page
-  if (y > 250) {
-    pdf.addPage();
-    y = 20;
-  }
-  
   // Implementation Notes
   pdf.setFontSize(12);
   pdf.text('Notas de Implementação', 20, y); y += lineHeight * 1.5;
@@ -114,12 +96,13 @@ export const exportDocumentationToPdf = () => {
   
   const notes = [
     'O arquivo deve ser salvo em formato texto (.txt) com codificação UTF-8.',
-    'Cada linha começa com um identificador de tipo (P, S, R, C).',
+    'Cada linha começa com um identificador de tipo (P, S, R).',
     'Os valores são separados por ponto-e-vírgula (;).',
     'A ordem dos valores é fixa para cada tipo de linha.',
     'As linhas em branco são ignoradas.',
     'As cores das peças são definidas pela plataforma.',
-    'IDs são gerados automaticamente pela plataforma.'
+    'IDs são gerados automaticamente pela plataforma.',
+    'O posicionamento das peças nas chapas é determinado pela plataforma.'
   ];
   
   notes.forEach(note => {

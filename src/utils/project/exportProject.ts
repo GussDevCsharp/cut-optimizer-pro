@@ -23,7 +23,7 @@ export const exportProjectToText = (projectData: ProjectData): string => {
     output += `${LINE_PREFIXES.PIECE};${piece.width};${piece.height};${piece.quantity};${piece.canRotate}\n`;
   });
   
-  // Placed Pieces Data Lines
+  // Placed Pieces Data Lines - still include these in export, just not in import
   placedPieces.forEach(piece => {
     output += `${LINE_PREFIXES.PLACED};${piece.width};${piece.height};${piece.x};${piece.y};${piece.rotated};${piece.sheetIndex}\n`;
   });
@@ -78,20 +78,7 @@ export const generateExampleProject = (): string => {
         color: "#33FF57"
       }
     ],
-    placedPieces: [
-      {
-        id: "piece-1-placed",
-        width: 500,
-        height: 300,
-        quantity: 1,
-        canRotate: true,
-        x: 10,
-        y: 10,
-        rotated: false,
-        sheetIndex: 0,
-        color: "#FF5733"
-      }
-    ]
+    placedPieces: [] // No placed pieces in the example
   };
   
   return exportProjectToText(exampleData);

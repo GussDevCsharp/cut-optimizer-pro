@@ -40,9 +40,6 @@ export const importProjectFromText = (content: string): ProjectData => {
       case LINE_PREFIXES.PIECE:
         processPieceDataLine(data, projectData);
         break;
-      case LINE_PREFIXES.PLACED:
-        processPlacedPieceDataLine(data, projectData);
-        break;
     }
   }
   
@@ -90,30 +87,6 @@ const processPieceDataLine = (data: string[], projectData: ProjectData) => {
     
     if (piece.width > 0 && piece.height > 0) {
       projectData.pieces.push(piece);
-    }
-  }
-};
-
-/**
- * Process a line of placed piece data
- */
-const processPlacedPieceDataLine = (data: string[], projectData: ProjectData) => {
-  if (data.length >= 6) {
-    const placedPiece: PlacedPiece = {
-      id: uuidv4(), // Generate an ID for the placed piece
-      width: parseInt(data[0], 10) || 0,
-      height: parseInt(data[1], 10) || 0,
-      quantity: 1,
-      canRotate: true,
-      x: parseInt(data[2], 10) || 0,
-      y: parseInt(data[3], 10) || 0,
-      rotated: data[4]?.toLowerCase() === "true",
-      sheetIndex: parseInt(data[5], 10) || 0,
-      color: getRandomColor() // Let the platform handle colors
-    };
-    
-    if (placedPiece.width > 0 && placedPiece.height > 0) {
-      projectData.placedPieces.push(placedPiece);
     }
   }
 };
