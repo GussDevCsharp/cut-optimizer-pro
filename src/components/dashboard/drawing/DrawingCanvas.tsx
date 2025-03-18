@@ -7,12 +7,12 @@ import { useDrawingActions } from "./hooks/useDrawingActions";
 import { DrawingCanvasProps } from "./types/drawingTypes";
 
 const DrawingCanvas = forwardRef<any, DrawingCanvasProps>(
-  ({ activeTool, activeColor, lineWidth = 2 }, ref) => {
+  ({ activeTool, activeColor, lineWidth = 2, showGrid = true }, ref) => {
     // Local state to track line width
     const [currentLineWidth, setCurrentLineWidth] = useState(lineWidth);
     
     // Set up canvas and context
-    const { canvasRef, contextRef } = useCanvasSetup(activeColor, currentLineWidth);
+    const { canvasRef, contextRef } = useCanvasSetup(activeColor, currentLineWidth, showGrid);
     
     // Set up drawing state
     const { isDrawingRef, shapesRef, undoHistoryRef, redoHistoryRef, currentShapeRef } = useDrawingState();
@@ -63,20 +63,25 @@ const DrawingCanvas = forwardRef<any, DrawingCanvasProps>(
     }));
 
     return (
-      <canvas
-        ref={canvasRef}
-        className="w-full h-full border border-gray-200 rounded-md cursor-crosshair touch-none"
-        // Mouse events
-        onMouseDown={startDrawing}
-        onMouseMove={draw}
-        onMouseUp={finishDrawing}
-        onMouseLeave={finishDrawing}
-        // Touch events
-        onTouchStart={startDrawing}
-        onTouchMove={draw}
-        onTouchEnd={finishDrawing}
-        onTouchCancel={finishDrawing}
-      />
+      <div className="relative w-full h-full">
+        <canvas
+          ref={canvasRef}
+          className="w-full h-full border border-gray-200 rounded-md cursor-crosshair touch-none"
+          // Mouse events
+          onMouseDown={startDrawing}
+          onMouseMove={draw}
+          onMouseUp={finishDrawing}
+          onMouseLeave={finishDrawing}
+          // Touch events
+          onTouchStart={startDrawing}
+          onTouchMove={draw}
+          onTouchEnd={finishDrawing}
+          onTouchCancel={finishDrawing}
+        />
+        <div className="absolute bottom-2 right-2 bg-white/80 px-2 py-1 text-xs rounded shadow-sm">
+          Escala: 1 pixel ≈ 0.26mm
+        </div>
+      </div>
     );
   }
 );

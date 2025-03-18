@@ -1,8 +1,8 @@
 
 import { useEffect, useRef } from 'react';
-import { setupCanvas } from '../utils/drawingUtils';
+import { setupCanvas, drawGrid } from '../utils/drawingUtils';
 
-export function useCanvasSetup(activeColor: string, lineWidth: number = 2) {
+export function useCanvasSetup(activeColor: string, lineWidth: number = 2, showGrid: boolean = true) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
 
@@ -16,6 +16,11 @@ export function useCanvasSetup(activeColor: string, lineWidth: number = 2) {
       if (ctx) {
         ctx.strokeStyle = activeColor;
         contextRef.current = ctx;
+
+        // Draw millimeter grid if enabled
+        if (showGrid) {
+          drawGrid(ctx, canvas.width, canvas.height);
+        }
       }
     };
 
@@ -25,7 +30,7 @@ export function useCanvasSetup(activeColor: string, lineWidth: number = 2) {
     return () => {
       window.removeEventListener('resize', resizeCanvas);
     };
-  }, [lineWidth]);
+  }, [lineWidth, showGrid]);
 
   // Update stroke style when color changes
   useEffect(() => {

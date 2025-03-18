@@ -1,6 +1,7 @@
 
 import { MutableRefObject } from 'react';
 import { Shape } from '../types/drawingTypes';
+import { drawGrid } from '../utils/drawingUtils';
 
 interface DrawingActionsParams {
   canvasRef: MutableRefObject<HTMLCanvasElement | null>;
@@ -22,66 +23,89 @@ export function useDrawingActions({
   const clearCanvas = () => {
     if (!contextRef.current || !canvasRef.current) return;
     
-    // Save current state for undo
-    undoHistoryRef.current.push([...shapesRef.current]);
-    redoHistoryRef.current = [];
+    const canvas = canvasRef.current;
+    const ctx = contextRef.current;
     
     // Clear all shapes
     shapesRef.current = [];
     
-    // Redraw (clear) canvas
-    redrawCanvas();
+    // Save to history
+    undoHistoryRef.current.push([...shapesRef.current]);
+    redoHistoryRef.current = [];
+    
+    // Clear canvas and redraw grid
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawGrid(ctx, canvas.width, canvas.height);
   };
 
   const undo = () => {
-    if (undoHistoryRef.current.length > 0) {
-      // Save current state for redo
-      redoHistoryRef.current.push([...shapesRef.current]);
-      
-      // Pop the last state from undo history
-      const previousState = undoHistoryRef.current.pop();
-      if (previousState && previousState.length > 0) {
-        // Set the current shapes to the previous state
-        shapesRef.current = [...previousState];
-      } else {
-        // If the previous state was empty, clear the canvas
-        shapesRef.current = [];
-      }
-      
-      // Redraw canvas
-      redrawCanvas();
-    }
+    if (undoHistoryRef.current.length <= 1) return;
+    
+    // Pop the current state
+    undoHistoryRef.current.pop();
+    
+    // Get the previous state
+    const previousShapes = undoHistoryRef.current[undoHistoryRef.current.length - 1];
+    
+    // Save current state for redo
+    redoHistoryRef.current.push([...shapesRef.current]);
+    
+    // Set the shapes to the previous state
+    shapesRef.current = [...previousShapes];
+    
+    // Redraw canvas
+    redrawCanvas();
   };
 
   const redo = () => {
-    if (redoHistoryRef.current.length > 0) {
-      // Save current state for undo
-      undoHistoryRef.current.push([...shapesRef.current]);
-      
-      // Pop the last state from redo history
-      const nextState = redoHistoryRef.current.pop();
-      if (nextState) {
-        // Set the current shapes to the next state
-        shapesRef.current = [...nextState];
-      }
-      
-      // Redraw canvas
-      redrawCanvas();
-    }
+    if (redoHistoryRef.current.length === 0) return;
+    
+    // Get the next state
+    const nextShapes = redoHistoryRef.current.pop() || [];
+    
+    // Save current state for undo
+    undoHistoryRef.current.push([...shapesRef.current]);
+    
+    // Set the shapes to the next state
+    shapesRef.current = [...nextShapes];
+    
+    // Redraw canvas
+    redrawCanvas();
   };
 
   const saveAsImage = () => {
     if (!canvasRef.current) return;
     
-    // Convert canvas to data URL
-    const dataUrl = canvasRef.current.toDataURL('image/png');
+    // Create a temporary canvas without the grid for saving
+    const tempCanvas = document.createElement('canvas');
+    const tempCtx = tempCanvas.getContext('2d');
+    if (!tempCtx) return;
     
-    // Create a link element
+    // Set dimensions
+    tempCanvas.width = canvasRef.current.width;
+    tempCanvas.height = canvasRef.current.height;
+    
+    // Draw only the shapes (no grid)
+    tempCtx.fillStyle = 'white';
+    tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+    
+    // Copy current canvas state but don't include grid
+    shapesRef.current.forEach(shape => {
+      if (contextRef.current) {
+        tempCtx.strokeStyle = shape.color;
+        if (shape.lineWidth) {
+          tempCtx.lineWidth = shape.lineWidth;
+        }
+        import('../utils/drawingUtils').then(({ drawShape }) => {
+          drawShape(tempCtx, shape);
+        });
+      }
+    });
+    
+    // Create download link
     const link = document.createElement('a');
-    link.href = dataUrl;
-    link.download = `desenho-${new Date().toISOString().slice(0, 10)}.png`;
-    
-    // Trigger download
+    link.download = 'drawing.png';
+    link.href = tempCanvas.toDataURL('image/png');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -98,6 +122,6 @@ export function useDrawingActions({
     undo,
     redo,
     saveAsImage,
-    setDrawingColor
+    setDrawingColor,
   };
 }

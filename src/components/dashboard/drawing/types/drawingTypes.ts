@@ -17,6 +17,7 @@ export interface DrawingCanvasProps {
   lineWidth?: number;
   width?: number;
   height?: number;
+  showGrid?: boolean; // Optional prop to toggle grid visibility
 }
 
 export interface DrawingCanvasRef {

@@ -1,6 +1,7 @@
+
 import { MutableRefObject } from 'react';
 import { Shape, DrawingTool } from '../types/drawingTypes';
-import { drawShape } from '../utils/drawingUtils';
+import { drawShape, drawGrid } from '../utils/drawingUtils';
 
 interface DrawingHandlersParams {
   canvasRef: MutableRefObject<HTMLCanvasElement | null>;
@@ -35,6 +36,9 @@ export function useDrawingHandlers({
     
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw grid first (if applicable)
+    drawGrid(ctx, canvas.width, canvas.height);
     
     // Redraw all shapes
     shapesRef.current.forEach(shape => drawShape(ctx, shape));
