@@ -14,17 +14,17 @@ export const MobileLayout = () => {
   const { pieces, updatePiece, removePiece } = useSheetData();
   
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full space-y-2">
       {/* Project Name Card - more compact */}
-      <div className="flex justify-end">
-        <Card className="animate-fade-in shadow-subtle border w-4/5 p-4">
+      <div className="flex justify-end mb-1">
+        <Card className="animate-fade-in shadow-subtle border w-4/5 p-3">
           <ProjectNameInput />
         </Card>
       </div>
 
       {/* Main/Outer Tabs for Project/Pieces */}
       <Tabs defaultValue="project" className="w-full">
-        <TabsList className="w-full grid grid-cols-2 mb-4">
+        <TabsList className="w-full grid grid-cols-2 mb-2">
           <TabsTrigger value="project" className="gap-1.5">
             <FileText size={16} />
             <span>Projeto</span>
@@ -43,11 +43,11 @@ export const MobileLayout = () => {
               <TabsTrigger value="settings">Configurações</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="cuttingBoard" className="mt-4">
+            <TabsContent value="cuttingBoard" className="mt-2">
               <CuttingBoard />
             </TabsContent>
             
-            <TabsContent value="settings" className="mt-4 space-y-4">
+            <TabsContent value="settings" className="mt-2 space-y-3">
               <SheetPanel />
               <PiecesAndOptimizationPanel />
             </TabsContent>
@@ -57,7 +57,7 @@ export const MobileLayout = () => {
         {/* Pieces List Tab */}
         <TabsContent value="pieces" className="mt-0">
           <CuttingBoard />
-          <div className="mt-4">
+          <div className="mt-3">
             <CollapsiblePiecesList 
               pieces={pieces}
               onUpdatePiece={updatePiece}
