@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Sparkles, RectangleHorizontal } from 'lucide-react';
+import { Sparkles, RectangleHorizontal, Loader2 } from 'lucide-react';
 import { useSheetData } from '../hooks/useSheetData';
 import { optimizeCutting } from '../utils/optimizationAlgorithm';
 import { toast } from "sonner";
