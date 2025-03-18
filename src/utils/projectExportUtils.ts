@@ -9,12 +9,12 @@ interface ProjectData {
   placedPieces: PlacedPiece[];
 }
 
-// Define section markers for the file format
-const SECTION_MARKERS = {
-  PROJECT_INFO: "#PROJECT_INFO",
-  SHEET_DATA: "#SHEET_DATA",
-  PIECES_DATA: "#PIECES_DATA",
-  PLACED_PIECES_DATA: "#PLACED_PIECES_DATA"
+// Define line prefixes for the file format
+const LINE_PREFIXES = {
+  PROJECT_INFO: "PROJECT_INFO:",
+  SHEET_DATA: "SHEET_DATA:",
+  PIECE: "PIECE:",
+  PLACED: "PLACED:"
 };
 
 /**
@@ -24,33 +24,24 @@ export const exportProjectToText = (projectData: ProjectData): string => {
   const { projectName, sheet, pieces, placedPieces } = projectData;
   let output = "";
   
-  // Project Info Section
-  output += `${SECTION_MARKERS.PROJECT_INFO}\n`;
-  output += `NAME=${projectName}\n`;
-  output += `VERSION=1.0\n`;
-  output += `TIMESTAMP=${new Date().toISOString()}\n\n`;
+  // Project Info Line
+  output += `${LINE_PREFIXES.PROJECT_INFO}NAME=${projectName};VERSION=1.0;TIMESTAMP=${new Date().toISOString()}\n`;
   
-  // Sheet Data Section
-  output += `${SECTION_MARKERS.SHEET_DATA}\n`;
-  output += `WIDTH=${sheet.width}\n`;
-  output += `HEIGHT=${sheet.height}\n`;
-  output += `CUT_WIDTH=${sheet.cutWidth}\n`;
+  // Sheet Data Line
+  output += `${LINE_PREFIXES.SHEET_DATA}WIDTH=${sheet.width};HEIGHT=${sheet.height};CUT_WIDTH=${sheet.cutWidth}`;
   if (sheet.materialId) {
-    output += `MATERIAL_ID=${sheet.materialId}\n`;
+    output += `;MATERIAL_ID=${sheet.materialId}`;
   }
   output += '\n';
   
-  // Pieces Data Section
-  output += `${SECTION_MARKERS.PIECES_DATA}\n`;
+  // Pieces Data Lines
   pieces.forEach(piece => {
-    output += `PIECE:ID=${piece.id};WIDTH=${piece.width};HEIGHT=${piece.height};QUANTITY=${piece.quantity};CAN_ROTATE=${piece.canRotate};COLOR=${piece.color || ''}\n`;
+    output += `${LINE_PREFIXES.PIECE}WIDTH=${piece.width};HEIGHT=${piece.height};QUANTITY=${piece.quantity};CAN_ROTATE=${piece.canRotate}\n`;
   });
-  output += '\n';
   
-  // Placed Pieces Data Section
-  output += `${SECTION_MARKERS.PLACED_PIECES_DATA}\n`;
+  // Placed Pieces Data Lines
   placedPieces.forEach(piece => {
-    output += `PLACED:ID=${piece.id};WIDTH=${piece.width};HEIGHT=${piece.height};X=${piece.x};Y=${piece.y};ROTATED=${piece.rotated};SHEET_INDEX=${piece.sheetIndex};COLOR=${piece.color || ''}\n`;
+    output += `${LINE_PREFIXES.PLACED}WIDTH=${piece.width};HEIGHT=${piece.height};X=${piece.x};Y=${piece.y};ROTATED=${piece.rotated};SHEET_INDEX=${piece.sheetIndex}\n`;
   });
   
   return output;
@@ -72,34 +63,22 @@ export const importProjectFromText = (content: string): ProjectData => {
     placedPieces: []
   };
   
-  // Split content by lines and process each section
+  // Split content by lines and process each line
   const lines = content.split(/\r?\n/);
-  let currentSection = "";
   
   for (const line of lines) {
     const trimmedLine = line.trim();
     if (!trimmedLine) continue;
     
-    // Check if line is a section marker
-    if (trimmedLine.startsWith("#")) {
-      currentSection = trimmedLine;
-      continue;
-    }
-    
-    // Process line based on current section
-    switch (currentSection) {
-      case SECTION_MARKERS.PROJECT_INFO:
-        processProjectInfoLine(trimmedLine, projectData);
-        break;
-      case SECTION_MARKERS.SHEET_DATA:
-        processSheetDataLine(trimmedLine, projectData);
-        break;
-      case SECTION_MARKERS.PIECES_DATA:
-        processPieceDataLine(trimmedLine, projectData);
-        break;
-      case SECTION_MARKERS.PLACED_PIECES_DATA:
-        processPlacedPieceDataLine(trimmedLine, projectData);
-        break;
+    // Process line based on its prefix
+    if (trimmedLine.startsWith(LINE_PREFIXES.PROJECT_INFO)) {
+      processProjectInfoLine(trimmedLine.substring(LINE_PREFIXES.PROJECT_INFO.length), projectData);
+    } else if (trimmedLine.startsWith(LINE_PREFIXES.SHEET_DATA)) {
+      processSheetDataLine(trimmedLine.substring(LINE_PREFIXES.SHEET_DATA.length), projectData);
+    } else if (trimmedLine.startsWith(LINE_PREFIXES.PIECE)) {
+      processPieceDataLine(trimmedLine.substring(LINE_PREFIXES.PIECE.length), projectData);
+    } else if (trimmedLine.startsWith(LINE_PREFIXES.PLACED)) {
+      processPlacedPieceDataLine(trimmedLine.substring(LINE_PREFIXES.PLACED.length), projectData);
     }
   }
   
@@ -109,9 +88,10 @@ export const importProjectFromText = (content: string): ProjectData => {
 /**
  * Process a line of project info data
  */
-const processProjectInfoLine = (line: string, projectData: ProjectData) => {
-  if (line.startsWith("NAME=")) {
-    projectData.projectName = line.substring(5);
+const processProjectInfoLine = (dataStr: string, projectData: ProjectData) => {
+  const data = parseDataString(dataStr);
+  if (data.NAME) {
+    projectData.projectName = data.NAME;
   }
   // Other project info fields can be processed here
 };
@@ -119,34 +99,37 @@ const processProjectInfoLine = (line: string, projectData: ProjectData) => {
 /**
  * Process a line of sheet data
  */
-const processSheetDataLine = (line: string, projectData: ProjectData) => {
-  if (line.startsWith("WIDTH=")) {
-    projectData.sheet.width = parseInt(line.substring(6), 10);
-  } else if (line.startsWith("HEIGHT=")) {
-    projectData.sheet.height = parseInt(line.substring(7), 10);
-  } else if (line.startsWith("CUT_WIDTH=")) {
-    projectData.sheet.cutWidth = parseInt(line.substring(10), 10);
-  } else if (line.startsWith("MATERIAL_ID=")) {
-    projectData.sheet.materialId = line.substring(12);
+const processSheetDataLine = (dataStr: string, projectData: ProjectData) => {
+  const data = parseDataString(dataStr);
+  
+  if (data.WIDTH) {
+    projectData.sheet.width = parseInt(data.WIDTH, 10);
+  }
+  if (data.HEIGHT) {
+    projectData.sheet.height = parseInt(data.HEIGHT, 10);
+  }
+  if (data.CUT_WIDTH) {
+    projectData.sheet.cutWidth = parseInt(data.CUT_WIDTH, 10);
+  }
+  if (data.MATERIAL_ID) {
+    projectData.sheet.materialId = data.MATERIAL_ID;
   }
 };
 
 /**
  * Process a line of piece data
  */
-const processPieceDataLine = (line: string, projectData: ProjectData) => {
-  if (!line.startsWith("PIECE:")) return;
+const processPieceDataLine = (dataStr: string, projectData: ProjectData) => {
+  const data = parseDataString(dataStr);
   
-  const pieceData = parseSectionData(line.substring(6));
-  
-  if (pieceData) {
+  if (data.WIDTH && data.HEIGHT) {
     const piece: Piece = {
-      id: pieceData.ID || uuidv4(),
-      width: parseInt(pieceData.WIDTH, 10),
-      height: parseInt(pieceData.HEIGHT, 10),
-      quantity: parseInt(pieceData.QUANTITY, 10),
-      canRotate: pieceData.CAN_ROTATE === "true",
-      color: pieceData.COLOR || getRandomColor()
+      id: uuidv4(), // Generate an ID for the piece
+      width: parseInt(data.WIDTH, 10),
+      height: parseInt(data.HEIGHT, 10),
+      quantity: data.QUANTITY ? parseInt(data.QUANTITY, 10) : 1,
+      canRotate: data.CAN_ROTATE === "true",
+      color: getRandomColor() // Let the platform handle colors
     };
     
     projectData.pieces.push(piece);
@@ -156,23 +139,21 @@ const processPieceDataLine = (line: string, projectData: ProjectData) => {
 /**
  * Process a line of placed piece data
  */
-const processPlacedPieceDataLine = (line: string, projectData: ProjectData) => {
-  if (!line.startsWith("PLACED:")) return;
+const processPlacedPieceDataLine = (dataStr: string, projectData: ProjectData) => {
+  const data = parseDataString(dataStr);
   
-  const placedData = parseSectionData(line.substring(7));
-  
-  if (placedData) {
+  if (data.WIDTH && data.HEIGHT && data.X && data.Y) {
     const placedPiece: PlacedPiece = {
-      id: placedData.ID || uuidv4(),
-      width: parseInt(placedData.WIDTH, 10),
-      height: parseInt(placedData.HEIGHT, 10),
+      id: uuidv4(), // Generate an ID for the placed piece
+      width: parseInt(data.WIDTH, 10),
+      height: parseInt(data.HEIGHT, 10),
       quantity: 1,
       canRotate: true,
-      x: parseInt(placedData.X, 10),
-      y: parseInt(placedData.Y, 10),
-      rotated: placedData.ROTATED === "true",
-      sheetIndex: parseInt(placedData.SHEET_INDEX, 10),
-      color: placedData.COLOR || getRandomColor()
+      x: parseInt(data.X, 10),
+      y: parseInt(data.Y, 10),
+      rotated: data.ROTATED === "true",
+      sheetIndex: data.SHEET_INDEX ? parseInt(data.SHEET_INDEX, 10) : 0,
+      color: getRandomColor() // Let the platform handle colors
     };
     
     projectData.placedPieces.push(placedPiece);
@@ -180,9 +161,9 @@ const processPlacedPieceDataLine = (line: string, projectData: ProjectData) => {
 };
 
 /**
- * Helper function to parse key-value pairs from a section line
+ * Helper function to parse key-value pairs from a data string
  */
-const parseSectionData = (dataStr: string) => {
+const parseDataString = (dataStr: string) => {
   const result: Record<string, string> = {};
   const pairs = dataStr.split(';');
   

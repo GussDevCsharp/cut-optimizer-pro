@@ -20,37 +20,24 @@ export const FileFormatDocumentation: React.FC = () => {
         <h3 className="font-semibold">Formato de Arquivo de Projeto</h3>
         <p className="text-muted-foreground">
           O formato de arquivo permite que aplicativos externos exportem e importem projetos completos, 
-          incluindo configurações de chapas, peças e posições.
+          incluindo configurações de chapas e peças. Cada linha representa um bloco de informação.
         </p>
         
         <h4 className="font-medium mt-4">Estrutura do Arquivo</h4>
         <div className="bg-secondary p-2 rounded-md">
           <pre className="text-xs overflow-x-auto">
-{`#PROJECT_INFO
-NAME=Nome do Projeto
-VERSION=1.0
-TIMESTAMP=2023-06-25T12:30:45.000Z
-
-#SHEET_DATA
-WIDTH=1220
-HEIGHT=2440
-CUT_WIDTH=4
-MATERIAL_ID=opcional-id-material
-
-#PIECES_DATA
-PIECE:ID=id-unico;WIDTH=500;HEIGHT=300;QUANTITY=2;CAN_ROTATE=true;COLOR=#FF5733
-PIECE:ID=id-unico-2;WIDTH=400;HEIGHT=200;QUANTITY=3;CAN_ROTATE=false;COLOR=#33FF57
-
-#PLACED_PIECES_DATA
-PLACED:ID=id-unico;WIDTH=500;HEIGHT=300;X=10;Y=10;ROTATED=false;SHEET_INDEX=0;COLOR=#FF5733
-`}
+{`PROJECT_INFO:NAME=Nome do Projeto;VERSION=1.0;TIMESTAMP=2023-06-25T12:30:45.000Z
+SHEET_DATA:WIDTH=1220;HEIGHT=2440;CUT_WIDTH=4;MATERIAL_ID=opcional-id-material
+PIECE:WIDTH=500;HEIGHT=300;QUANTITY=2;CAN_ROTATE=true
+PIECE:WIDTH=400;HEIGHT=200;QUANTITY=3;CAN_ROTATE=false
+PLACED:WIDTH=500;HEIGHT=300;X=10;Y=10;ROTATED=false;SHEET_INDEX=0`}
           </pre>
         </div>
         
-        <h4 className="font-medium mt-4">Seções do Arquivo</h4>
+        <h4 className="font-medium mt-4">Tipos de Linha</h4>
         <ul className="list-disc pl-5 space-y-2">
           <li>
-            <strong>#PROJECT_INFO</strong> - Informações gerais do projeto
+            <strong>PROJECT_INFO</strong>: Informações gerais do projeto
             <ul className="list-disc pl-5 text-muted-foreground">
               <li>NAME - Nome do projeto</li>
               <li>VERSION - Versão do formato (atual: 1.0)</li>
@@ -58,7 +45,7 @@ PLACED:ID=id-unico;WIDTH=500;HEIGHT=300;X=10;Y=10;ROTATED=false;SHEET_INDEX=0;CO
             </ul>
           </li>
           <li>
-            <strong>#SHEET_DATA</strong> - Configuração da chapa
+            <strong>SHEET_DATA</strong>: Configuração da chapa
             <ul className="list-disc pl-5 text-muted-foreground">
               <li>WIDTH - Largura da chapa em mm</li>
               <li>HEIGHT - Altura da chapa em mm</li>
@@ -67,27 +54,23 @@ PLACED:ID=id-unico;WIDTH=500;HEIGHT=300;X=10;Y=10;ROTATED=false;SHEET_INDEX=0;CO
             </ul>
           </li>
           <li>
-            <strong>#PIECES_DATA</strong> - Lista de peças (uma por linha)
+            <strong>PIECE</strong>: Definição de uma peça 
             <ul className="list-disc pl-5 text-muted-foreground">
-              <li>ID - Identificador único da peça</li>
               <li>WIDTH - Largura da peça em mm</li>
               <li>HEIGHT - Altura da peça em mm</li>
               <li>QUANTITY - Quantidade de peças</li>
               <li>CAN_ROTATE - Indica se a peça pode ser rotacionada (true/false)</li>
-              <li>COLOR - Cor da peça (opcional, código hexadecimal)</li>
             </ul>
           </li>
           <li>
-            <strong>#PLACED_PIECES_DATA</strong> - Peças posicionadas na chapa (uma por linha)
+            <strong>PLACED</strong>: Peça posicionada na chapa
             <ul className="list-disc pl-5 text-muted-foreground">
-              <li>ID - Identificador único da peça posicionada</li>
               <li>WIDTH - Largura da peça em mm</li>
               <li>HEIGHT - Altura da peça em mm</li>
               <li>X - Posição X na chapa (coordenada do canto superior esquerdo)</li>
               <li>Y - Posição Y na chapa (coordenada do canto superior esquerdo)</li>
               <li>ROTATED - Indica se a peça está rotacionada (true/false)</li>
               <li>SHEET_INDEX - Índice da chapa onde a peça está posicionada (0, 1, 2, ...)</li>
-              <li>COLOR - Cor da peça (opcional, código hexadecimal)</li>
             </ul>
           </li>
         </ul>
@@ -95,10 +78,11 @@ PLACED:ID=id-unico;WIDTH=500;HEIGHT=300;X=10;Y=10;ROTATED=false;SHEET_INDEX=0;CO
         <h4 className="font-medium mt-4">Notas de Implementação</h4>
         <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
           <li>O arquivo deve ser salvo em formato texto (.txt) com codificação UTF-8.</li>
+          <li>Cada linha deve conter apenas um tipo de informação.</li>
           <li>Os campos são case-sensitive.</li>
           <li>As linhas em branco são ignoradas.</li>
-          <li>Os IDs devem ser únicos dentro de cada seção.</li>
-          <li>Se não for especificado um ID, o sistema gerará um automaticamente.</li>
+          <li>As cores das peças são definidas pela plataforma.</li>
+          <li>IDs são gerados automaticamente pela plataforma.</li>
           <li>As coordenadas X e Y são relativas ao canto superior esquerdo da chapa.</li>
         </ul>
       </div>
