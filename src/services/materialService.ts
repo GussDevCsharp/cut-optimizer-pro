@@ -12,9 +12,48 @@ const filterNonDatabaseFields = (material: Partial<Material>) => {
   return databaseFields;
 };
 
+// Create the materials table if it doesn't exist
+export const initializeMaterialsTable = async (): Promise<boolean> => {
+  try {
+    // Check if the table exists
+    const { error: checkError } = await supabase
+      .from('materials')
+      .select('id')
+      .limit(1);
+    
+    // If table exists, return true
+    if (!checkError) {
+      console.log('Materials table already exists');
+      return true;
+    }
+    
+    // If error is not related to missing table, throw it
+    if (checkError.code !== 'PGRST204') {
+      throw checkError;
+    }
+    
+    // Table doesn't exist, create it manually with SQL
+    const { error: createError } = await supabase.rpc('init_materials_table');
+    
+    if (createError) {
+      console.error('Error creating materials table:', createError);
+      return false;
+    }
+    
+    console.log('Materials table created successfully');
+    return true;
+  } catch (error) {
+    console.error('Error checking/creating materials table:', error);
+    return false;
+  }
+};
+
 // Fetch all materials for a user
 export const fetchMaterials = async (userId: string): Promise<ApiResponse<Material[]>> => {
   try {
+    // First make sure the table exists
+    await initializeMaterialsTable();
+    
     const { data, error } = await typedSupabase
       .from('materials')
       .select('*')
@@ -42,6 +81,9 @@ export const fetchMaterials = async (userId: string): Promise<ApiResponse<Materi
 // Fetch a single material by ID
 export const fetchMaterialById = async (materialId: string): Promise<ApiResponse<Material>> => {
   try {
+    // First make sure the table exists
+    await initializeMaterialsTable();
+    
     const { data, error } = await typedSupabase
       .from('materials')
       .select('*')
@@ -71,6 +113,9 @@ export const createMaterial = async (
   material: Omit<Material, 'id' | 'created_at' | 'updated_at'>
 ): Promise<ApiResponse<Material>> => {
   try {
+    // First make sure the table exists
+    await initializeMaterialsTable();
+    
     // Filter out fields that don't exist in the database
     const databaseFields = filterNonDatabaseFields(material);
     
@@ -83,14 +128,15 @@ export const createMaterial = async (
       .single();
 
     if (error) {
+      console.error('Database error:', error);
       throw error;
     }
 
     // Add default values for frontend-only fields to the returned data
     const materialWithDefaultValues = {
       ...data,
-      color: "", // Default frontend-only field
-      availability: "Disponível" as const // Default frontend-only field
+      color: material.color || "", // Use provided value or default
+      availability: material.availability || "Disponível" as const // Use provided value or default
     };
 
     return { data: materialWithDefaultValues, error: null };
@@ -123,8 +169,8 @@ export const updateMaterial = async (
     // Add default values for frontend-only fields
     const materialWithDefaultValues = {
       ...data,
-      color: "", // Default frontend-only field
-      availability: "Disponível" as const // Default frontend-only field
+      color: materialData.color || "", // Use provided value or default
+      availability: materialData.availability || "Disponível" as const // Use provided value or default
     };
 
     return { data: materialWithDefaultValues, error: null };

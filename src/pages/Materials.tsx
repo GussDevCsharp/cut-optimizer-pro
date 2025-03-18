@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/context/AuthContext";
 import { MaterialsList } from "@/components/materials/MaterialsList";
@@ -10,6 +10,7 @@ import {
   createMaterial,
   updateMaterial,
   deleteMaterial,
+  initializeMaterialsTable,
 } from "@/services/materialService";
 import { toast } from "sonner";
 import {
@@ -23,6 +24,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import Layout from "@/components/Layout";
+import { useInitializeDatabase } from "@/hooks/useInitializeDatabase";
 
 export default function Materials() {
   const { user } = useAuth();
@@ -31,12 +33,22 @@ export default function Materials() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null);
+  const { isInitializing, error: initError } = useInitializeDatabase();
+
+  // Show initialization error if there was one
+  useEffect(() => {
+    if (initError) {
+      toast.error("Erro de inicialização", {
+        description: initError,
+      });
+    }
+  }, [initError]);
 
   // Query to fetch materials
   const { data: materialsData, isLoading } = useQuery({
     queryKey: ["materials", user?.id],
     queryFn: () => fetchMaterials(user?.id || ""),
-    enabled: !!user?.id,
+    enabled: !!user?.id && !isInitializing,
   });
 
   // Mutation to create a new material
@@ -134,17 +146,25 @@ export default function Materials() {
   return (
     <Layout>
       <div className="container py-6 space-y-6">
-        <MaterialsList
-          materials={materials}
-          onEdit={handleOpenEditDialog}
-          onDelete={(id) => {
-            const material = materials.find((m) => m.id === id);
-            if (material) {
-              handleOpenDeleteDialog(material);
-            }
-          }}
-          onAdd={() => setIsAddDialogOpen(true)}
-        />
+        {isInitializing ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="text-center">
+              <p className="text-muted-foreground">Inicializando banco de dados...</p>
+            </div>
+          </div>
+        ) : (
+          <MaterialsList
+            materials={materials}
+            onEdit={handleOpenEditDialog}
+            onDelete={(id) => {
+              const material = materials.find((m) => m.id === id);
+              if (material) {
+                handleOpenDeleteDialog(material);
+              }
+            }}
+            onAdd={() => setIsAddDialogOpen(true)}
+          />
+        )}
 
         {/* Add Material Dialog */}
         <MaterialDialog
