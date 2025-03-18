@@ -60,14 +60,14 @@ export function generatePiecesFromShapes(shapes: Shape[]): Piece[] {
     // Create a piece for this group
     pieces.push({
       id: `drawing-piece-${pieceCounter++}`,
-      name: `Peça ${pieceCounter - 1}`,
       width,
       height, 
       quantity: shapesInGroup.length,
       color: shapesInGroup[0].color, // Use color of the first shape in group
       rotation: 0,
       x: 0,
-      y: 0
+      y: 0,
+      canRotate: true
     });
   });
   

@@ -5,6 +5,28 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useProjectActions } from '@/hooks/useProjectActions';
 
+interface DrawingProjectData {
+  sheet: {
+    width: number;
+    height: number;
+    cutWidth: number;
+    thickness?: number;
+    materialName?: string;
+  };
+  pieces: Array<{
+    id: string;
+    width: number;
+    height: number;
+    quantity: number;
+    color?: string;
+    x: number;
+    y: number;
+    rotation?: number;
+    canRotate?: boolean;
+  }>;
+  placedPieces: Array<any>;
+}
+
 export function ProjectLoader() {
   const { loadProject, isLoading } = useProjectActions();
   const { setProjectName, setSheet, addPiece, setPieces, setPlacedPieces } = useSheetData();
@@ -14,18 +36,22 @@ export function ProjectLoader() {
 
   useEffect(() => {
     // Check if there's drawing project data in localStorage
-    const drawingProjectData = localStorage.getItem('drawing-project-data');
+    const drawingProjectDataStr = localStorage.getItem('drawing-project-data');
     
-    if (drawingProjectData) {
+    if (drawingProjectDataStr) {
       try {
-        const projectData = JSON.parse(drawingProjectData);
+        const projectData = JSON.parse(drawingProjectDataStr) as DrawingProjectData;
         
         // Set project name
         setProjectName('Novo Projeto de Desenho');
         
         // Set sheet data
         if (projectData.sheet) {
-          setSheet(projectData.sheet);
+          setSheet({
+            width: projectData.sheet.width,
+            height: projectData.sheet.height,
+            cutWidth: projectData.sheet.cutWidth || 4
+          });
         }
         
         // Set pieces
@@ -33,7 +59,7 @@ export function ProjectLoader() {
           setPieces(projectData.pieces);
           
           // Also add each piece individually to ensure IDs are handled correctly
-          projectData.pieces.forEach((piece: any) => {
+          projectData.pieces.forEach((piece) => {
             addPiece(piece);
           });
         }

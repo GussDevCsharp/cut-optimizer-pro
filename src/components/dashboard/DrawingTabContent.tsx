@@ -2,7 +2,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Pencil, Square, Circle, Triangle, Trash2, Save, Undo, Redo, PuzzlePiece } from "lucide-react";
+import { Pencil, Square, Circle, Triangle, Trash2, Save, Undo, Redo, Puzzle } from "lucide-react";
 import { toast } from "sonner";
 import DrawingCanvas from "./drawing/DrawingCanvas";
 import ShapeSelector from "./drawing/ShapeSelector";
@@ -117,7 +117,7 @@ export function DrawingTabContent({ userId, isActiveTab }: DrawingTabContentProp
                 className="w-full flex items-center justify-center gap-2"
                 onClick={handleGenerateProject}
               >
-                <PuzzlePiece className="h-4 w-4" />
+                <Puzzle className="h-4 w-4" />
                 Gerar Projeto
               </Button>
               <p className="text-xs text-muted-foreground mt-2">
