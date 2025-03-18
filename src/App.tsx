@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,6 +12,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Testing from "./pages/Testing";
 import Home from "./pages/Home";
+import Materials from "./pages/Materials";
 import { useEffect } from "react";
 
 // Protected route component
@@ -93,6 +95,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <Index />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/materiais" 
+        element={
+          <ProtectedRoute>
+            <Materials />
           </ProtectedRoute>
         } 
       />
