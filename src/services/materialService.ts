@@ -6,6 +6,12 @@ import { supabase } from '@/integrations/supabase/client';
 // Type-cast the supabase client to include our materials table definition
 const typedSupabase = supabase as unknown as ReturnType<typeof createClient<MaterialsDatabase>>;
 
+// Filter out frontend-only fields before sending to database
+const filterNonDatabaseFields = (material: Partial<Material>) => {
+  const { color, availability, ...databaseFields } = material;
+  return databaseFields;
+};
+
 // Fetch all materials for a user
 export const fetchMaterials = async (userId: string): Promise<ApiResponse<Material[]>> => {
   try {
@@ -62,14 +68,17 @@ export const fetchMaterialById = async (materialId: string): Promise<ApiResponse
 
 // Create a new material - only send fields that exist in the database
 export const createMaterial = async (
-  material: Omit<Material, 'id' | 'created_at' | 'updated_at' | 'color' | 'availability'>
+  material: Omit<Material, 'id' | 'created_at' | 'updated_at'>
 ): Promise<ApiResponse<Material>> => {
   try {
-    console.log('Creating material with data:', material);
+    // Filter out fields that don't exist in the database
+    const databaseFields = filterNonDatabaseFields(material);
+    
+    console.log('Creating material with data:', databaseFields);
     
     const { data, error } = await typedSupabase
       .from('materials')
-      .insert([material])
+      .insert([databaseFields])
       .select()
       .single();
 
@@ -94,12 +103,15 @@ export const createMaterial = async (
 // Update an existing material - only send fields that exist in the database
 export const updateMaterial = async (
   materialId: string, 
-  materialData: Partial<Omit<Material, 'id' | 'created_at' | 'user_id' | 'color' | 'availability'>>
+  materialData: Partial<Omit<Material, 'id' | 'created_at' | 'user_id'>>
 ): Promise<ApiResponse<Material>> => {
   try {
+    // Filter out fields that don't exist in the database
+    const databaseFields = filterNonDatabaseFields(materialData);
+    
     const { data, error } = await typedSupabase
       .from('materials')
-      .update(materialData)
+      .update(databaseFields)
       .eq('id', materialId)
       .select()
       .single();

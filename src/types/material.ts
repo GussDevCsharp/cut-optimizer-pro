@@ -1,3 +1,4 @@
+
 import type { Database } from "@/integrations/supabase/types";
 
 // Material-related types
@@ -16,6 +17,7 @@ export interface Material {
   height?: number;
   stock_quantity?: number;
   supplier?: string;
+  // Frontend-only fields (not in database)
   color?: string;
   availability?: "Disponível" | "Indisponível" | "Sob Encomenda";
 }
@@ -46,6 +48,7 @@ export type MaterialsDatabase = Database & {
           height?: number;
           stock_quantity?: number;
           supplier?: string;
+          // Note: color and availability fields are not in the actual database
         };
         Insert: {
           name: string;
