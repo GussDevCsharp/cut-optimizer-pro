@@ -130,7 +130,7 @@ export const TextImportTab = ({ onImportSuccess, onImportProject }: TextImportTa
             setTextContent={setTextContent}
             onFileUpload={handleFileUpload}
             clearError={clearError}
-            placeholder="PROJECT_INFO:NAME=Meu Projeto&#10;SHEET_DATA:WIDTH=1220;HEIGHT=2440;CUT_WIDTH=4&#10;PIECE:WIDTH=500;HEIGHT=300;QUANTITY=2;CAN_ROTATE=true&#10;PIECE:WIDTH=400;HEIGHT=200;QUANTITY=3;CAN_ROTATE=false"
+            placeholder="P;Meu Projeto;1.0;2023-06-25T12:30:45.000Z&#10;S;1220;2440;4;material-id&#10;R;500;300;2;true&#10;R;400;200;3;false"
             formatHint="Arquivo de projeto completo no formato linha por linha."
           />
           

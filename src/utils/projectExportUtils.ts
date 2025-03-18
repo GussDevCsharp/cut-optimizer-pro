@@ -11,10 +11,10 @@ interface ProjectData {
 
 // Define line prefixes for the file format
 const LINE_PREFIXES = {
-  PROJECT_INFO: "PROJECT_INFO:",
-  SHEET_DATA: "SHEET_DATA:",
-  PIECE: "PIECE:",
-  PLACED: "PLACED:"
+  PROJECT_INFO: "P",
+  SHEET_DATA: "S",
+  PIECE: "R",
+  PLACED: "C"
 };
 
 /**
@@ -25,23 +25,23 @@ export const exportProjectToText = (projectData: ProjectData): string => {
   let output = "";
   
   // Project Info Line
-  output += `${LINE_PREFIXES.PROJECT_INFO}NAME=${projectName};VERSION=1.0;TIMESTAMP=${new Date().toISOString()}\n`;
+  output += `${LINE_PREFIXES.PROJECT_INFO};${projectName};1.0;${new Date().toISOString()}\n`;
   
   // Sheet Data Line
-  output += `${LINE_PREFIXES.SHEET_DATA}WIDTH=${sheet.width};HEIGHT=${sheet.height};CUT_WIDTH=${sheet.cutWidth}`;
+  output += `${LINE_PREFIXES.SHEET_DATA};${sheet.width};${sheet.height};${sheet.cutWidth}`;
   if (sheet.materialId) {
-    output += `;MATERIAL_ID=${sheet.materialId}`;
+    output += `;${sheet.materialId}`;
   }
   output += '\n';
   
   // Pieces Data Lines
   pieces.forEach(piece => {
-    output += `${LINE_PREFIXES.PIECE}WIDTH=${piece.width};HEIGHT=${piece.height};QUANTITY=${piece.quantity};CAN_ROTATE=${piece.canRotate}\n`;
+    output += `${LINE_PREFIXES.PIECE};${piece.width};${piece.height};${piece.quantity};${piece.canRotate}\n`;
   });
   
   // Placed Pieces Data Lines
   placedPieces.forEach(piece => {
-    output += `${LINE_PREFIXES.PLACED}WIDTH=${piece.width};HEIGHT=${piece.height};X=${piece.x};Y=${piece.y};ROTATED=${piece.rotated};SHEET_INDEX=${piece.sheetIndex}\n`;
+    output += `${LINE_PREFIXES.PLACED};${piece.width};${piece.height};${piece.x};${piece.y};${piece.rotated};${piece.sheetIndex}\n`;
   });
   
   return output;
@@ -71,14 +71,22 @@ export const importProjectFromText = (content: string): ProjectData => {
     if (!trimmedLine) continue;
     
     // Process line based on its prefix
-    if (trimmedLine.startsWith(LINE_PREFIXES.PROJECT_INFO)) {
-      processProjectInfoLine(trimmedLine.substring(LINE_PREFIXES.PROJECT_INFO.length), projectData);
-    } else if (trimmedLine.startsWith(LINE_PREFIXES.SHEET_DATA)) {
-      processSheetDataLine(trimmedLine.substring(LINE_PREFIXES.SHEET_DATA.length), projectData);
-    } else if (trimmedLine.startsWith(LINE_PREFIXES.PIECE)) {
-      processPieceDataLine(trimmedLine.substring(LINE_PREFIXES.PIECE.length), projectData);
-    } else if (trimmedLine.startsWith(LINE_PREFIXES.PLACED)) {
-      processPlacedPieceDataLine(trimmedLine.substring(LINE_PREFIXES.PLACED.length), projectData);
+    const prefix = trimmedLine[0]; // First character is the prefix
+    const data = trimmedLine.substring(2).split(';'); // Skip prefix and separator, then split
+    
+    switch (prefix) {
+      case LINE_PREFIXES.PROJECT_INFO:
+        processProjectInfoLine(data, projectData);
+        break;
+      case LINE_PREFIXES.SHEET_DATA:
+        processSheetDataLine(data, projectData);
+        break;
+      case LINE_PREFIXES.PIECE:
+        processPieceDataLine(data, projectData);
+        break;
+      case LINE_PREFIXES.PLACED:
+        processPlacedPieceDataLine(data, projectData);
+        break;
     }
   }
   
@@ -88,10 +96,9 @@ export const importProjectFromText = (content: string): ProjectData => {
 /**
  * Process a line of project info data
  */
-const processProjectInfoLine = (dataStr: string, projectData: ProjectData) => {
-  const data = parseDataString(dataStr);
-  if (data.NAME) {
-    projectData.projectName = data.NAME;
+const processProjectInfoLine = (data: string[], projectData: ProjectData) => {
+  if (data.length >= 1) {
+    projectData.projectName = data[0];
   }
   // Other project info fields can be processed here
 };
@@ -99,82 +106,60 @@ const processProjectInfoLine = (dataStr: string, projectData: ProjectData) => {
 /**
  * Process a line of sheet data
  */
-const processSheetDataLine = (dataStr: string, projectData: ProjectData) => {
-  const data = parseDataString(dataStr);
-  
-  if (data.WIDTH) {
-    projectData.sheet.width = parseInt(data.WIDTH, 10);
-  }
-  if (data.HEIGHT) {
-    projectData.sheet.height = parseInt(data.HEIGHT, 10);
-  }
-  if (data.CUT_WIDTH) {
-    projectData.sheet.cutWidth = parseInt(data.CUT_WIDTH, 10);
-  }
-  if (data.MATERIAL_ID) {
-    projectData.sheet.materialId = data.MATERIAL_ID;
+const processSheetDataLine = (data: string[], projectData: ProjectData) => {
+  if (data.length >= 3) {
+    projectData.sheet.width = parseInt(data[0], 10) || 1220;
+    projectData.sheet.height = parseInt(data[1], 10) || 2440;
+    projectData.sheet.cutWidth = parseInt(data[2], 10) || 4;
+    
+    if (data.length >= 4 && data[3]) {
+      projectData.sheet.materialId = data[3];
+    }
   }
 };
 
 /**
  * Process a line of piece data
  */
-const processPieceDataLine = (dataStr: string, projectData: ProjectData) => {
-  const data = parseDataString(dataStr);
-  
-  if (data.WIDTH && data.HEIGHT) {
+const processPieceDataLine = (data: string[], projectData: ProjectData) => {
+  if (data.length >= 4) {
     const piece: Piece = {
       id: uuidv4(), // Generate an ID for the piece
-      width: parseInt(data.WIDTH, 10),
-      height: parseInt(data.HEIGHT, 10),
-      quantity: data.QUANTITY ? parseInt(data.QUANTITY, 10) : 1,
-      canRotate: data.CAN_ROTATE === "true",
+      width: parseInt(data[0], 10) || 0,
+      height: parseInt(data[1], 10) || 0,
+      quantity: parseInt(data[2], 10) || 1,
+      canRotate: data[3]?.toLowerCase() === "true",
       color: getRandomColor() // Let the platform handle colors
     };
     
-    projectData.pieces.push(piece);
+    if (piece.width > 0 && piece.height > 0) {
+      projectData.pieces.push(piece);
+    }
   }
 };
 
 /**
  * Process a line of placed piece data
  */
-const processPlacedPieceDataLine = (dataStr: string, projectData: ProjectData) => {
-  const data = parseDataString(dataStr);
-  
-  if (data.WIDTH && data.HEIGHT && data.X && data.Y) {
+const processPlacedPieceDataLine = (data: string[], projectData: ProjectData) => {
+  if (data.length >= 6) {
     const placedPiece: PlacedPiece = {
       id: uuidv4(), // Generate an ID for the placed piece
-      width: parseInt(data.WIDTH, 10),
-      height: parseInt(data.HEIGHT, 10),
+      width: parseInt(data[0], 10) || 0,
+      height: parseInt(data[1], 10) || 0,
       quantity: 1,
       canRotate: true,
-      x: parseInt(data.X, 10),
-      y: parseInt(data.Y, 10),
-      rotated: data.ROTATED === "true",
-      sheetIndex: data.SHEET_INDEX ? parseInt(data.SHEET_INDEX, 10) : 0,
+      x: parseInt(data[2], 10) || 0,
+      y: parseInt(data[3], 10) || 0,
+      rotated: data[4]?.toLowerCase() === "true",
+      sheetIndex: parseInt(data[5], 10) || 0,
       color: getRandomColor() // Let the platform handle colors
     };
     
-    projectData.placedPieces.push(placedPiece);
-  }
-};
-
-/**
- * Helper function to parse key-value pairs from a data string
- */
-const parseDataString = (dataStr: string) => {
-  const result: Record<string, string> = {};
-  const pairs = dataStr.split(';');
-  
-  for (const pair of pairs) {
-    const [key, value] = pair.split('=');
-    if (key && value !== undefined) {
-      result[key] = value;
+    if (placedPiece.width > 0 && placedPiece.height > 0) {
+      projectData.placedPieces.push(placedPiece);
     }
   }
-  
-  return result;
 };
 
 /**

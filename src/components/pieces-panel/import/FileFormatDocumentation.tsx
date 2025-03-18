@@ -26,51 +26,51 @@ export const FileFormatDocumentation: React.FC = () => {
         <h4 className="font-medium mt-4">Estrutura do Arquivo</h4>
         <div className="bg-secondary p-2 rounded-md">
           <pre className="text-xs overflow-x-auto">
-{`PROJECT_INFO:NAME=Nome do Projeto;VERSION=1.0;TIMESTAMP=2023-06-25T12:30:45.000Z
-SHEET_DATA:WIDTH=1220;HEIGHT=2440;CUT_WIDTH=4;MATERIAL_ID=opcional-id-material
-PIECE:WIDTH=500;HEIGHT=300;QUANTITY=2;CAN_ROTATE=true
-PIECE:WIDTH=400;HEIGHT=200;QUANTITY=3;CAN_ROTATE=false
-PLACED:WIDTH=500;HEIGHT=300;X=10;Y=10;ROTATED=false;SHEET_INDEX=0`}
+{`P;Nome do Projeto;1.0;2023-06-25T12:30:45.000Z
+S;1220;2440;4;opcional-id-material
+R;500;300;2;true
+R;400;200;3;false
+C;500;300;10;10;false;0`}
           </pre>
         </div>
         
         <h4 className="font-medium mt-4">Tipos de Linha</h4>
         <ul className="list-disc pl-5 space-y-2">
           <li>
-            <strong>PROJECT_INFO</strong>: Informações gerais do projeto
+            <strong>P</strong>: Informações do projeto
             <ul className="list-disc pl-5 text-muted-foreground">
-              <li>NAME - Nome do projeto</li>
-              <li>VERSION - Versão do formato (atual: 1.0)</li>
-              <li>TIMESTAMP - Data e hora da exportação</li>
+              <li>Nome do projeto</li>
+              <li>Versão do formato (atual: 1.0)</li>
+              <li>Data e hora da exportação</li>
             </ul>
           </li>
           <li>
-            <strong>SHEET_DATA</strong>: Configuração da chapa
+            <strong>S</strong>: Configuração da chapa
             <ul className="list-disc pl-5 text-muted-foreground">
-              <li>WIDTH - Largura da chapa em mm</li>
-              <li>HEIGHT - Altura da chapa em mm</li>
-              <li>CUT_WIDTH - Largura do corte em mm</li>
-              <li>MATERIAL_ID - Identificador do material (opcional)</li>
+              <li>Largura da chapa em mm</li>
+              <li>Altura da chapa em mm</li>
+              <li>Largura do corte em mm</li>
+              <li>Identificador do material (opcional)</li>
             </ul>
           </li>
           <li>
-            <strong>PIECE</strong>: Definição de uma peça 
+            <strong>R</strong>: Definição de uma peça 
             <ul className="list-disc pl-5 text-muted-foreground">
-              <li>WIDTH - Largura da peça em mm</li>
-              <li>HEIGHT - Altura da peça em mm</li>
-              <li>QUANTITY - Quantidade de peças</li>
-              <li>CAN_ROTATE - Indica se a peça pode ser rotacionada (true/false)</li>
+              <li>Largura da peça em mm</li>
+              <li>Altura da peça em mm</li>
+              <li>Quantidade de peças</li>
+              <li>Indica se a peça pode ser rotacionada (true/false)</li>
             </ul>
           </li>
           <li>
-            <strong>PLACED</strong>: Peça posicionada na chapa
+            <strong>C</strong>: Peça posicionada na chapa
             <ul className="list-disc pl-5 text-muted-foreground">
-              <li>WIDTH - Largura da peça em mm</li>
-              <li>HEIGHT - Altura da peça em mm</li>
-              <li>X - Posição X na chapa (coordenada do canto superior esquerdo)</li>
-              <li>Y - Posição Y na chapa (coordenada do canto superior esquerdo)</li>
-              <li>ROTATED - Indica se a peça está rotacionada (true/false)</li>
-              <li>SHEET_INDEX - Índice da chapa onde a peça está posicionada (0, 1, 2, ...)</li>
+              <li>Largura da peça em mm</li>
+              <li>Altura da peça em mm</li>
+              <li>Posição X na chapa (coordenada do canto superior esquerdo)</li>
+              <li>Posição Y na chapa (coordenada do canto superior esquerdo)</li>
+              <li>Indica se a peça está rotacionada (true/false)</li>
+              <li>Índice da chapa onde a peça está posicionada (0, 1, 2, ...)</li>
             </ul>
           </li>
         </ul>
@@ -78,12 +78,12 @@ PLACED:WIDTH=500;HEIGHT=300;X=10;Y=10;ROTATED=false;SHEET_INDEX=0`}
         <h4 className="font-medium mt-4">Notas de Implementação</h4>
         <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
           <li>O arquivo deve ser salvo em formato texto (.txt) com codificação UTF-8.</li>
-          <li>Cada linha deve conter apenas um tipo de informação.</li>
-          <li>Os campos são case-sensitive.</li>
+          <li>Cada linha começa com um identificador de tipo (P, S, R, C).</li>
+          <li>Os valores são separados por ponto-e-vírgula (;).</li>
+          <li>A ordem dos valores é fixa para cada tipo de linha.</li>
           <li>As linhas em branco são ignoradas.</li>
           <li>As cores das peças são definidas pela plataforma.</li>
           <li>IDs são gerados automaticamente pela plataforma.</li>
-          <li>As coordenadas X e Y são relativas ao canto superior esquerdo da chapa.</li>
         </ul>
       </div>
       
