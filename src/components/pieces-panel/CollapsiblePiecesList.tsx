@@ -27,7 +27,7 @@ export const CollapsiblePiecesList = ({
   return (
     <div className="h-full flex">
       <Collapsible open={isOpen} onOpenChange={setIsOpen} className="h-full flex">
-        <CollapsibleContent className="h-full">
+        <CollapsibleContent className="h-full flex-grow">
           <Card className="h-full shadow-subtle border animate-fade-in overflow-hidden flex flex-col">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
@@ -48,7 +48,7 @@ export const CollapsiblePiecesList = ({
         
         <div className="flex items-center">
           <CollapsibleTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
+            <Button variant="ghost" size="icon" className="h-8 w-8 shadow-md bg-background rounded-full">
               {isOpen ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
             </Button>
           </CollapsibleTrigger>
