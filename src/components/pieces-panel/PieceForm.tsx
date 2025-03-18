@@ -1,14 +1,12 @@
 
 import { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Plus } from 'lucide-react';
 import { Piece } from '../../hooks/useSheetData';
 import { useProjectActions } from "@/hooks/useProjectActions";
 import { useSheetData } from "@/hooks/useSheetData";
 import { useToast } from "@/hooks/use-toast";
-import { SheetDimensionInput } from "../sheet-panel/SheetDimensionInput";
+import { PieceDimensionsInput } from './piece-form/PieceDimensionsInput';
+import { PieceQuantityInput } from './piece-form/PieceQuantityInput';
+import { AddPieceButton } from './piece-form/AddPieceButton';
 
 interface PieceFormProps {
   onAddPiece: (piece: Piece) => void;
@@ -88,41 +86,26 @@ export const PieceForm = ({ onAddPiece, projectId }: PieceFormProps) => {
     setNewPiece({ ...newPiece, [dimension]: value });
   };
 
+  const handleQuantityChange = (quantity: number) => {
+    setNewPiece({ ...newPiece, quantity });
+  };
+
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <SheetDimensionInput
-          id="width"
-          label="Largura (mm)"
-          value={newPiece.width}
-          onChange={(value) => handleDimensionChange('width', value)}
-        />
-        <SheetDimensionInput
-          id="height"
-          label="Altura (mm)"
-          value={newPiece.height}
-          onChange={(value) => handleDimensionChange('height', value)}
-        />
-      </div>
+      <PieceDimensionsInput
+        piece={newPiece}
+        onDimensionChange={handleDimensionChange}
+      />
 
-      <div className="space-y-2">
-        <Label htmlFor="quantity">Quantidade</Label>
-        <Input
-          id="quantity"
-          type="number"
-          value={newPiece.quantity}
-          onChange={(e) => setNewPiece({ ...newPiece, quantity: Number(e.target.value) })}
-        />
-      </div>
+      <PieceQuantityInput
+        quantity={newPiece.quantity}
+        onQuantityChange={handleQuantityChange}
+      />
 
-      <Button 
-        className="w-full mt-2" 
+      <AddPieceButton
         onClick={handleAddPiece}
-        disabled={isSaving}
-      >
-        <Plus size={16} className="mr-2" />
-        {isSaving ? "Salvando..." : "Adicionar Peça"}
-      </Button>
+        isLoading={isSaving}
+      />
     </div>
   );
 };
