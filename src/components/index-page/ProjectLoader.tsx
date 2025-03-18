@@ -99,39 +99,48 @@ export function ProjectLoader() {
     // If no drawing data, proceed with regular project loading logic
     if (projectId) {
       const loadProjectData = async () => {
-        const project = await loadProject(projectId);
-        
-        if (project && project.description) {
-          try {
-            // Parse project description if it's a string
-            const projectDesc = typeof project.description === 'string' 
-              ? JSON.parse(project.description) 
-              : project.description;
-            
-            // Set project name
-            setProjectName(project.name);
-            
-            // Set sheet data if available
-            if (projectDesc.sheet) {
-              setSheet(projectDesc.sheet);
+        try {
+          const project = await loadProject(projectId);
+          
+          if (project && project.description) {
+            try {
+              // Parse project description if it's a string
+              const projectDesc = typeof project.description === 'string' 
+                ? JSON.parse(project.description) 
+                : project.description;
+              
+              // Set project name
+              setProjectName(project.name || 'Projeto sem nome');
+              
+              // Set sheet data if available
+              if (projectDesc.sheet) {
+                setSheet(projectDesc.sheet);
+              }
+              
+              // Set pieces if available
+              if (projectDesc.pieces && Array.isArray(projectDesc.pieces)) {
+                setPieces(projectDesc.pieces);
+              }
+              
+              // Set placed pieces if available
+              if (projectDesc.placedPieces && Array.isArray(projectDesc.placedPieces)) {
+                setPlacedPieces(projectDesc.placedPieces);
+              }
+              
+              // Update URL state to include projectId
+              navigate('?projectId=' + projectId, { replace: true });
+              
+              toast.success('Projeto carregado com sucesso', {
+                description: `${project.name} foi carregado`
+              });
+            } catch (error) {
+              console.error('Error parsing project description:', error);
+              toast.error('Erro ao carregar projeto');
             }
-            
-            // Set pieces if available
-            if (projectDesc.pieces && Array.isArray(projectDesc.pieces)) {
-              setPieces(projectDesc.pieces);
-            }
-            
-            // Set placed pieces if available
-            if (projectDesc.placedPieces && Array.isArray(projectDesc.placedPieces)) {
-              setPlacedPieces(projectDesc.placedPieces);
-            }
-            
-            // Update URL state to include projectId
-            navigate('?projectId=' + projectId, { replace: true });
-          } catch (error) {
-            console.error('Error parsing project description:', error);
-            toast.error('Erro ao carregar projeto');
           }
+        } catch (error) {
+          console.error('Error loading project:', error);
+          toast.error('Erro ao carregar projeto');
         }
       };
       
