@@ -56,6 +56,41 @@ export class SheetGrid {
     
     return true;
   }
+
+  // Método adicional para verificar posições com uma margem extra de segurança para peças problemáticas
+  isSecurePosition(x: number, y: number, pieceWidth: number, pieceHeight: number, safetyMargin: number): boolean {
+    // Verifica cada ponto ao redor da peça com uma margem extra de segurança
+    const extendedCutStartX = Math.max(0, x - safetyMargin);
+    const extendedCutStartY = Math.max(0, y - safetyMargin);
+    const extendedCutEndX = Math.min(this.width - 1, x + pieceWidth + safetyMargin - 1);
+    const extendedCutEndY = Math.min(this.height - 1, y + pieceHeight + safetyMargin - 1);
+    
+    // Verifica os cantos com atenção especial (onde sobreposições costumam ocorrer)
+    const corners = [
+      { x: extendedCutStartX, y: extendedCutStartY },
+      { x: extendedCutEndX, y: extendedCutStartY },
+      { x: extendedCutStartX, y: extendedCutEndY },
+      { x: extendedCutEndX, y: extendedCutEndY }
+    ];
+    
+    for (const corner of corners) {
+      // Verificação extra nos cantos
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const cx = corner.x + dx;
+          const cy = corner.y + dy;
+          if (cx >= 0 && cx < this.width && cy >= 0 && cy < this.height) {
+            if (this.grid[cy][cx]) {
+              return false; // Área não é segura
+            }
+          }
+        }
+      }
+    }
+    
+    // Se passou por todas as verificações, a posição é segura
+    return true;
+  }
   
   // Mark an area as occupied
   occupyArea(x: number, y: number, pieceWidth: number, pieceHeight: number): void {

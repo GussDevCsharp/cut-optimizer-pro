@@ -15,9 +15,36 @@ export const optimizeCutting = (
   const sortedPieces = sortPiecesByArea(pieces);
   const placedPieces: PlacedPiece[] = [];
   
-  // Expand pieces based on quantity
-  const expandedPieces: Piece[] = [];
+  // Priorize peças problemáticas (como 200x275)
+  const priorityPieces: Piece[] = [];
+  const normalPieces: Piece[] = [];
+  
+  // Identificar peças problemáticas
   sortedPieces.forEach(piece => {
+    const isPriority = (piece.width === 200 && piece.height === 275) || 
+                      (piece.width === 275 && piece.height === 200);
+    if (isPriority) {
+      priorityPieces.push(piece);
+    } else {
+      normalPieces.push(piece);
+    }
+  });
+  
+  // Expandir peças baseado na quantidade, começando pelas prioritárias
+  const expandedPieces: Piece[] = [];
+  
+  // Primeiro as peças prioritárias
+  priorityPieces.forEach(piece => {
+    for (let i = 0; i < piece.quantity; i++) {
+      expandedPieces.push({
+        ...piece,
+        color: piece.color || generatePastelColor()
+      });
+    }
+  });
+  
+  // Depois as peças normais
+  normalPieces.forEach(piece => {
     for (let i = 0; i < piece.quantity; i++) {
       expandedPieces.push({
         ...piece,
@@ -34,6 +61,14 @@ export const optimizeCutting = (
   // Try to place each piece
   for (const piece of expandedPieces) {
     let placed = false;
+    
+    // Verifica se é uma peça problemática
+    const isPriority = (piece.width === 200 && piece.height === 275) || 
+                       (piece.width === 275 && piece.height === 200);
+    
+    if (isPriority) {
+      console.log(`Trying to place priority piece ${piece.width}x${piece.height}`);
+    }
     
     // Try to place on existing sheets, starting from the first sheet
     for (let sheetIndex = 0; sheetIndex < sheetGrids.length; sheetIndex++) {
@@ -56,8 +91,8 @@ export const optimizeCutting = (
         placedPieces.push(placedPiece);
         placed = true;
         
-        if (placedPieces.length < 5) { // Only log for first few pieces to avoid console spam
-          console.log(`Placed piece ${placedPiece.width}x${placedPiece.height} at (${position.x},${position.y}) on sheet ${sheetIndex}, rotated: ${position.rotated}`);
+        if (isPriority || placedPieces.length < 5) { // Log prioridades e primeiras peças
+          console.log(`Placed ${isPriority ? 'PRIORITY ' : ''}piece ${placedPiece.width}x${placedPiece.height} at (${position.x},${position.y}) on sheet ${sheetIndex}, rotated: ${position.rotated}`);
         }
         
         break; // Move to the next piece
@@ -70,7 +105,7 @@ export const optimizeCutting = (
       const newSheetGrid = new SheetGrid(sheet.width, sheet.height);
       sheetGrids.push(newSheetGrid);
       
-      console.log("Created new sheet:", newSheetIndex);
+      console.log(`Created new sheet: ${newSheetIndex} for ${isPriority ? 'PRIORITY ' : ''}piece ${piece.width}x${piece.height}`);
       
       // Try to place on the new sheet
       const newPosition = findBestPosition(piece, newSheetGrid, sheet);
@@ -90,11 +125,35 @@ export const optimizeCutting = (
         newSheetGrid.occupyArea(newPosition.x, newPosition.y, placedPiece.width, placedPiece.height);
         placedPieces.push(placedPiece);
         
-        console.log(`Placed piece ${placedPiece.width}x${placedPiece.height} at (${newPosition.x},${newPosition.y}) on new sheet ${newSheetIndex}, rotated: ${newPosition.rotated}`);
+        console.log(`Placed ${isPriority ? 'PRIORITY ' : ''}piece ${placedPiece.width}x${placedPiece.height} at (${newPosition.x},${newPosition.y}) on new sheet ${newSheetIndex}, rotated: ${newPosition.rotated}`);
       } else {
-        console.warn(`Failed to place piece ${piece.width}x${piece.height} even on a new sheet!`);
+        console.warn(`Failed to place ${isPriority ? 'PRIORITY ' : ''}piece ${piece.width}x${piece.height} even on a new sheet!`);
       }
     }
+  }
+  
+  // Verificação final para detectar possíveis sobreposições
+  console.log("Running final overlap check...");
+  const verificationGrids: SheetGrid[] = [];
+  for (let i = 0; i < sheetGrids.length; i++) {
+    verificationGrids.push(new SheetGrid(sheet.width, sheet.height));
+  }
+  
+  let hasOverlap = false;
+  for (const piece of placedPieces) {
+    const grid = verificationGrids[piece.sheetIndex];
+    if (!grid.isAreaAvailable(piece.x, piece.y, piece.width, piece.height, 0)) {
+      console.error(`OVERLAP DETECTED: Piece ${piece.width}x${piece.height} at (${piece.x},${piece.y}) on sheet ${piece.sheetIndex}`);
+      hasOverlap = true;
+    } else {
+      grid.occupyArea(piece.x, piece.y, piece.width, piece.height);
+    }
+  }
+  
+  if (hasOverlap) {
+    console.error("WARNING: Overlaps detected in final check. Algorithm may need further improvements.");
+  } else {
+    console.log("Final check complete: No overlaps detected.");
   }
   
   console.log("Optimization complete. Placed", placedPieces.length, "pieces on", sheetGrids.length, "sheets");
