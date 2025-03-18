@@ -1,4 +1,3 @@
-
 import { MutableRefObject } from 'react';
 import { Shape, DrawingTool } from '../types/drawingTypes';
 import { drawShape } from '../utils/drawingUtils';
@@ -13,6 +12,7 @@ interface DrawingHandlersParams {
   redoHistoryRef: MutableRefObject<Shape[][]>;
   activeTool: DrawingTool;
   activeColor: string;
+  lineWidth?: number;
 }
 
 export function useDrawingHandlers({
@@ -24,7 +24,8 @@ export function useDrawingHandlers({
   undoHistoryRef,
   redoHistoryRef,
   activeTool,
-  activeColor
+  activeColor,
+  lineWidth = 2
 }: DrawingHandlersParams) {
   const redrawCanvas = () => {
     if (!contextRef.current || !canvasRef.current) return;
@@ -82,14 +83,16 @@ export function useDrawingHandlers({
         type: 'line',
         startX: x,
         startY: y,
-        color: activeColor
+        color: activeColor,
+        lineWidth: lineWidth
       };
     } else if (activeTool !== 'select') {
       currentShapeRef.current = {
         type: activeTool,
         startX: x,
         startY: y,
-        color: activeColor
+        color: activeColor,
+        lineWidth: lineWidth
       };
     }
   };
@@ -116,7 +119,8 @@ export function useDrawingHandlers({
         drawShape(contextRef.current, {
           ...currentShapeRef.current,
           endX: x,
-          endY: y
+          endY: y,
+          lineWidth: lineWidth
         });
       }
     }
@@ -149,7 +153,8 @@ export function useDrawingHandlers({
       const newShape = {
         ...currentShapeRef.current,
         endX: x,
-        endY: y
+        endY: y,
+        lineWidth: lineWidth
       };
       
       shapesRef.current = [...shapesRef.current, newShape];

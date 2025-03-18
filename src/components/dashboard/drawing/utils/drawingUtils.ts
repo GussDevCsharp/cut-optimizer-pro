@@ -5,6 +5,11 @@ export function drawShape(ctx: CanvasRenderingContext2D, shape: Shape): void {
   ctx.beginPath();
   ctx.strokeStyle = shape.color;
   
+  // Apply line width if specified, otherwise use context default
+  if (shape.lineWidth) {
+    ctx.lineWidth = shape.lineWidth;
+  }
+  
   const { startX, startY, endX = startX, endY = startY } = shape;
   
   switch (shape.type) {
@@ -45,9 +50,14 @@ export function drawShape(ctx: CanvasRenderingContext2D, shape: Shape): void {
   }
   
   ctx.stroke();
+  
+  // Reset to default line width after drawing
+  if (shape.lineWidth) {
+    ctx.lineWidth = 2; // Reset to default
+  }
 }
 
-export function setupCanvas(canvas: HTMLCanvasElement): CanvasRenderingContext2D | null {
+export function setupCanvas(canvas: HTMLCanvasElement, lineWidth: number = 2): CanvasRenderingContext2D | null {
   const container = canvas.parentElement;
   if (!container) return null;
   
@@ -58,7 +68,7 @@ export function setupCanvas(canvas: HTMLCanvasElement): CanvasRenderingContext2D
   if (ctx) {
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
-    ctx.lineWidth = 2;
+    ctx.lineWidth = lineWidth;
   }
   
   return ctx;

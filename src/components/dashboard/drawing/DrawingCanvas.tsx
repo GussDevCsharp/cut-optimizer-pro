@@ -1,5 +1,5 @@
 
-import React, { useImperativeHandle, forwardRef } from "react";
+import React, { useImperativeHandle, forwardRef, useState } from "react";
 import { useCanvasSetup } from "./hooks/useCanvasSetup";
 import { useDrawingState } from "./hooks/useDrawingState";
 import { useDrawingHandlers } from "./hooks/useDrawingHandlers";
@@ -7,9 +7,12 @@ import { useDrawingActions } from "./hooks/useDrawingActions";
 import { DrawingCanvasProps } from "./types/drawingTypes";
 
 const DrawingCanvas = forwardRef<any, DrawingCanvasProps>(
-  ({ activeTool, activeColor }, ref) => {
+  ({ activeTool, activeColor, lineWidth = 2 }, ref) => {
+    // Local state to track line width
+    const [currentLineWidth, setCurrentLineWidth] = useState(lineWidth);
+    
     // Set up canvas and context
-    const { canvasRef, contextRef } = useCanvasSetup(activeColor);
+    const { canvasRef, contextRef } = useCanvasSetup(activeColor, currentLineWidth);
     
     // Set up drawing state
     const { isDrawingRef, shapesRef, undoHistoryRef, redoHistoryRef, currentShapeRef } = useDrawingState();
@@ -24,7 +27,8 @@ const DrawingCanvas = forwardRef<any, DrawingCanvasProps>(
       undoHistoryRef,
       redoHistoryRef,
       activeTool,
-      activeColor
+      activeColor,
+      lineWidth: currentLineWidth
     });
 
     // Set up drawing actions
@@ -37,6 +41,14 @@ const DrawingCanvas = forwardRef<any, DrawingCanvasProps>(
       redrawCanvas
     });
 
+    // Function to change line width
+    const setLineWidth = (width: number) => {
+      setCurrentLineWidth(width);
+      if (contextRef.current) {
+        contextRef.current.lineWidth = width;
+      }
+    };
+
     // Expose functions to parent component through ref
     useImperativeHandle(ref, () => ({
       clearCanvas,
@@ -44,6 +56,7 @@ const DrawingCanvas = forwardRef<any, DrawingCanvasProps>(
       redo,
       saveAsImage,
       setDrawingColor,
+      setLineWidth,
       setDrawingTool: () => {
         // Just to keep the interface consistent - tool is already updated in the parent
       }

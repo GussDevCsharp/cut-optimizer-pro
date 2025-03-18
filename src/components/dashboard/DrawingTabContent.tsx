@@ -15,6 +15,7 @@ interface DrawingTabContentProps {
 export function DrawingTabContent({ userId, isActiveTab }: DrawingTabContentProps) {
   const [activeTool, setActiveTool] = useState<'select' | 'pencil' | 'square' | 'circle' | 'triangle'>('select');
   const [activeColor, setActiveColor] = useState('#3b82f6'); // Default color: blue
+  const [lineWidth, setLineWidth] = useState(2); // Default line width: 2px
   const canvasRef = useRef<any>(null);
 
   // Initialize or reset the canvas when tab becomes active
@@ -35,6 +36,13 @@ export function DrawingTabContent({ userId, isActiveTab }: DrawingTabContentProp
     setActiveTool(tool);
     if (canvasRef.current) {
       canvasRef.current.setDrawingTool(tool);
+    }
+  };
+
+  const handleLineWidthChange = (width: number) => {
+    setLineWidth(width);
+    if (canvasRef.current) {
+      canvasRef.current.setLineWidth(width);
     }
   };
 
@@ -92,6 +100,8 @@ export function DrawingTabContent({ userId, isActiveTab }: DrawingTabContentProp
               onSelectTool={handleToolSelect} 
               activeColor={activeColor}
               onColorChange={handleColorChange}
+              lineWidth={lineWidth}
+              onLineWidthChange={handleLineWidthChange}
             />
           </Card>
         </div>
@@ -100,7 +110,8 @@ export function DrawingTabContent({ userId, isActiveTab }: DrawingTabContentProp
             <DrawingCanvas 
               ref={canvasRef} 
               activeTool={activeTool} 
-              activeColor={activeColor} 
+              activeColor={activeColor}
+              lineWidth={lineWidth}
             />
           </Card>
         </div>

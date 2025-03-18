@@ -16,6 +16,7 @@ export const DesktopLayout = () => {
   const { pieces, updatePiece, removePiece } = useSheetData();
   const [activeTool, setActiveTool] = useState<'select' | 'pencil' | 'square' | 'circle' | 'triangle'>('select');
   const [activeColor, setActiveColor] = useState('#3b82f6'); // Default color: blue
+  const [lineWidth, setLineWidth] = useState(2); // Default line width: 2px
   const canvasRef = React.useRef<any>(null);
 
   const handleColorChange = (color: string) => {
@@ -29,6 +30,13 @@ export const DesktopLayout = () => {
     setActiveTool(tool);
     if (canvasRef.current) {
       canvasRef.current.setDrawingTool(tool);
+    }
+  };
+
+  const handleLineWidthChange = (width: number) => {
+    setLineWidth(width);
+    if (canvasRef.current) {
+      canvasRef.current.setLineWidth(width);
     }
   };
 
@@ -126,6 +134,8 @@ export const DesktopLayout = () => {
                   onSelectTool={handleToolSelect} 
                   activeColor={activeColor}
                   onColorChange={handleColorChange}
+                  lineWidth={lineWidth}
+                  onLineWidthChange={handleLineWidthChange}
                 />
                 <div className="flex flex-wrap gap-1 mt-2">
                   <button 
@@ -164,7 +174,8 @@ export const DesktopLayout = () => {
                 <DrawingCanvas 
                   ref={canvasRef} 
                   activeTool={activeTool} 
-                  activeColor={activeColor} 
+                  activeColor={activeColor}
+                  lineWidth={lineWidth}
                 />
               </Card>
             </div>

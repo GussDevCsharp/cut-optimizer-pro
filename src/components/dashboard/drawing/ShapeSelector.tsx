@@ -2,19 +2,25 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { MousePointer, Pencil, Square, Circle, Triangle } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { Label } from "@/components/ui/label";
 
 interface ShapeSelectorProps {
   activeTool: 'select' | 'pencil' | 'square' | 'circle' | 'triangle';
   onSelectTool: (tool: 'select' | 'pencil' | 'square' | 'circle' | 'triangle') => void;
   activeColor: string;
   onColorChange: (color: string) => void;
+  lineWidth?: number;
+  onLineWidthChange?: (width: number) => void;
 }
 
 const ShapeSelector: React.FC<ShapeSelectorProps> = ({ 
   activeTool, 
   onSelectTool, 
   activeColor, 
-  onColorChange 
+  onColorChange,
+  lineWidth = 2,
+  onLineWidthChange
 }) => {
   // Predefined colors
   const colors = [
@@ -27,6 +33,12 @@ const ShapeSelector: React.FC<ShapeSelectorProps> = ({
     '#ec4899', // Pink
     '#f97316'  // Orange
   ];
+
+  const handleLineWidthChange = (value: number[]) => {
+    if (onLineWidthChange) {
+      onLineWidthChange(value[0]);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -73,6 +85,21 @@ const ShapeSelector: React.FC<ShapeSelectorProps> = ({
           >
             <Triangle className="h-4 w-4" />
           </Button>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex flex-col space-y-1.5">
+          <Label htmlFor="line-width">Espessura da Linha: {lineWidth}px</Label>
+          <Slider 
+            id="line-width"
+            min={1} 
+            max={20} 
+            step={1} 
+            value={[lineWidth]} 
+            onValueChange={handleLineWidthChange}
+            className="w-full"
+          />
         </div>
       </div>
 
