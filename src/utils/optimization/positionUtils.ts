@@ -17,45 +17,35 @@ export const findBestPosition = (
   sheetGrid: SheetGrid,
   sheet: Sheet
 ): { x: number; y: number; rotated: boolean } | null => {
-  // Try both orientations
+  // Try both orientations - start with non-rotated
   const orientations = [
     { width: piece.width, height: piece.height, rotated: false },
-    { width: piece.height, height: piece.width, rotated: true && piece.canRotate } // Only rotate if allowed
-  ].filter(o => !o.rotated || piece.canRotate); // Filter out rotated option if rotation not allowed
+    { width: piece.height, height: piece.width, rotated: true }
+  ].filter(o => !o.rotated || piece.canRotate); // Only use rotated option if allowed
   
   let bestPosition = null;
-  let lowestY = Number.MAX_SAFE_INTEGER;
-  let lowestX = Number.MAX_SAFE_INTEGER;
+  let bestScore = Number.MAX_SAFE_INTEGER;
 
   // Try every possible position on the sheet
   for (const orientation of orientations) {
-    for (let y = 0; y <= sheet.height - orientation.height; y++) {
-      for (let x = 0; x <= sheet.width - orientation.width; x++) {
+    for (let y = 0; y <= sheet.height - orientation.height; y += 1) {
+      for (let x = 0; x <= sheet.width - orientation.width; x += 1) {
         if (sheetGrid.isAreaAvailable(x, y, orientation.width, orientation.height, sheet.cutWidth)) {
-          // We found a valid position - check if it's "better" than our current best
-          // Better means closer to the top-left corner
-          if (y < lowestY || (y === lowestY && x < lowestX)) {
-            lowestY = y;
-            lowestX = x;
+          // Calculate score - prefer positions closer to top-left
+          // And add preference for orientation that fits better
+          const score = y * 1000 + x + (orientation.rotated ? 0.5 : 0);
+          
+          if (score < bestScore) {
+            bestScore = score;
             bestPosition = { x, y, rotated: orientation.rotated };
-            
-            // If we found a position at y=0, we can break early as this is already optimal
-            if (y === 0) {
-              break;
-            }
+          }
+          
+          // If we found a position at y=0, x=0, we can break early as this is already optimal
+          if (y === 0 && x === 0 && !orientation.rotated) {
+            return bestPosition;
           }
         }
       }
-      
-      // If we found a position at the current y, we can move to the next piece
-      if (bestPosition && bestPosition.y === y) {
-        break;
-      }
-    }
-    
-    // If we found a position in the first orientation, try the next orientation
-    if (bestPosition) {
-      break;
     }
   }
 

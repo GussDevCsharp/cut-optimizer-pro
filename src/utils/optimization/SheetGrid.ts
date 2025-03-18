@@ -21,35 +21,22 @@ export class SheetGrid {
     }
     
     // Account for cut width by checking a slightly expanded area
-    const startX = Math.max(0, x);
-    const startY = Math.max(0, y);
-    const endX = Math.min(this.width - 1, x + pieceWidth - 1);
-    const endY = Math.min(this.height - 1, y + pieceHeight - 1);
-    
-    // Check each cell in the grid to ensure no overlap
-    for (let i = startY; i <= endY; i++) {
-      for (let j = startX; j <= endX; j++) {
-        if (this.grid[i][j]) {
-          return false; // Area is already occupied
-        }
-      }
-    }
-    
-    // Also check for cut width spacing to ensure no pieces are too close together
     const cutStartX = Math.max(0, x - cutWidth);
     const cutStartY = Math.max(0, y - cutWidth);
     const cutEndX = Math.min(this.width - 1, x + pieceWidth + cutWidth - 1);
     const cutEndY = Math.min(this.height - 1, y + pieceHeight + cutWidth - 1);
     
-    // Check the border of the piece with cut width
+    // Check for any occupied cells within the expanded area
     for (let i = cutStartY; i <= cutEndY; i++) {
       for (let j = cutStartX; j <= cutEndX; j++) {
-        // Skip checking the actual piece area
-        if (i >= startY && i <= endY && j >= startX && j <= endX) {
+        // Skip checking boundaries
+        if (i < 0 || i >= this.height || j < 0 || j >= this.width) {
           continue;
         }
-        if (i >= 0 && i < this.height && j >= 0 && j < this.width && this.grid[i][j]) {
-          return false; // Cut width area is already occupied
+        
+        // Check if cell is already occupied
+        if (this.grid[i][j]) {
+          return false;
         }
       }
     }
@@ -57,8 +44,9 @@ export class SheetGrid {
     return true;
   }
   
-  // Mark an area as occupied
+  // Mark an area as occupied including cut width spacing
   occupyArea(x: number, y: number, pieceWidth: number, pieceHeight: number): void {
+    // Mark the piece area as occupied
     for (let i = y; i < y + pieceHeight; i++) {
       for (let j = x; j < x + pieceWidth; j++) {
         if (i >= 0 && i < this.height && j >= 0 && j < this.width) {
