@@ -44,9 +44,9 @@ export function MaterialForm({ initialData, onSubmit, onCancel }: MaterialFormPr
   // Handle form submission
   const handleSubmit = async (values: MaterialFormValues) => {
     try {
-      // Remove the availability field from the data sent to the server
-      // since it doesn't exist in the database yet
-      const { availability, ...dataToSubmit } = values;
+      // Remove the color and availability fields from the data sent to the server
+      // since they don't exist in the database yet
+      const { availability, color, ...dataToSubmit } = values;
       await onSubmit(dataToSubmit as MaterialFormValues);
     } catch (error) {
       toast.error("Erro ao salvar material", {

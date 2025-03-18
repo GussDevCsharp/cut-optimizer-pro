@@ -15,7 +15,7 @@ export interface Material {
   thickness?: number;
   width?: number;
   height?: number;
-  color?: string;
+  color?: string; // Making color optional since it doesn't exist in the DB yet
   stock_quantity?: number;
   supplier?: string;
   // Making availability optional since it doesn't exist in the DB yet
@@ -33,9 +33,11 @@ export type MaterialsDatabase = Database & {
   public: {
     Tables: {
       materials: {
-        Row: Material;
-        Insert: Omit<Material, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Omit<Material, 'id' | 'created_at'>>;
+        Row: Omit<Material, 'color' | 'availability'> & {
+          // Add any additional fields that actually exist in the DB but aren't in our Material type
+        };
+        Insert: Omit<Material, 'id' | 'created_at' | 'updated_at' | 'color' | 'availability'>;
+        Update: Partial<Omit<Material, 'id' | 'created_at' | 'color' | 'availability'>>;
       };
     };
   };
