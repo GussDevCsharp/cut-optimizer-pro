@@ -15,7 +15,7 @@ export const DesktopLayout = () => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
       {/* Left Column - Controls in the order: Project Name, Chapa, Peças e Otimização */}
-      <div className={`lg:col-span-${isPiecesListOpen ? '1' : '2'} space-y-6 transition-all duration-300`}>
+      <div className="lg:col-span-1 space-y-6 transition-all duration-300">
         <Card className="animate-fade-in shadow-subtle border">
           <CardHeader className="pb-2">
             <CardTitle>Projeto</CardTitle>
@@ -32,7 +32,7 @@ export const DesktopLayout = () => {
       </div>
       
       {/* Middle Column - Visualization with multiple sheets in carousel */}
-      <div className="lg:col-span-2">
+      <div className={`lg:col-span-${isPiecesListOpen ? '2' : '3'} transition-all duration-300`}>
         <CuttingBoard />
       </div>
       
