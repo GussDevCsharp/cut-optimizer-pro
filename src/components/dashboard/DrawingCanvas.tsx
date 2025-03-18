@@ -1,10 +1,11 @@
+
 import React, { useImperativeHandle, forwardRef, useState } from "react";
-import { useCanvasSetup } from "./hooks/useCanvasSetup";
-import { useDrawingState } from "./hooks/useDrawingState";
-import { useDrawingHandlers } from "./hooks/useDrawingHandlers";
-import { useDrawingActions } from "./hooks/useDrawingActions";
-import { DrawingCanvasProps } from "./types/drawingTypes";
-import { generatePiecesFromShapes } from "./utils/projectGenerationUtils";
+import { useCanvasSetup } from "./drawing/hooks/useCanvasSetup";
+import { useDrawingState } from "./drawing/hooks/useDrawingState";
+import { useDrawingHandlers } from "./drawing/hooks/useDrawingHandlers";
+import { useDrawingActions } from "./drawing/hooks/useDrawingActions";
+import { DrawingCanvasProps } from "./drawing/types/drawingTypes";
+import { generatePiecesFromShapes } from "./drawing/utils/projectGenerationUtils";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
