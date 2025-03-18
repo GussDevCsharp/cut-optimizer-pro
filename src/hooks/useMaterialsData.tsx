@@ -47,7 +47,7 @@ export function useMaterialsData(userId: string | undefined) {
   };
 
   const handleAddMaterial = async (
-    data: Omit<Material, "id" | "created_at" | "updated_at" | "user_id">
+    data: Omit<Material, "id" | "created_at" | "updated_at" | "user_id" | "color" | "availability">
   ) => {
     try {
       const result = await createMaterial({
@@ -80,7 +80,7 @@ export function useMaterialsData(userId: string | undefined) {
   };
 
   const handleEditMaterial = async (
-    data: Omit<Material, "id" | "created_at" | "updated_at" | "user_id">
+    data: Omit<Material, "id" | "created_at" | "updated_at" | "user_id" | "color" | "availability">
   ) => {
     if (!selectedMaterial) return;
 

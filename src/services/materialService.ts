@@ -19,7 +19,14 @@ export const fetchMaterials = async (userId: string): Promise<ApiResponse<Materi
       throw error;
     }
 
-    return { data, error: null };
+    // Add default values for frontend-only fields
+    const materialsWithDefaultValues = data.map(material => ({
+      ...material,
+      color: "", // Default frontend-only field
+      availability: "Disponível" as const // Default frontend-only field
+    }));
+
+    return { data: materialsWithDefaultValues, error: null };
   } catch (error) {
     console.error('Error fetching materials:', error);
     return { data: null, error: (error as Error).message };
@@ -39,16 +46,27 @@ export const fetchMaterialById = async (materialId: string): Promise<ApiResponse
       throw error;
     }
 
-    return { data, error: null };
+    // Add default values for frontend-only fields
+    const materialWithDefaultValues = {
+      ...data,
+      color: "", // Default frontend-only field
+      availability: "Disponível" as const // Default frontend-only field
+    };
+
+    return { data: materialWithDefaultValues, error: null };
   } catch (error) {
     console.error('Error fetching material:', error);
     return { data: null, error: (error as Error).message };
   }
 };
 
-// Create a new material
-export const createMaterial = async (material: Omit<Material, 'id' | 'created_at' | 'updated_at'>): Promise<ApiResponse<Material>> => {
+// Create a new material - only send fields that exist in the database
+export const createMaterial = async (
+  material: Omit<Material, 'id' | 'created_at' | 'updated_at' | 'color' | 'availability'>
+): Promise<ApiResponse<Material>> => {
   try {
+    console.log('Creating material with data:', material);
+    
     const { data, error } = await typedSupabase
       .from('materials')
       .insert([material])
@@ -59,15 +77,25 @@ export const createMaterial = async (material: Omit<Material, 'id' | 'created_at
       throw error;
     }
 
-    return { data, error: null };
+    // Add default values for frontend-only fields to the returned data
+    const materialWithDefaultValues = {
+      ...data,
+      color: "", // Default frontend-only field
+      availability: "Disponível" as const // Default frontend-only field
+    };
+
+    return { data: materialWithDefaultValues, error: null };
   } catch (error) {
     console.error('Error creating material:', error);
     return { data: null, error: (error as Error).message };
   }
 };
 
-// Update an existing material
-export const updateMaterial = async (materialId: string, materialData: Partial<Omit<Material, 'id' | 'created_at'>>): Promise<ApiResponse<Material>> => {
+// Update an existing material - only send fields that exist in the database
+export const updateMaterial = async (
+  materialId: string, 
+  materialData: Partial<Omit<Material, 'id' | 'created_at' | 'user_id' | 'color' | 'availability'>>
+): Promise<ApiResponse<Material>> => {
   try {
     const { data, error } = await typedSupabase
       .from('materials')
@@ -80,7 +108,14 @@ export const updateMaterial = async (materialId: string, materialData: Partial<O
       throw error;
     }
 
-    return { data, error: null };
+    // Add default values for frontend-only fields
+    const materialWithDefaultValues = {
+      ...data,
+      color: "", // Default frontend-only field
+      availability: "Disponível" as const // Default frontend-only field
+    };
+
+    return { data: materialWithDefaultValues, error: null };
   } catch (error) {
     console.error('Error updating material:', error);
     return { data: null, error: (error as Error).message };
