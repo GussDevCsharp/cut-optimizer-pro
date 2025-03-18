@@ -12,10 +12,10 @@ export const OptimizationLoadingDialog = ({ isOpen }: OptimizationLoadingDialogP
   const [elapsedTime, setElapsedTime] = useState(0);
   const [progress, setProgress] = useState(0);
   
-  // Average optimization time in seconds
-  const estimatedTotalTime = 15; // Reduced to 15 seconds for better UX
+  // Average optimization time in seconds (adjust based on your app's performance)
+  const estimatedTotalTime = 60; // 60 seconds
   
-  // Reset timer when dialog opens or closes
+  // Reset timer when dialog opens
   useEffect(() => {
     if (isOpen) {
       setElapsedTime(0);
@@ -25,14 +25,14 @@ export const OptimizationLoadingDialog = ({ isOpen }: OptimizationLoadingDialogP
   
   // Update timer and progress when dialog is open
   useEffect(() => {
-    let timerId: NodeJS.Timeout | undefined;
+    let timerId: NodeJS.Timeout;
     
     if (isOpen) {
       timerId = setInterval(() => {
         setElapsedTime(prev => {
           const newTime = prev + 1;
           // Update progress based on elapsed time relative to estimated time
-          const newProgress = Math.min((newTime / estimatedTotalTime) * 100, 98);
+          const newProgress = Math.min((newTime / estimatedTotalTime) * 100, 95);
           setProgress(newProgress);
           return newTime;
         });
@@ -42,7 +42,7 @@ export const OptimizationLoadingDialog = ({ isOpen }: OptimizationLoadingDialogP
     return () => {
       if (timerId) clearInterval(timerId);
     };
-  }, [isOpen, estimatedTotalTime]);
+  }, [isOpen]);
   
   // Format time as MM:SS
   const formatTime = (seconds: number): string => {
@@ -55,8 +55,8 @@ export const OptimizationLoadingDialog = ({ isOpen }: OptimizationLoadingDialogP
   const remainingTime = Math.max(estimatedTotalTime - elapsedTime, 0);
 
   return (
-    <Dialog open={isOpen} onOpenChange={() => {}}>
-      <DialogContent className="sm:max-w-md" onEscapeKeyDown={(e) => e.preventDefault()} onPointerDownOutside={(e) => e.preventDefault()}>
+    <Dialog open={isOpen}>
+      <DialogContent className="sm:max-w-md">
         <div className="flex flex-col items-center justify-center py-4 space-y-4">
           <div className="flex items-center gap-2">
             <Loader2 className="h-5 w-5 text-primary animate-spin" />

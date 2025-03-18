@@ -8,6 +8,7 @@ export interface Piece {
   quantity: number;
   canRotate: boolean;
   color?: string;
+  materialId?: string;
 }
 
 export interface PlacedPiece extends Piece {
@@ -21,6 +22,7 @@ export interface Sheet {
   width: number;
   height: number;
   cutWidth: number;
+  materialId?: string; // Add materialId to track the selected material
 }
 
 interface SheetContextType {

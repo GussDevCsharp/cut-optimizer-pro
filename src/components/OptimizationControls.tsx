@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Sparkles, RectangleHorizontal, Loader2 } from 'lucide-react';
+import { Sparkles, RectangleHorizontal } from 'lucide-react';
 import { useSheetData } from '../hooks/useSheetData';
 import { optimizeCutting } from '../utils/optimizationAlgorithm';
 import { toast } from "sonner";
@@ -31,58 +31,43 @@ export const OptimizationControls = () => {
     setIsOptimizing(true);
     
     try {
-      // Slight delay to ensure React renders the loading dialog before heavy computation
+      // Slight delay to ensure the loading dialog is shown
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      // Run the optimization in a separate task to allow UI updates
-      setTimeout(async () => {
+      const optimizedPieces = optimizeCutting(pieces, sheet);
+      setPlacedPieces(optimizedPieces);
+      
+      // Show toast with result
+      const placedCount = optimizedPieces.length;
+      const totalCount = pieces.reduce((total, piece) => total + piece.quantity, 0);
+      
+      if (placedCount === totalCount) {
+        toast.success("Otimização concluída com sucesso!", {
+          description: `Todas as ${totalCount} peças foram posicionadas na chapa.`
+        });
+      } else {
+        toast.warning("Otimização parcial!", {
+          description: `Foram posicionadas ${placedCount} de ${totalCount} peças na chapa.`
+        });
+      }
+      
+      // Save the project with optimized pieces
+      if (projectName && projectId) {
         try {
-          const optimizedPieces = optimizeCutting(pieces, sheet);
+          const projectData = {
+            sheet,
+            pieces,
+            placedPieces: optimizedPieces
+          };
           
-          // Add a small delay to make the loading animation more visible
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          setPlacedPieces(optimizedPieces);
-          
-          // Show toast with result
-          const placedCount = optimizedPieces.length;
-          const totalCount = pieces.reduce((total, piece) => total + piece.quantity, 0);
-          
-          if (placedCount === totalCount) {
-            toast.success("Otimização concluída com sucesso!", {
-              description: `Todas as ${totalCount} peças foram posicionadas na chapa.`
-            });
-          } else {
-            toast.warning("Otimização parcial!", {
-              description: `Foram posicionadas ${placedCount} de ${totalCount} peças na chapa.`
-            });
-          }
-          
-          // Save the project with optimized pieces
-          if (projectName && projectId) {
-            try {
-              const projectData = {
-                sheet,
-                pieces,
-                placedPieces: optimizedPieces
-              };
-              
-              await saveProject(projectId, projectName, projectData);
-              console.log("Project saved after optimization");
-            } catch (error) {
-              console.error("Error saving project after optimization:", error);
-            }
-          }
-        } finally {
-          // Hide loading dialog
-          setIsOptimizing(false);
+          await saveProject(projectId, projectName, projectData);
+          console.log("Project saved after optimization");
+        } catch (error) {
+          console.error("Error saving project after optimization:", error);
         }
-      }, 10);
-    } catch (error) {
-      console.error("Optimization error:", error);
-      toast.error("Erro na otimização", {
-        description: "Ocorreu um erro ao tentar otimizar o corte."
-      });
+      }
+    } finally {
+      // Hide loading dialog
       setIsOptimizing(false);
     }
   };
@@ -118,21 +103,16 @@ export const OptimizationControls = () => {
         <Button 
           className="w-full gap-2" 
           onClick={handleOptimize}
-          disabled={pieces.length === 0 || isOptimizing}
+          disabled={pieces.length === 0}
         >
-          {isOptimizing ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Sparkles size={16} />
-          )}
-          {isOptimizing ? "Otimizando..." : "Otimizar Corte"}
+          <Sparkles size={16} />
+          Otimizar Corte
         </Button>
         
         <Button 
           variant="outline" 
           className="w-full gap-2" 
           onClick={handleClear}
-          disabled={isOptimizing}
         >
           <RectangleHorizontal size={16} />
           Limpar Visualização

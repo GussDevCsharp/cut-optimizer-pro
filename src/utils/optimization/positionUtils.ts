@@ -11,7 +11,7 @@ export const sortPiecesByArea = (pieces: Piece[]): Piece[] => {
   });
 };
 
-// Try all possible positions for a piece on a specific sheet grid - optimized for performance
+// Try all possible positions for a piece on a specific sheet grid
 export const findBestPosition = (
   piece: Piece,
   sheetGrid: SheetGrid,
@@ -27,53 +27,34 @@ export const findBestPosition = (
   let lowestY = Number.MAX_SAFE_INTEGER;
   let lowestX = Number.MAX_SAFE_INTEGER;
 
-  // Determine step size - use larger steps for faster search on normal pieces
-  // Special handling for problematic pieces like 200x275
-  const isProblemPiece = (piece.width === 200 && piece.height === 275) || 
-                         (piece.width === 275 && piece.height === 200);
-  const stepSize = isProblemPiece ? 1 : (piece.width > 150 && piece.height > 150 ? 2 : 4);
-
   // Try every possible position on the sheet
   for (const orientation of orientations) {
-    // Check if this is a priority orientation (important for 200x275 pieces)
-    const isPriority = (orientation.width === 200 && orientation.height === 275) || 
-                       (orientation.width === 275 && orientation.height === 200);
-    
-    // For large sheets, check positions in increments to improve performance
-    for (let y = 0; y <= sheet.height - orientation.height; y += stepSize) {
-      // Early termination if we found a position at the current y level and it's not a priority piece
-      if (bestPosition && bestPosition.y === y && !isPriority && !isProblemPiece) {
-        break;
-      }
-      
-      for (let x = 0; x <= sheet.width - orientation.width; x += stepSize) {
+    for (let y = 0; y <= sheet.height - orientation.height; y++) {
+      for (let x = 0; x <= sheet.width - orientation.width; x++) {
         if (sheetGrid.isAreaAvailable(x, y, orientation.width, orientation.height, sheet.cutWidth)) {
-          // Extra check only for problematic pieces
-          if (isProblemPiece) {
-            const isSecure = sheetGrid.isSecurePosition(x, y, orientation.width, orientation.height, sheet.cutWidth + 1);
-            if (!isSecure) continue;
-          }
-          
           // We found a valid position - check if it's "better" than our current best
-          const score = y * 1000 + x; // Base score
-          const currentBestScore = lowestY * 1000 + lowestX;
-          
-          if (isPriority || bestPosition === null || score < currentBestScore) {
+          // Better means closer to the top-left corner
+          if (y < lowestY || (y === lowestY && x < lowestX)) {
             lowestY = y;
             lowestX = x;
             bestPosition = { x, y, rotated: orientation.rotated };
             
-            // Return early for priority pieces in the preferred orientation
-            if (isPriority && orientation.rotated === true) {
-              return bestPosition;
+            // If we found a position at y=0, we can break early as this is already optimal
+            if (y === 0) {
+              break;
             }
           }
         }
       }
+      
+      // If we found a position at the current y, we can move to the next piece
+      if (bestPosition && bestPosition.y === y) {
+        break;
+      }
     }
     
-    // If we found a position and it's not a problematic piece, we can stop trying other orientations
-    if (bestPosition && !isProblemPiece) {
+    // If we found a position in the first orientation, try the next orientation
+    if (bestPosition) {
       break;
     }
   }
