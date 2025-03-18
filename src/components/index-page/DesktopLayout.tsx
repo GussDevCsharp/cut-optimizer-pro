@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import SheetPanel from '../SheetPanel';
 import CuttingBoard from '../CuttingBoard';
@@ -10,11 +10,12 @@ import { useSheetData } from '@/hooks/useSheetData';
 
 export const DesktopLayout = () => {
   const { pieces, updatePiece, removePiece } = useSheetData();
+  const [isPiecesListOpen, setIsPiecesListOpen] = useState(true);
   
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
       {/* Left Column - Controls in the order: Project Name, Chapa, Peças e Otimização */}
-      <div className="lg:col-span-1 space-y-6">
+      <div className={`lg:col-span-${isPiecesListOpen ? '1' : '2'} space-y-6 transition-all duration-300`}>
         <Card className="animate-fade-in shadow-subtle border">
           <CardHeader className="pb-2">
             <CardTitle>Projeto</CardTitle>
@@ -41,6 +42,7 @@ export const DesktopLayout = () => {
           pieces={pieces}
           onUpdatePiece={updatePiece}
           onRemovePiece={removePiece}
+          onOpenChange={setIsPiecesListOpen}
         />
       </div>
     </div>

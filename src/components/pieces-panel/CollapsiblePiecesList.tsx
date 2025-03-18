@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,22 +11,37 @@ interface CollapsiblePiecesListProps {
   pieces: Piece[];
   onUpdatePiece: (id: string, piece: Partial<Piece>) => void;
   onRemovePiece: (id: string) => void;
+  onOpenChange?: (isOpen: boolean) => void;
 }
 
 export const CollapsiblePiecesList = ({
   pieces,
   onUpdatePiece,
-  onRemovePiece
+  onRemovePiece,
+  onOpenChange
 }: CollapsiblePiecesListProps) => {
   const [isOpen, setIsOpen] = useState(true);
+
+  useEffect(() => {
+    if (onOpenChange) {
+      onOpenChange(isOpen);
+    }
+  }, [isOpen, onOpenChange]);
 
   if (pieces.length === 0) {
     return null;
   }
 
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (onOpenChange) {
+      onOpenChange(open);
+    }
+  };
+
   return (
     <div className="h-full flex">
-      <Collapsible open={isOpen} onOpenChange={setIsOpen} className="h-full flex">
+      <Collapsible open={isOpen} onOpenChange={handleOpenChange} className="h-full flex">
         <CollapsibleContent className="h-full flex-grow">
           <Card className="h-full shadow-subtle border animate-fade-in overflow-hidden flex flex-col">
             <CardHeader className="pb-3">
