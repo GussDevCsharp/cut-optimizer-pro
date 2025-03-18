@@ -15,18 +15,20 @@ export const DesktopLayout = () => {
   
   return (
     <div className="space-y-4">
-      {/* Project Name Card always visible at top */}
-      <Card className="animate-fade-in shadow-subtle border">
-        <CardHeader className="pb-2">
-          <CardTitle>Projeto</CardTitle>
-          <CardDescription>
-            Identifique seu projeto de corte
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ProjectNameInput />
-        </CardContent>
-      </Card>
+      {/* Project Name Card - more narrow and right-aligned */}
+      <div className="flex justify-end">
+        <Card className="animate-fade-in shadow-subtle border w-1/3">
+          <CardHeader className="pb-2">
+            <CardTitle>Projeto</CardTitle>
+            <CardDescription>
+              Identifique seu projeto de corte
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ProjectNameInput />
+          </CardContent>
+        </Card>
+      </div>
       
       <Tabs defaultValue="project" className="w-full">
         <TabsList className="mb-4 mx-auto w-[400px]">

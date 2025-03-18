@@ -15,18 +15,20 @@ export const MobileLayout = () => {
   
   return (
     <div className="w-full space-y-4">
-      {/* Project Name Card always visible at top */}
-      <Card className="animate-fade-in shadow-subtle border">
-        <CardHeader className="pb-2">
-          <CardTitle>Projeto</CardTitle>
-          <CardDescription>
-            Identifique seu projeto de corte
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ProjectNameInput />
-        </CardContent>
-      </Card>
+      {/* Project Name Card - more compact */}
+      <div className="flex justify-end">
+        <Card className="animate-fade-in shadow-subtle border w-4/5">
+          <CardHeader className="pb-2">
+            <CardTitle>Projeto</CardTitle>
+            <CardDescription>
+              Identifique seu projeto de corte
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ProjectNameInput />
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Main/Outer Tabs for Project/Pieces */}
       <Tabs defaultValue="project" className="w-full">
