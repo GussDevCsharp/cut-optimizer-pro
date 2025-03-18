@@ -1,17 +1,15 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Puzzle, Scissors } from 'lucide-react';
+import { Puzzle, Scissors, Sparkles, RectangleHorizontal, Upload, Plus } from 'lucide-react';
 import { useSheetData, Piece } from '../hooks/useSheetData';
 import { PieceForm } from './pieces-panel/PieceForm';
 import { PiecesList } from './pieces-panel/PiecesList';
 import { ImportPiecesForm } from './pieces-panel/ImportPiecesForm';
 import { optimizeCutting } from '../utils/optimizationAlgorithm';
 import { Button } from "@/components/ui/button";
-import { Sparkles, RectangleHorizontal } from 'lucide-react';
 import { toast } from "sonner";
 import { useProjectActions } from "@/hooks/useProjectActions";
 import { useLocation } from 'react-router-dom';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
 import OptimizationLoadingDialog from './OptimizationLoadingDialog';
 
@@ -128,60 +126,57 @@ export const PiecesAndOptimizationPanel = () => {
         </CardHeader>
         
         <CardContent className="space-y-4">
-          <Tabs defaultValue="pieces" className="w-full">
-            <TabsList className="w-full grid grid-cols-2">
-              <TabsTrigger value="pieces">Peças</TabsTrigger>
-              <TabsTrigger value="optimization">Otimização</TabsTrigger>
-            </TabsList>
+          {/* Import Pieces Button */}
+          <div className="flex items-center justify-between">
+            <ImportPiecesForm onImportPieces={handleImportPieces} />
+          </div>
+          
+          {/* Piece Form */}
+          <PieceForm onAddPiece={addPiece} projectId={projectId} />
+          
+          {/* Optimization Buttons */}
+          <div className="flex gap-2 mt-4">
+            <Button 
+              className="flex-1 gap-2" 
+              onClick={handleOptimize}
+              disabled={pieces.length === 0}
+            >
+              <Sparkles size={16} />
+              Otimizar Corte
+            </Button>
             
-            <TabsContent value="pieces" className="pt-4 space-y-4">
-              <div className="flex items-center justify-between">
-                <ImportPiecesForm onImportPieces={handleImportPieces} />
-              </div>
-              <PieceForm onAddPiece={addPiece} projectId={projectId} />
-              
-              {pieces.length > 0 && (
-                <div className="pt-4">
-                  <PiecesList
-                    pieces={pieces}
-                    onUpdatePiece={updatePiece}
-                    onRemovePiece={removePiece}
-                  />
-                </div>
-              )}
-            </TabsContent>
-            
-            <TabsContent value="optimization" className="pt-4 space-y-4">
-              <Button 
-                className="w-full gap-2" 
-                onClick={handleOptimize}
-                disabled={pieces.length === 0}
-              >
-                <Sparkles size={16} />
-                Otimizar Corte
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                className="w-full gap-2" 
-                onClick={handleClear}
-              >
-                <RectangleHorizontal size={16} />
-                Limpar Visualização
-              </Button>
-              
-              <div className="bg-secondary rounded-md p-3 text-sm">
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Total de peças:</span>
-                  <span className="font-medium">{totalPieces}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Tipos de peças:</span>
-                  <span className="font-medium">{pieces.length}</span>
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
+            <Button 
+              variant="outline" 
+              className="flex-1 gap-2" 
+              onClick={handleClear}
+            >
+              <RectangleHorizontal size={16} />
+              Limpar
+            </Button>
+          </div>
+          
+          {/* Pieces Stats */}
+          <div className="bg-secondary rounded-md p-3 text-sm">
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Total de peças:</span>
+              <span className="font-medium">{totalPieces}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Tipos de peças:</span>
+              <span className="font-medium">{pieces.length}</span>
+            </div>
+          </div>
+          
+          {/* Pieces List */}
+          {pieces.length > 0 && (
+            <div className="pt-2">
+              <PiecesList
+                pieces={pieces}
+                onUpdatePiece={updatePiece}
+                onRemovePiece={removePiece}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
       
