@@ -2,7 +2,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Pencil, Square, Circle, Triangle, Trash2, Save, Undo, Redo } from "lucide-react";
+import { Pencil, Square, Circle, Triangle, Trash2, Save, Undo, Redo, PuzzlePiece } from "lucide-react";
 import { toast } from "sonner";
 import DrawingCanvas from "./drawing/DrawingCanvas";
 import ShapeSelector from "./drawing/ShapeSelector";
@@ -60,6 +60,12 @@ export function DrawingTabContent({ userId, isActiveTab }: DrawingTabContentProp
     }
   };
 
+  const handleGenerateProject = () => {
+    if (canvasRef.current) {
+      canvasRef.current.generateProject();
+    }
+  };
+
   const handleUndo = () => {
     if (canvasRef.current) {
       canvasRef.current.undo();
@@ -103,6 +109,22 @@ export function DrawingTabContent({ userId, isActiveTab }: DrawingTabContentProp
               lineWidth={lineWidth}
               onLineWidthChange={handleLineWidthChange}
             />
+            
+            {/* Generate Project Button */}
+            <div className="mt-4">
+              <Button 
+                variant="default" 
+                className="w-full flex items-center justify-center gap-2"
+                onClick={handleGenerateProject}
+              >
+                <PuzzlePiece className="h-4 w-4" />
+                Gerar Projeto
+              </Button>
+              <p className="text-xs text-muted-foreground mt-2">
+                Gera um projeto de corte a partir do desenho atual.
+                Formas não retangulares usarão suas dimensões externas.
+              </p>
+            </div>
           </Card>
         </div>
         <div className="lg:col-span-4">

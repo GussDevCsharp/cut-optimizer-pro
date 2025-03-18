@@ -25,6 +25,7 @@ export interface DrawingCanvasRef {
   undo: () => void;
   redo: () => void;
   saveAsImage: () => void;
+  generateProject: () => void; // New method to generate a project from drawings
   setDrawingColor: (color: string) => void;
   setDrawingTool: (tool: string) => void;
   setLineWidth: (width: number) => void;
