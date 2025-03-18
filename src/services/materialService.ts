@@ -1,14 +1,12 @@
 
-import { supabase } from "@/integrations/supabase/client";
 import { Material, ApiResponse, ExtendedDatabase } from "@/types/material";
 import { createClient } from '@supabase/supabase-js';
 
-// Get the Supabase URL and key from the existing client
-const supabaseUrl = supabase.supabaseUrl;
-const supabaseKey = supabase.supabaseKey;
-
-// Create a typed client that knows about our materials table
-const typedClient = createClient<ExtendedDatabase>(supabaseUrl, supabaseKey);
+// Create a typed client with explicit URL and key
+const typedClient = createClient<ExtendedDatabase>(
+  "https://jppeztsbsecizzpdxugk.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpwcGV6dHNic2VjaXp6cGR4dWdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIwNjQwMDcsImV4cCI6MjA1NzY0MDAwN30.tWor5HXfGu6Z0BphIqw6kK53WovqC1S6JMUWqiBD0DM"
+);
 
 // Fetch all materials for a user
 export const fetchMaterials = async (userId: string): Promise<ApiResponse<Material[]>> => {
