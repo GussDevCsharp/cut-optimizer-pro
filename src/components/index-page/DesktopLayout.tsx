@@ -37,7 +37,7 @@ export const DesktopLayout = () => {
       </div>
       
       {/* Right Column - Collapsible Pieces List */}
-      <div className={`lg:col-span-1 h-full ${!isPiecesListOpen ? 'lg:col-span-0 w-0 overflow-hidden' : ''} transition-all duration-300`}>
+      <div className="lg:col-span-1 h-full transition-all duration-300">
         <CollapsiblePiecesList 
           pieces={pieces}
           onUpdatePiece={updatePiece}
