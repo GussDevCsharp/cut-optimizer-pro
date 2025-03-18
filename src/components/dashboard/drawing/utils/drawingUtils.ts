@@ -1,3 +1,4 @@
+
 import { Shape } from '../types/drawingTypes';
 
 export function drawShape(ctx: CanvasRenderingContext2D, shape: Shape): void {
@@ -54,6 +55,56 @@ export function drawShape(ctx: CanvasRenderingContext2D, shape: Shape): void {
   if (shape.lineWidth) {
     ctx.lineWidth = 2; // Reset to default
   }
+  
+  // Draw dimensions
+  if (shape.type !== 'line') {
+    drawDimensions(ctx, shape);
+  }
+}
+
+// New function to draw dimensions
+export function drawDimensions(ctx: CanvasRenderingContext2D, shape: Shape): void {
+  const { startX, startY, endX = startX, endY = startY } = shape;
+  
+  // Calculate the bounding box
+  const minX = Math.min(startX, endX);
+  const minY = Math.min(startY, endY);
+  const width = Math.abs(endX - startX);
+  const height = Math.abs(endY - startY);
+  
+  // Convert to mm for display
+  const widthMm = Math.ceil(pixelsToMm(width));
+  const heightMm = Math.ceil(pixelsToMm(height));
+  
+  // Save current context state
+  ctx.save();
+  
+  // Set text properties for dimensions
+  ctx.font = '12px Arial';
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+  ctx.textAlign = 'center';
+  
+  // Draw width dimension (on top)
+  const widthText = `${widthMm}mm`;
+  ctx.fillText(widthText, minX + width / 2, minY - 5);
+  
+  // Draw height dimension (on left side)
+  const heightText = `${heightMm}mm`;
+  ctx.save();
+  ctx.translate(minX - 5, minY + height / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText(heightText, 0, 0);
+  ctx.restore();
+  
+  // If it's not a square, add a small text in the bottom right to indicate outer dimensions
+  if (shape.type !== 'square') {
+    ctx.fillStyle = 'rgba(255, 0, 0, 0.8)';
+    ctx.font = '10px Arial';
+    ctx.fillText('*dimensão externa', minX + width - 45, minY + height + 15);
+  }
+  
+  // Restore context
+  ctx.restore();
 }
 
 export function setupCanvas(canvas: HTMLCanvasElement, lineWidth: number = 2): CanvasRenderingContext2D | null {
