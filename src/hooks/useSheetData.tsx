@@ -22,6 +22,7 @@ export interface Sheet {
   width: number;
   height: number;
   cutWidth: number;
+  materialId?: string; // Add materialId to track the selected material
 }
 
 interface SheetContextType {
