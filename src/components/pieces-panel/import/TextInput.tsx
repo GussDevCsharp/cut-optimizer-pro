@@ -25,12 +25,12 @@ export const TextInput = ({
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
         <FileText className="h-5 w-5 text-muted-foreground" />
-        <span className="text-sm font-medium">Texto</span>
+        <span className="text-sm font-medium">Importar dados</span>
       </div>
       
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">Ou importe de um arquivo:</span>
+          <span className="text-xs text-muted-foreground">Importe de um arquivo:</span>
           <Input 
             type="file" 
             accept=".txt" 
@@ -40,7 +40,7 @@ export const TextInput = ({
         </div>
         <Textarea
           placeholder={placeholder}
-          rows={6}
+          rows={8}
           value={textContent}
           onChange={(e) => {
             setTextContent(e.target.value);

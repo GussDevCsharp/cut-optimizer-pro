@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -6,7 +7,7 @@ import { ErrorMessage } from './ErrorMessage';
 import { TextInput } from './TextInput';
 import { processTextContent, readTextFile } from '../../../utils/textImportUtils';
 import { FileFormatDocumentation } from './FileFormatDocumentation';
-import { importProjectFromText, readProjectFile } from '../../../utils/projectExportUtils';
+import { importProjectFromText } from '../../../utils/projectExportUtils';
 import { toast } from "sonner";
 
 interface TextImportTabProps {
@@ -17,7 +18,6 @@ interface TextImportTabProps {
 export const TextImportTab = ({ onImportSuccess, onImportProject }: TextImportTabProps) => {
   const [textContent, setTextContent] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [textFile, setTextFile] = useState<File | null>(null);
   const [importMode, setImportMode] = useState<'simple' | 'project'>('simple');
 
   const clearError = () => setError(null);
@@ -50,7 +50,6 @@ export const TextImportTab = ({ onImportSuccess, onImportProject }: TextImportTa
       
       onImportSuccess(importedPieces);
       setTextContent('');
-      setTextFile(null);
       setError(null);
     } catch (err) {
       setError(`Erro ao processar texto: ${err instanceof Error ? err.message : 'Formato inválido'}`);
@@ -80,7 +79,6 @@ export const TextImportTab = ({ onImportSuccess, onImportProject }: TextImportTa
       }
       
       setTextContent('');
-      setTextFile(null);
       setError(null);
     } catch (err) {
       setError(`Erro ao processar projeto: ${err instanceof Error ? err.message : 'Formato inválido'}`);
@@ -91,7 +89,6 @@ export const TextImportTab = ({ onImportSuccess, onImportProject }: TextImportTa
     const file = e.target.files?.[0];
     if (!file) return;
     
-    setTextFile(file);
     setError(null);
     
     try {
@@ -137,11 +134,9 @@ export const TextImportTab = ({ onImportSuccess, onImportProject }: TextImportTa
             formatHint="Arquivo de projeto completo no formato documentado."
           />
           
-          {importMode === 'project' && (
-            <div className="mt-4">
-              <FileFormatDocumentation />
-            </div>
-          )}
+          <div className="mt-4">
+            <FileFormatDocumentation />
+          </div>
         </TabsContent>
       </Tabs>
       

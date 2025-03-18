@@ -2,10 +2,8 @@
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Upload } from 'lucide-react';
 import { Piece, useSheetData } from '../../hooks/useSheetData';
-import { ExcelImportTab } from './import/ExcelImportTab';
 import { TextImportTab } from './import/TextImportTab';
 import { toast } from "sonner";
 
@@ -60,23 +58,12 @@ export const ImportPiecesForm = ({ onImportPieces }: ImportPiecesFormProps) => {
           <DialogTitle>Importar Peças</DialogTitle>
         </DialogHeader>
         
-        <Tabs defaultValue="excel" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="excel">Excel</TabsTrigger>
-            <TabsTrigger value="text">Texto</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="excel" className="py-4">
-            <ExcelImportTab onImportSuccess={handleImportSuccess} />
-          </TabsContent>
-          
-          <TabsContent value="text" className="py-4">
-            <TextImportTab 
-              onImportSuccess={handleImportSuccess} 
-              onImportProject={handleImportProject}
-            />
-          </TabsContent>
-        </Tabs>
+        <div className="py-4">
+          <TextImportTab 
+            onImportSuccess={handleImportSuccess} 
+            onImportProject={handleImportProject}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );

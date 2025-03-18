@@ -1,6 +1,5 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Puzzle, Scissors, Sparkles, RectangleHorizontal, Upload, Plus } from 'lucide-react';
+import { Puzzle, Scissors, Sparkles, RectangleHorizontal } from 'lucide-react';
 import { useSheetData, Piece } from '../hooks/useSheetData';
 import { PieceForm } from './pieces-panel/PieceForm';
 import { ImportPiecesForm } from './pieces-panel/ImportPiecesForm';
@@ -18,12 +17,10 @@ export const PiecesAndOptimizationPanel = () => {
   const location = useLocation();
   const [isOptimizing, setIsOptimizing] = useState(false);
   
-  // Get the projectId from URL params or location state
   const searchParams = new URLSearchParams(window.location.search);
   const projectId = location.state?.projectId || searchParams.get('projectId');
 
   const handleImportPieces = (importedPieces: Piece[]) => {
-    // Add each imported piece
     importedPieces.forEach(piece => {
       addPiece(piece);
     });
@@ -37,18 +34,14 @@ export const PiecesAndOptimizationPanel = () => {
       return;
     }
     
-    // Show loading dialog
     setIsOptimizing(true);
     
     try {
-      // Slight delay to ensure the loading dialog is shown
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      // Run optimization algorithm
       const optimizedPieces = optimizeCutting(pieces, sheet);
       setPlacedPieces(optimizedPieces);
       
-      // Show toast with result
       const placedCount = optimizedPieces.length;
       const totalCount = pieces.reduce((total, piece) => total + piece.quantity, 0);
       
@@ -62,7 +55,6 @@ export const PiecesAndOptimizationPanel = () => {
         });
       }
       
-      // Save the project with optimized pieces
       if (projectName && projectId) {
         try {
           const projectData = {
@@ -78,7 +70,6 @@ export const PiecesAndOptimizationPanel = () => {
         }
       }
     } finally {
-      // Hide loading dialog
       setIsOptimizing(false);
     }
   };
@@ -89,7 +80,6 @@ export const PiecesAndOptimizationPanel = () => {
       description: "Todas as peças foram removidas da visualização."
     });
     
-    // Save the project with cleared placed pieces
     if (projectName && projectId) {
       try {
         const projectData = {
@@ -125,15 +115,12 @@ export const PiecesAndOptimizationPanel = () => {
         </CardHeader>
         
         <CardContent className="space-y-4">
-          {/* Import Pieces Button */}
           <div className="flex items-center justify-between">
             <ImportPiecesForm onImportPieces={handleImportPieces} />
           </div>
           
-          {/* Piece Form */}
           <PieceForm onAddPiece={addPiece} projectId={projectId} />
           
-          {/* Optimization Buttons */}
           <div className="flex gap-2 mt-4">
             <Button 
               className="flex-1 gap-2" 
@@ -154,7 +141,6 @@ export const PiecesAndOptimizationPanel = () => {
             </Button>
           </div>
           
-          {/* Pieces Stats */}
           <div className="bg-secondary rounded-md p-3 text-sm">
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Total de peças:</span>
