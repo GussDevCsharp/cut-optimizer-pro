@@ -40,26 +40,25 @@ export const optimizeCutting = (
       const position = findBestPosition(piece, sheetGrids[sheetIndex], sheet);
       
       if (position) {
-        const width = position.rotated ? piece.height : piece.width;
-        const height = position.rotated ? piece.width : piece.height;
-        
         // Place on this sheet
         const placedPiece: PlacedPiece = {
           ...piece,
           x: position.x,
           y: position.y,
           rotated: position.rotated,
-          width: width,
-          height: height,
+          width: position.rotated ? piece.height : piece.width,
+          height: position.rotated ? piece.width : piece.height,
           sheetIndex: sheetIndex
         };
         
-        // Mark the area as occupied including cut width spacing
-        sheetGrids[sheetIndex].occupyArea(position.x, position.y, width, height);
+        // Mark the area as occupied
+        sheetGrids[sheetIndex].occupyArea(position.x, position.y, placedPiece.width, placedPiece.height);
         placedPieces.push(placedPiece);
         placed = true;
         
-        console.log(`Placed piece ${width}x${height} at (${position.x},${position.y}) on sheet ${sheetIndex}, rotated: ${position.rotated}`);
+        if (placedPieces.length < 5) { // Only log for first few pieces to avoid console spam
+          console.log(`Placed piece ${placedPiece.width}x${placedPiece.height} at (${position.x},${position.y}) on sheet ${sheetIndex}, rotated: ${position.rotated}`);
+        }
         
         break; // Move to the next piece
       }
@@ -77,24 +76,21 @@ export const optimizeCutting = (
       const newPosition = findBestPosition(piece, newSheetGrid, sheet);
       
       if (newPosition) {
-        const width = newPosition.rotated ? piece.height : piece.width;
-        const height = newPosition.rotated ? piece.width : piece.height;
-        
         const placedPiece: PlacedPiece = {
           ...piece,
           x: newPosition.x,
           y: newPosition.y,
           rotated: newPosition.rotated,
-          width: width,
-          height: height,
+          width: newPosition.rotated ? piece.height : piece.width,
+          height: newPosition.rotated ? piece.width : piece.height,
           sheetIndex: newSheetIndex
         };
         
-        // Mark the area as occupied including cut width spacing
-        newSheetGrid.occupyArea(newPosition.x, newPosition.y, width, height);
+        // Mark the area as occupied
+        newSheetGrid.occupyArea(newPosition.x, newPosition.y, placedPiece.width, placedPiece.height);
         placedPieces.push(placedPiece);
         
-        console.log(`Placed piece ${width}x${height} at (${newPosition.x},${newPosition.y}) on new sheet ${newSheetIndex}, rotated: ${newPosition.rotated}`);
+        console.log(`Placed piece ${placedPiece.width}x${placedPiece.height} at (${newPosition.x},${newPosition.y}) on new sheet ${newSheetIndex}, rotated: ${newPosition.rotated}`);
       } else {
         console.warn(`Failed to place piece ${piece.width}x${piece.height} even on a new sheet!`);
       }
