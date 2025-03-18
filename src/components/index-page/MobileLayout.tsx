@@ -2,14 +2,14 @@
 import React, { useState, useRef } from 'react';
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Settings, List, PenTool } from 'lucide-react';
+import { FileText, Settings, List, PenTool, Building2 } from 'lucide-react';
 import SheetPanel from '../SheetPanel';
 import CuttingBoard from '../CuttingBoard';
 import { ProjectNameInput } from '../sheet-panel/ProjectNameInput';
 import PiecesAndOptimizationPanel from '../PiecesAndOptimizationPanel';
 import { useSheetData } from '@/hooks/useSheetData';
 import CollapsiblePiecesList from '../pieces-panel/CollapsiblePiecesList';
-import DrawingCanvas from '../dashboard/drawing/DrawingCanvas';
+import DrawingCanvas from '../dashboard/DrawingCanvas';
 import ShapeSelector from '../dashboard/drawing/ShapeSelector';
 
 export const MobileLayout = () => {
@@ -64,27 +64,33 @@ export const MobileLayout = () => {
     }
   };
   
+  const handleGenerateProject = () => {
+    if (canvasRef.current) {
+      canvasRef.current.generateProject();
+    }
+  };
+  
   return (
-    <div className="w-full space-y-1">
+    <div className="w-full space-y-1 font-work-sans">
       {/* Project Name Card - more compact */}
       <div className="flex justify-end mb-1">
-        <Card className="animate-fade-in shadow-subtle border w-4/5 p-2">
+        <Card className="animate-fade-in shadow-subtle border w-4/5 p-2 bg-gray-50">
           <ProjectNameInput />
         </Card>
       </div>
 
       {/* Main/Outer Tabs for Project/Pieces/Drawing */}
       <Tabs defaultValue="project" className="w-full">
-        <TabsList className="w-full grid grid-cols-3 mb-1">
-          <TabsTrigger value="project" className="gap-1.5">
+        <TabsList className="w-full grid grid-cols-3 mb-1 bg-charcoal/90 text-white">
+          <TabsTrigger value="project" className="gap-1.5 data-[state=active]:bg-lilac data-[state=active]:text-white">
             <FileText size={16} />
             <span>Projeto</span>
           </TabsTrigger>
-          <TabsTrigger value="pieces" className="gap-1.5">
+          <TabsTrigger value="pieces" className="gap-1.5 data-[state=active]:bg-lilac data-[state=active]:text-white">
             <List size={16} />
             <span>Peças</span>
           </TabsTrigger>
-          <TabsTrigger value="drawing" className="gap-1.5">
+          <TabsTrigger value="drawing" className="gap-1.5 data-[state=active]:bg-lilac data-[state=active]:text-white">
             <PenTool size={16} />
             <span>Desenho</span>
           </TabsTrigger>
@@ -93,7 +99,7 @@ export const MobileLayout = () => {
         {/* Project Information Tab with nested tabs for Visualization/Settings */}
         <TabsContent value="project" className="mt-0">
           <Tabs defaultValue="cuttingBoard" className="w-full">
-            <TabsList className="w-full grid grid-cols-2">
+            <TabsList className="w-full grid grid-cols-2 border border-gray-200 bg-gray-50">
               <TabsTrigger value="cuttingBoard">Visualização</TabsTrigger>
               <TabsTrigger value="settings">Configurações</TabsTrigger>
             </TabsList>
@@ -123,7 +129,7 @@ export const MobileLayout = () => {
         
         {/* Drawing Tab */}
         <TabsContent value="drawing" className="mt-0">
-          <Card className="p-1 aspect-video mb-2">
+          <Card className="p-1 aspect-video mb-2 border border-gray-300">
             <DrawingCanvas 
               ref={canvasRef} 
               activeTool={activeTool} 
@@ -132,7 +138,12 @@ export const MobileLayout = () => {
             />
           </Card>
           
-          <Card className="p-2 space-y-2">
+          <Card className="p-2 space-y-2 bg-gray-50 border border-gray-200">
+            <div className="text-center mb-1">
+              <h3 className="font-playfair text-base text-charcoal-dark">Ferramentas</h3>
+              <div className="h-0.5 w-12 bg-lilac mx-auto mt-0.5"></div>
+            </div>
+            
             <ShapeSelector 
               activeTool={activeTool} 
               onSelectTool={handleToolSelect} 
@@ -168,8 +179,16 @@ export const MobileLayout = () => {
                 onClick={handleSaveDrawing}
                 className="px-2 py-1 text-xs bg-gray-100 rounded hover:bg-gray-200"
                 title="Salvar"
+              </button>
+            </div>
+            
+            <div className="mt-3 pt-2 border-t border-gray-200">
+              <button 
+                onClick={handleGenerateProject}
+                className="w-full py-2 px-3 bg-lilac hover:bg-lilac-dark text-white rounded flex items-center justify-center gap-2 transition-colors"
               >
-                Salvar
+                <Building2 size={16} />
+                Gerar Projeto
               </button>
             </div>
           </Card>

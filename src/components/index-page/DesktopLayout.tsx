@@ -1,15 +1,15 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, List, PenTool } from 'lucide-react';
+import { FileText, List, PenTool, Building2 } from 'lucide-react';
 import SheetPanel from '../SheetPanel';
 import CuttingBoard from '../CuttingBoard';
 import { ProjectNameInput } from '../sheet-panel/ProjectNameInput';
 import PiecesAndOptimizationPanel from '../PiecesAndOptimizationPanel';
 import CollapsiblePiecesList from '../pieces-panel/CollapsiblePiecesList';
 import { useSheetData } from '@/hooks/useSheetData';
-import DrawingCanvas from '../dashboard/drawing/DrawingCanvas';
+import DrawingCanvas from '../dashboard/DrawingCanvas';
 import ShapeSelector from '../dashboard/drawing/ShapeSelector';
 
 export const DesktopLayout = () => {
@@ -63,27 +63,33 @@ export const DesktopLayout = () => {
       canvasRef.current.redo();
     }
   };
+
+  const handleGenerateProject = () => {
+    if (canvasRef.current) {
+      canvasRef.current.generateProject();
+    }
+  };
   
   return (
     <div className="space-y-1">
       {/* Project Name Card - more narrow and right-aligned */}
       <div className="flex justify-end mb-1">
-        <Card className="animate-fade-in shadow-subtle border w-1/3 p-2">
+        <Card className="animate-fade-in shadow-subtle border w-1/3 p-2 bg-gray-50">
           <ProjectNameInput />
         </Card>
       </div>
       
-      <Tabs defaultValue="project" className="w-full">
-        <TabsList className="mb-1 mx-auto w-[500px]">
-          <TabsTrigger value="project" className="flex-1 gap-1.5">
+      <Tabs defaultValue="project" className="w-full font-work-sans">
+        <TabsList className="mb-1 mx-auto w-[500px] bg-charcoal/90 text-white">
+          <TabsTrigger value="project" className="flex-1 gap-1.5 data-[state=active]:bg-lilac data-[state=active]:text-white">
             <FileText size={16} />
             <span>Informações do Projeto</span>
           </TabsTrigger>
-          <TabsTrigger value="pieces" className="flex-1 gap-1.5">
+          <TabsTrigger value="pieces" className="flex-1 gap-1.5 data-[state=active]:bg-lilac data-[state=active]:text-white">
             <List size={16} />
             <span>Peças Inseridas</span>
           </TabsTrigger>
-          <TabsTrigger value="drawing" className="flex-1 gap-1.5">
+          <TabsTrigger value="drawing" className="flex-1 gap-1.5 data-[state=active]:bg-lilac data-[state=active]:text-white">
             <PenTool size={16} />
             <span>Desenho</span>
           </TabsTrigger>
@@ -128,7 +134,12 @@ export const DesktopLayout = () => {
         <TabsContent value="drawing" className="mt-0">
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-2">
             <div className="lg:col-span-1">
-              <Card className="p-3 space-y-3">
+              <Card className="p-3 space-y-3 bg-gray-50 border border-gray-200">
+                <div className="text-center mb-2">
+                  <h3 className="font-playfair text-lg text-charcoal-dark">Ferramentas de Desenho</h3>
+                  <div className="h-0.5 w-16 bg-lilac mx-auto mt-1"></div>
+                </div>
+                
                 <ShapeSelector 
                   activeTool={activeTool} 
                   onSelectTool={handleToolSelect} 
@@ -137,6 +148,7 @@ export const DesktopLayout = () => {
                   lineWidth={lineWidth}
                   onLineWidthChange={handleLineWidthChange}
                 />
+                
                 <div className="flex flex-wrap gap-1 mt-2">
                   <button 
                     onClick={handleUndo}
@@ -167,10 +179,20 @@ export const DesktopLayout = () => {
                     Salvar
                   </button>
                 </div>
+                
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <button 
+                    onClick={handleGenerateProject}
+                    className="w-full py-2 px-3 bg-lilac hover:bg-lilac-dark text-white rounded flex items-center justify-center gap-2 transition-colors"
+                  >
+                    <Building2 size={16} />
+                    Gerar Projeto
+                  </button>
+                </div>
               </Card>
             </div>
             <div className="lg:col-span-4">
-              <Card className="p-1 aspect-video">
+              <Card className="p-1 aspect-video border border-gray-300">
                 <DrawingCanvas 
                   ref={canvasRef} 
                   activeTool={activeTool} 
