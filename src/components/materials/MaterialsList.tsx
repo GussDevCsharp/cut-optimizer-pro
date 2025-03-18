@@ -37,13 +37,13 @@ export function MaterialsList({
 }: MaterialsListProps) {
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Filter materials based on search term
+  // Filter materials based on search term with null/undefined checks
   const filteredMaterials = materials.filter((material) =>
-    material.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    material.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    material.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    material.color?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    material.supplier?.toLowerCase().includes(searchTerm.toLowerCase())
+    (material.name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+    ((material.description || "").toLowerCase()).includes(searchTerm.toLowerCase()) ||
+    ((material.type || "").toLowerCase()).includes(searchTerm.toLowerCase()) ||
+    ((material.color || "").toLowerCase()).includes(searchTerm.toLowerCase()) ||
+    ((material.supplier || "").toLowerCase()).includes(searchTerm.toLowerCase())
   );
 
   // Function to get material type label
@@ -125,7 +125,7 @@ export function MaterialsList({
                         </span>
                       )}
                     </TableCell>
-                    <TableCell>{getMaterialTypeLabel(material.type)}</TableCell>
+                    <TableCell>{material.type ? getMaterialTypeLabel(material.type) : "-"}</TableCell>
                     <TableCell>
                       {material.thickness && (
                         <span>{material.thickness}mm </span>
@@ -138,12 +138,12 @@ export function MaterialsList({
                     </TableCell>
                     <TableCell>
                       {material.price
-                        ? `${formatCurrency(material.price)}/${material.unit}`
+                        ? `${formatCurrency(material.price)}/${material.unit || "unid"}`
                         : "-"}
                     </TableCell>
                     <TableCell>
                       {material.stock_quantity !== undefined
-                        ? `${material.stock_quantity} ${material.unit}`
+                        ? `${material.stock_quantity} ${material.unit || "unid"}`
                         : "-"}
                     </TableCell>
                     <TableCell className="text-right">
