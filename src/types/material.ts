@@ -18,6 +18,7 @@ export interface Material {
   color?: string;
   stock_quantity?: number;
   supplier?: string;
+  // Making availability optional since it doesn't exist in the DB yet
   availability?: "Disponível" | "Indisponível" | "Sob Encomenda";
 }
 

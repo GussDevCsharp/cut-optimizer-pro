@@ -14,7 +14,7 @@ export const materialSchema = z.object({
   color: z.string().optional(),
   stock_quantity: z.coerce.number().min(0).optional(),
   supplier: z.string().optional(),
-  availability: z.enum(["Disponível", "Indisponível", "Sob Encomenda"]).default("Disponível"),
+  availability: z.enum(["Disponível", "Indisponível", "Sob Encomenda"]).optional(),
 });
 
 export type MaterialFormValues = z.infer<typeof materialSchema>;

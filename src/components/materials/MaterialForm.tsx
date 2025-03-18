@@ -37,13 +37,17 @@ export function MaterialForm({ initialData, onSubmit, onCancel }: MaterialFormPr
       color: initialData?.color || "",
       stock_quantity: initialData?.stock_quantity || undefined,
       supplier: initialData?.supplier || "",
+      availability: initialData?.availability || "Disponível",
     },
   });
 
   // Handle form submission
   const handleSubmit = async (values: MaterialFormValues) => {
     try {
-      await onSubmit(values);
+      // Remove the availability field from the data sent to the server
+      // since it doesn't exist in the database yet
+      const { availability, ...dataToSubmit } = values;
+      await onSubmit(dataToSubmit as MaterialFormValues);
     } catch (error) {
       toast.error("Erro ao salvar material", {
         description: "Tente novamente mais tarde",
