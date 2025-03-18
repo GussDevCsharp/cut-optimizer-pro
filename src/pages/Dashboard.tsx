@@ -4,14 +4,13 @@ import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { useAuth } from "@/context/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Briefcase, Package, PenTool } from "lucide-react";
+import { Briefcase, Package } from "lucide-react";
 
 // Dashboard components
 import { UserMenu } from "@/components/dashboard/UserMenu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProjectsTabContent } from "@/components/dashboard/ProjectsTabContent";
 import { MaterialsTabContent } from "@/components/dashboard/MaterialsTabContent";
-import { DrawingTabContent } from "@/components/dashboard/DrawingTabContent";
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -37,7 +36,7 @@ export default function Dashboard() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3 mb-4">
+          <TabsList className="grid w-full grid-cols-2 mb-4">
             <TabsTrigger value="projects" className="flex items-center gap-2">
               <Briefcase className="h-4 w-4" />
               <span>Projetos</span>
@@ -45,10 +44,6 @@ export default function Dashboard() {
             <TabsTrigger value="materials" className="flex items-center gap-2">
               <Package className="h-4 w-4" />
               <span>Materiais</span>
-            </TabsTrigger>
-            <TabsTrigger value="drawing" className="flex items-center gap-2">
-              <PenTool className="h-4 w-4" />
-              <span>Desenho</span>
             </TabsTrigger>
           </TabsList>
           
@@ -63,13 +58,6 @@ export default function Dashboard() {
             <MaterialsTabContent 
               userId={user?.id} 
               isActiveTab={activeTab === "materials"}
-            />
-          </TabsContent>
-          
-          <TabsContent value="drawing" className="space-y-4">
-            <DrawingTabContent 
-              userId={user?.id} 
-              isActiveTab={activeTab === "drawing"}
             />
           </TabsContent>
         </Tabs>

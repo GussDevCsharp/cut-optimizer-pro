@@ -1,152 +1,142 @@
 
-import { useEffect } from 'react';
-import { useSheetData, Piece } from '@/hooks/useSheetData';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { toast } from 'sonner';
+import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { useSheetData } from '@/hooks/useSheetData';
 import { useProjectActions } from '@/hooks/useProjectActions';
+import { Progress } from "@/components/ui/progress";
 
-// Define the structure of drawing project data
-interface DrawingProjectData {
-  sheet: {
-    width: number;
-    height: number;
-    cutWidth: number;
-    thickness?: number;
-    materialName?: string;
-  };
-  pieces: Array<{
-    id: string;
-    width: number;
-    height: number;
-    quantity: number;
-    color?: string;
-    x: number;
-    y: number;
-    rotation?: number;
-    canRotate: boolean;
-  }>;
-  placedPieces: Array<any>;
+// Define the structure of our saved project data
+interface ProjectData {
+  sheet?: any;
+  pieces?: any[];
+  placedPieces?: any[];
 }
 
-export function ProjectLoader() {
-  const { loadProject, isLoading } = useProjectActions();
-  const { setProjectName, setSheet, addPiece, setPieces, setPlacedPieces } = useSheetData();
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const projectId = searchParams.get('projectId');
-
+export const ProjectLoader: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const location = useLocation();
+  const { setProjectName, setPlacedPieces, setSheet, setPieces } = useSheetData();
+  const { loadProject } = useProjectActions();
+  const [loading, setLoading] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [isInitialized, setIsInitialized] = useState(false);
+  
   useEffect(() => {
-    // Check if there's drawing project data in localStorage
-    const drawingProjectDataStr = localStorage.getItem('drawing-project-data');
-    
-    if (drawingProjectDataStr) {
-      try {
-        const projectData = JSON.parse(drawingProjectDataStr) as DrawingProjectData;
-        
-        // Set project name
-        setProjectName('Novo Projeto de Desenho');
-        
-        // Set sheet data
-        if (projectData.sheet) {
-          setSheet({
-            width: projectData.sheet.width,
-            height: projectData.sheet.height,
-            cutWidth: projectData.sheet.cutWidth || 4
-          });
-        }
-        
-        // Set pieces - ensure they conform to Piece type
-        if (projectData.pieces && Array.isArray(projectData.pieces)) {
-          // Map the pieces to ensure they match the required Piece structure
-          const mappedPieces: Piece[] = projectData.pieces.map(piece => ({
-            id: piece.id,
-            width: piece.width,
-            height: piece.height,
-            quantity: piece.quantity,
-            color: piece.color,
-            x: piece.x,
-            y: piece.y,
-            canRotate: piece.canRotate
-          }));
-          
-          setPieces(mappedPieces);
-          
-          // Add each piece individually to ensure IDs are handled correctly
-          mappedPieces.forEach(piece => {
-            addPiece(piece);
-          });
-        }
-        
-        // Set placed pieces if available
-        if (projectData.placedPieces && Array.isArray(projectData.placedPieces)) {
-          setPlacedPieces(projectData.placedPieces);
-        }
-        
-        toast.success('Projeto carregado do desenho', {
-          description: `${projectData.pieces.length} tipos de peças foram importados`
+    if (loading) {
+      // Simulate loading progress
+      const interval = setInterval(() => {
+        setProgress((prevProgress) => {
+          const newProgress = prevProgress + 10;
+          return newProgress >= 100 ? 100 : newProgress;
         });
-        
-        // Remove the data from localStorage
-        localStorage.removeItem('drawing-project-data');
-        
-        return; // Exit early, no need to load from projectId
-      } catch (error) {
-        console.error('Error loading drawing project data:', error);
-        localStorage.removeItem('drawing-project-data');
-      }
+      }, 200);
+      
+      return () => clearInterval(interval);
     }
-    
-    // If no drawing data, proceed with regular project loading logic
-    if (projectId) {
-      const loadProjectData = async () => {
+  }, [loading]);
+  
+  useEffect(() => {
+    const fetchProjectData = async () => {
+      // Prevent double initialization
+      if (isInitialized) return;
+      
+      // Check if there's a projectId in the location state or URL params
+      const searchParams = new URLSearchParams(window.location.search);
+      const projectId = location.state?.projectId || searchParams.get('projectId');
+      
+      if (projectId) {
+        setLoading(true);
+        setProgress(0);
         try {
           const project = await loadProject(projectId);
           
-          if (project && project.description) {
-            try {
-              // Parse project description if it's a string
-              const projectDesc = typeof project.description === 'string' 
-                ? JSON.parse(project.description) 
-                : project.description;
+          if (project) {
+            // Set project name
+            setProjectName(project.name);
+            
+            // If project has description with data, load it
+            if (project.description && typeof project.description === 'object') {
+              // Cast project.description to our ProjectData interface
+              const projectData = project.description as ProjectData;
               
-              // Set project name
-              setProjectName(project.name || 'Projeto sem nome');
+              console.log("Loaded project data:", projectData);
               
-              // Set sheet data if available
-              if (projectDesc.sheet) {
-                setSheet(projectDesc.sheet);
+              // Load sheet dimensions if available
+              if (projectData.sheet) {
+                setSheet(projectData.sheet);
               }
               
-              // Set pieces if available
-              if (projectDesc.pieces && Array.isArray(projectDesc.pieces)) {
-                setPieces(projectDesc.pieces);
+              // Load pieces if available
+              if (projectData.pieces && Array.isArray(projectData.pieces)) {
+                // Clear existing pieces and add the saved ones
+                setPieces(projectData.pieces);
+                
+                console.log("Loaded pieces:", projectData.pieces);
               }
               
-              // Set placed pieces if available
-              if (projectDesc.placedPieces && Array.isArray(projectDesc.placedPieces)) {
-                setPlacedPieces(projectDesc.placedPieces);
+              // Load placed pieces if available
+              if (projectData.placedPieces && Array.isArray(projectData.placedPieces)) {
+                setPlacedPieces(projectData.placedPieces);
+                
+                console.log("Loaded placed pieces:", projectData.placedPieces);
               }
               
-              // Update URL state to include projectId
-              navigate('?projectId=' + projectId, { replace: true });
-              
-              toast.success('Projeto carregado com sucesso', {
-                description: `${project.name} foi carregado`
-              });
-            } catch (error) {
-              console.error('Error parsing project description:', error);
-              toast.error('Erro ao carregar projeto');
+              // Indicate that data has been loaded successfully
+              setDataLoaded(true);
             }
           }
         } catch (error) {
-          console.error('Error loading project:', error);
-          toast.error('Erro ao carregar projeto');
+          console.error("Error loading project data:", error);
+        } finally {
+          // Ensure we reach 100% before removing the loader
+          setProgress(100);
+          setTimeout(() => {
+            setLoading(false);
+            setIsInitialized(true); // Mark as initialized to prevent re-fetching
+          }, 600); // Slightly longer timeout to ensure smooth transition
         }
-      };
-      
-      loadProjectData();
-    }
-  }, [projectId, loadProject, navigate, setProjectName, setSheet, setPieces, setPlacedPieces, addPiece]);
+      } else if (location.state?.projectName) {
+        // If no project ID but we have a name, just set the name
+        setProjectName(location.state.projectName);
+        setIsInitialized(true);
+      } else {
+        // No project to load, mark as initialized
+        setIsInitialized(true);
+      }
+    };
+    
+    fetchProjectData();
+  }, [location.state, setProjectName, loadProject, setPlacedPieces, setSheet, setPieces, isInitialized]);
 
-  return null;
-}
+  // Display a loading indicator while project is being loaded
+  if (loading) {
+    return (
+      <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center z-50">
+        <div className="w-[300px] space-y-4">
+          <h2 className="text-xl font-semibold text-center">Carregando projeto</h2>
+          <Progress value={progress} className="w-full" />
+          <p className="text-sm text-muted-foreground text-center">
+            Aguarde enquanto carregamos os dados do seu projeto
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render children until fully initialized
+  if (!isInitialized) {
+    return (
+      <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center z-50">
+        <div className="w-[300px] space-y-4">
+          <h2 className="text-xl font-semibold text-center">Inicializando...</h2>
+          <Progress value={30} className="w-full" />
+        </div>
+      </div>
+    );
+  }
+
+  // Render children once loading is complete
+  return <>{children}</>;
+};
+
+export default ProjectLoader;

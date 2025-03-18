@@ -4,8 +4,7 @@ import { Save, Upload } from "lucide-react";
 import { useProjectActions } from "@/hooks/useProjectActions";
 import { useSheetData } from "@/hooks/useSheetData";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useRef, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useState, useRef } from "react";
 
 interface SaveProjectButtonProps {
   projectId: string | null;
@@ -13,7 +12,7 @@ interface SaveProjectButtonProps {
 }
 
 export function SaveProjectButton({ 
-  projectId: propProjectId, 
+  projectId, 
   className = "" 
 }: SaveProjectButtonProps) {
   const { saveProject, isSaving, isUploadingImage } = useProjectActions();
@@ -21,18 +20,6 @@ export function SaveProjectButton({
   const { toast } = useToast();
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [searchParams] = useSearchParams();
-  const [projectId, setProjectId] = useState<string | null>(propProjectId);
-
-  // Get projectId from URL if not provided as prop
-  useEffect(() => {
-    if (!propProjectId) {
-      const urlProjectId = searchParams.get('projectId');
-      if (urlProjectId) {
-        setProjectId(urlProjectId);
-      }
-    }
-  }, [propProjectId, searchParams]);
 
   const handleSave = async () => {
     // Create a complete project data object with all necessary information
@@ -62,20 +49,6 @@ export function SaveProjectButton({
       });
       // Reset selected image after successful save
       setSelectedImage(null);
-      
-      // Update projectId if this was a new project
-      if (!projectId && savedProject.id) {
-        setProjectId(savedProject.id);
-        
-        // Update URL to include projectId without refreshing
-        const newSearchParams = new URLSearchParams(searchParams);
-        newSearchParams.set('projectId', savedProject.id);
-        window.history.replaceState(
-          null, 
-          '', 
-          `${window.location.pathname}?${newSearchParams.toString()}`
-        );
-      }
     }
   };
 
