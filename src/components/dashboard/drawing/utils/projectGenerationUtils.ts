@@ -57,15 +57,13 @@ export function generatePiecesFromShapes(shapes: Shape[]): Piece[] {
       return; // Skip invalid dimensions
     }
     
-    // Create a piece for this group
+    // Create a piece for this group - make sure to only include properties that are part of the Piece interface
     pieces.push({
       id: `drawing-piece-${pieceCounter++}`,
       width,
       height, 
       quantity: shapesInGroup.length,
       color: shapesInGroup[0].color, // Use color of the first shape in group
-      x: 0,
-      y: 0,
       canRotate: true
     });
   });
