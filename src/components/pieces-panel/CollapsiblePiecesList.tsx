@@ -41,21 +41,21 @@ export const CollapsiblePiecesList = ({
 
   return (
     <div className="h-full flex relative">
-      <div 
-        className={`absolute right-0 top-1/2 -translate-y-1/2 z-10 transform ${isOpen ? 'translate-x-0' : 'translate-x-2'} transition-transform duration-300`}
-      >
-        <CollapsibleTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-8 w-8 shadow-md bg-background rounded-full">
-            {isOpen ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-          </Button>
-        </CollapsibleTrigger>
-      </div>
-      
       <Collapsible 
         open={isOpen} 
         onOpenChange={handleOpenChange} 
         className="h-full w-full"
       >
+        <div 
+          className={`absolute right-0 top-1/2 -translate-y-1/2 z-10 transform ${isOpen ? 'translate-x-0' : 'translate-x-2'} transition-transform duration-300`}
+        >
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8 shadow-md bg-background rounded-full">
+              {isOpen ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+            </Button>
+          </CollapsibleTrigger>
+        </div>
+        
         <CollapsibleContent 
           className={`h-full transition-all duration-300 ${isOpen ? 'animate-slide-in-right' : 'animate-slide-out-right'}`}
           forceMount
