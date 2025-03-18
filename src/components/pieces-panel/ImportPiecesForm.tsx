@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Upload } from 'lucide-react';
-import { Piece } from '../../hooks/useSheetData';
+import { Piece, useSheetData } from '../../hooks/useSheetData';
 import { ExcelImportTab } from './import/ExcelImportTab';
 import { TextImportTab } from './import/TextImportTab';
 import { toast } from "sonner";
@@ -15,11 +15,36 @@ interface ImportPiecesFormProps {
 
 export const ImportPiecesForm = ({ onImportPieces }: ImportPiecesFormProps) => {
   const [open, setOpen] = useState(false);
+  const { setProjectName, setSheet, setPieces, setPlacedPieces } = useSheetData();
   
   const handleImportSuccess = (importedPieces: Piece[]) => {
     onImportPieces(importedPieces);
     setOpen(false);
     toast.success(`${importedPieces.length} peças importadas com sucesso!`);
+  };
+
+  const handleImportProject = (projectData: any) => {
+    if (!projectData) return;
+    
+    // Update project data in context
+    if (projectData.projectName) {
+      setProjectName(projectData.projectName);
+    }
+    
+    if (projectData.sheet) {
+      setSheet(projectData.sheet);
+    }
+    
+    if (projectData.pieces) {
+      setPieces(projectData.pieces);
+    }
+    
+    if (projectData.placedPieces) {
+      setPlacedPieces(projectData.placedPieces);
+    }
+    
+    setOpen(false);
+    toast.success(`Projeto "${projectData.projectName || 'Importado'}" carregado com sucesso!`);
   };
 
   return (
@@ -30,7 +55,7 @@ export const ImportPiecesForm = ({ onImportPieces }: ImportPiecesFormProps) => {
           Importar Peças
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Importar Peças</DialogTitle>
         </DialogHeader>
@@ -46,7 +71,10 @@ export const ImportPiecesForm = ({ onImportPieces }: ImportPiecesFormProps) => {
           </TabsContent>
           
           <TabsContent value="text" className="py-4">
-            <TextImportTab onImportSuccess={handleImportSuccess} />
+            <TextImportTab 
+              onImportSuccess={handleImportSuccess} 
+              onImportProject={handleImportProject}
+            />
           </TabsContent>
         </Tabs>
       </DialogContent>

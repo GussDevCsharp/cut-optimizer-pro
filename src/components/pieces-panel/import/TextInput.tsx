@@ -2,19 +2,24 @@
 import { Textarea } from "@/components/ui/textarea";
 import { FileText } from 'lucide-react';
 import { Input } from "@/components/ui/input";
+import { ReactNode } from "react";
 
 interface TextInputProps {
   textContent: string;
   setTextContent: (content: string) => void;
   onFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   clearError: () => void;
+  placeholder?: string;
+  formatHint?: ReactNode;
 }
 
 export const TextInput = ({ 
   textContent, 
   setTextContent, 
   onFileUpload,
-  clearError
+  clearError,
+  placeholder = "100x200 (3)&#10;150x300&#10;400 600 5",
+  formatHint
 }: TextInputProps) => {
   return (
     <div className="flex flex-col gap-4">
@@ -34,7 +39,7 @@ export const TextInput = ({
           />
         </div>
         <Textarea
-          placeholder="100x200 (3)&#10;150x300&#10;400 600 5"
+          placeholder={placeholder}
           rows={6}
           value={textContent}
           onChange={(e) => {
@@ -44,11 +49,9 @@ export const TextInput = ({
         />
       </div>
       
-      <p className="text-xs text-muted-foreground">
-        Formatos aceitos por linha:
-        <br />• 100x200 (3) - largura x altura (quantidade)
-        <br />• 100 200 3 - largura altura quantidade
-      </p>
+      {formatHint && (
+        <p className="text-xs text-muted-foreground">{formatHint}</p>
+      )}
     </div>
   );
 };
