@@ -64,7 +64,6 @@ export function generatePiecesFromShapes(shapes: Shape[]): Piece[] {
       height, 
       quantity: shapesInGroup.length,
       color: shapesInGroup[0].color, // Use color of the first shape in group
-      rotation: 0,
       x: 0,
       y: 0,
       canRotate: true

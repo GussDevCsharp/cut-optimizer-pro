@@ -1,10 +1,11 @@
 
 import { useEffect } from 'react';
-import { useSheetData } from '@/hooks/useSheetData';
+import { useSheetData, Piece } from '@/hooks/useSheetData';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useProjectActions } from '@/hooks/useProjectActions';
 
+// Define the structure of drawing project data
 interface DrawingProjectData {
   sheet: {
     width: number;
@@ -22,7 +23,7 @@ interface DrawingProjectData {
     x: number;
     y: number;
     rotation?: number;
-    canRotate?: boolean;
+    canRotate: boolean;
   }>;
   placedPieces: Array<any>;
 }
@@ -54,12 +55,24 @@ export function ProjectLoader() {
           });
         }
         
-        // Set pieces
+        // Set pieces - ensure they conform to Piece type
         if (projectData.pieces && Array.isArray(projectData.pieces)) {
-          setPieces(projectData.pieces);
+          // Map the pieces to ensure they match the required Piece structure
+          const mappedPieces: Piece[] = projectData.pieces.map(piece => ({
+            id: piece.id,
+            width: piece.width,
+            height: piece.height,
+            quantity: piece.quantity,
+            color: piece.color,
+            x: piece.x,
+            y: piece.y,
+            canRotate: piece.canRotate
+          }));
           
-          // Also add each piece individually to ensure IDs are handled correctly
-          projectData.pieces.forEach((piece) => {
+          setPieces(mappedPieces);
+          
+          // Add each piece individually to ensure IDs are handled correctly
+          mappedPieces.forEach(piece => {
             addPiece(piece);
           });
         }
@@ -83,32 +96,42 @@ export function ProjectLoader() {
       }
     }
     
-    // If no drawing data, proceed with regular project loading
+    // If no drawing data, proceed with regular project loading logic
     if (projectId) {
       const loadProjectData = async () => {
         const project = await loadProject(projectId);
         
         if (project && project.description) {
-          // Set project name
-          setProjectName(project.name);
-          
-          // Set sheet data if available
-          if (project.description.sheet) {
-            setSheet(project.description.sheet);
+          try {
+            // Parse project description if it's a string
+            const projectDesc = typeof project.description === 'string' 
+              ? JSON.parse(project.description) 
+              : project.description;
+            
+            // Set project name
+            setProjectName(project.name);
+            
+            // Set sheet data if available
+            if (projectDesc.sheet) {
+              setSheet(projectDesc.sheet);
+            }
+            
+            // Set pieces if available
+            if (projectDesc.pieces && Array.isArray(projectDesc.pieces)) {
+              setPieces(projectDesc.pieces);
+            }
+            
+            // Set placed pieces if available
+            if (projectDesc.placedPieces && Array.isArray(projectDesc.placedPieces)) {
+              setPlacedPieces(projectDesc.placedPieces);
+            }
+            
+            // Update URL state to include projectId
+            navigate('?projectId=' + projectId, { replace: true });
+          } catch (error) {
+            console.error('Error parsing project description:', error);
+            toast.error('Erro ao carregar projeto');
           }
-          
-          // Set pieces if available
-          if (project.description.pieces && Array.isArray(project.description.pieces)) {
-            setPieces(project.description.pieces);
-          }
-          
-          // Set placed pieces if available
-          if (project.description.placedPieces && Array.isArray(project.description.placedPieces)) {
-            setPlacedPieces(project.description.placedPieces);
-          }
-          
-          // Update URL state to include projectId
-          navigate('?projectId=' + projectId, { replace: true });
         }
       };
       
