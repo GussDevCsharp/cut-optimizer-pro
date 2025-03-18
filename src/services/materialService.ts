@@ -1,11 +1,19 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Material, ApiResponse } from "@/types/material";
+import { Material, ApiResponse, ExtendedDatabase } from "@/types/material";
+import { createClient } from '@supabase/supabase-js';
+
+// Get the Supabase URL and key from the existing client
+const supabaseUrl = supabase.supabaseUrl;
+const supabaseKey = supabase.supabaseKey;
+
+// Create a typed client that knows about our materials table
+const typedClient = createClient<ExtendedDatabase>(supabaseUrl, supabaseKey);
 
 // Fetch all materials for a user
 export const fetchMaterials = async (userId: string): Promise<ApiResponse<Material[]>> => {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await typedClient
       .from('materials')
       .select('*')
       .eq('user_id', userId)
@@ -25,7 +33,7 @@ export const fetchMaterials = async (userId: string): Promise<ApiResponse<Materi
 // Fetch a single material by ID
 export const fetchMaterialById = async (materialId: string): Promise<ApiResponse<Material>> => {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await typedClient
       .from('materials')
       .select('*')
       .eq('id', materialId)
@@ -45,7 +53,7 @@ export const fetchMaterialById = async (materialId: string): Promise<ApiResponse
 // Create a new material
 export const createMaterial = async (material: Omit<Material, 'id' | 'created_at' | 'updated_at'>): Promise<ApiResponse<Material>> => {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await typedClient
       .from('materials')
       .insert([material])
       .select()
@@ -65,7 +73,7 @@ export const createMaterial = async (material: Omit<Material, 'id' | 'created_at
 // Update an existing material
 export const updateMaterial = async (materialId: string, materialData: Partial<Omit<Material, 'id' | 'created_at'>>): Promise<ApiResponse<Material>> => {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await typedClient
       .from('materials')
       .update(materialData)
       .eq('id', materialId)
@@ -86,7 +94,7 @@ export const updateMaterial = async (materialId: string, materialData: Partial<O
 // Delete a material
 export const deleteMaterial = async (materialId: string): Promise<ApiResponse<null>> => {
   try {
-    const { error } = await supabase
+    const { error } = await typedClient
       .from('materials')
       .delete()
       .eq('id', materialId);

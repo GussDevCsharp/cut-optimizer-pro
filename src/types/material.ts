@@ -27,7 +27,7 @@ export interface ApiResponse<T> {
 }
 
 // Extend the Database type with our materials table
-export interface ExtendedMaterialsDatabase extends Database {
+export type ExtendedDatabase = Database & {
   public: {
     Tables: {
       materials: {
@@ -36,9 +36,5 @@ export interface ExtendedMaterialsDatabase extends Database {
         Update: Partial<Omit<Material, 'id' | 'created_at'>>;
       };
     } & Database['public']['Tables'];
-    Views: Database['public']['Views'];
-    Functions: Database['public']['Functions'];
-    Enums: Database['public']['Enums'];
-    CompositeTypes: Database['public']['CompositeTypes'];
   }
 }
