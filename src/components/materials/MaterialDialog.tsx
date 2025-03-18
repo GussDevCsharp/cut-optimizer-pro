@@ -8,11 +8,12 @@ import {
 } from "@/components/ui/dialog";
 import { Material } from "@/types/material";
 import { MaterialForm } from "./MaterialForm";
+import { MaterialFormValues } from "./schema/materialSchema";
 
 interface MaterialDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: Omit<Material, "id" | "created_at" | "updated_at" | "user_id">) => Promise<void>;
+  onSubmit: (data: MaterialFormValues) => Promise<void>;
   initialData?: Material;
   title: string;
 }
