@@ -8,6 +8,7 @@ export interface Piece {
   quantity: number;
   canRotate: boolean;
   color?: string;
+  materialId?: string;
 }
 
 export interface PlacedPiece extends Piece {
