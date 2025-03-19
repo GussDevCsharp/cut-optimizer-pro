@@ -1,10 +1,11 @@
 
 import React from 'react';
-import { Sheet, PlacedPiece } from '../../hooks/useSheetData';
+import { Sheet, PlacedPiece, ScrapPiece } from '../../hooks/useSheetData';
 
 interface SheetThumbnailsProps {
   sheet: Sheet;
   placedPieces: PlacedPiece[];
+  scrapPieces?: ScrapPiece[]; // Add scrapPieces as an optional prop
   sheetCount: number;
   currentSheetIndex: number;
   onSelectSheet: (index: number) => void;
@@ -14,6 +15,7 @@ interface SheetThumbnailsProps {
 export const SheetThumbnails = ({ 
   sheet, 
   placedPieces, 
+  scrapPieces = [], // Provide default empty array
   sheetCount, 
   currentSheetIndex,
   onSelectSheet,
@@ -34,6 +36,7 @@ export const SheetThumbnails = ({
         {sheets.map((index) => {
           const isActive = index === currentSheetIndex;
           const sheetPieces = placedPieces.filter(p => p.sheetIndex === index);
+          const sheetScraps = scrapPieces.filter(p => p.sheetIndex === index);
           
           return (
             <div 
@@ -54,6 +57,28 @@ export const SheetThumbnails = ({
               <div className="absolute inset-0 flex items-center justify-center text-xs font-semibold">
                 {index + 1}
               </div>
+              
+              {/* Scrap pieces in the thumbnail */}
+              {sheetScraps.map((scrap, scrapIndex) => {
+                const scale = Math.min(thumbnailWidth / sheet.width, thumbnailHeight / sheet.height);
+                
+                return (
+                  <div
+                    key={`scrap-${scrap.id}-${scrapIndex}`}
+                    style={{
+                      position: 'absolute',
+                      left: scrap.x * scale,
+                      top: scrap.y * scale,
+                      width: scrap.width * scale,
+                      height: scrap.height * scale,
+                      backgroundColor: scrap.color || "#9BDEAC",
+                      border: '1px solid rgba(0,0,0,0.1)',
+                      transform: `rotate(${scrap.rotated ? '90deg' : '0deg'})`,
+                      transformOrigin: 'center',
+                    }}
+                  />
+                );
+              })}
               
               {/* Peças na miniatura */}
               {sheetPieces.map((piece, pieceIndex) => {

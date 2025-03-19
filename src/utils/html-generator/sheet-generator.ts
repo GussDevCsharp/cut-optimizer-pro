@@ -1,9 +1,10 @@
 
-import { Sheet, PlacedPiece } from '../../hooks/useSheetData';
+import { Sheet, PlacedPiece, ScrapPiece } from '../../hooks/useSheetData';
 import { generateSheet } from './sheet-renderer';
 
 export const generateSheets = (sheet: Sheet, placedPieces: PlacedPiece[], sheets: number[]): string => {
-  return sheets.map(sheetIndex => generateSheet(sheet, placedPieces, sheetIndex)).join('');
+  const scrapPieces: ScrapPiece[] = []; // Add empty scrap pieces array as default
+  return sheets.map(sheetIndex => generateSheet(sheet, placedPieces, scrapPieces, sheetIndex)).join('');
 };
 
 // Re-export functions from piece-generator.ts for backward compatibility
