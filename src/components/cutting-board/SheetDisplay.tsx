@@ -81,6 +81,26 @@ export const SheetDisplay = ({
           backgroundSize: `${isMobile ? '10px 10px' : '20px 20px'}`,
         }}
       >
+        {/* In-sheet width dimension */}
+        <div 
+          className="absolute bottom-2 left-0 right-0 text-center font-medium text-gray-500 z-10 bg-white/60 py-1 rounded-sm"
+          style={{ fontSize: `${dimensionFontSize * 1.2}px` }}
+        >
+          {sheet.width} mm
+        </div>
+        
+        {/* In-sheet height dimension */}
+        <div 
+          className="absolute top-10 left-2 font-medium text-gray-500 z-10 bg-white/60 px-1 py-1 rounded-sm"
+          style={{ 
+            fontSize: `${dimensionFontSize * 1.2}px`,
+            writingMode: 'vertical-rl',
+            transform: 'rotate(180deg)'
+          }}
+        >
+          {sheet.height} mm
+        </div>
+        
         {/* Render scrap pieces first (lower z-index) */}
         {sheetIndex === currentSheetIndex && displayScraps.map((scrap, index) => (
           <SheetPiece 
