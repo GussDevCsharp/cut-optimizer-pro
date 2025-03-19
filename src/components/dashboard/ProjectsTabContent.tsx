@@ -1,10 +1,13 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useProjectsData } from "@/hooks/useProjectsData";
 import { ProjectsGrid } from "@/components/dashboard/ProjectsGrid";
 import { NewProjectDialog } from "@/components/dashboard/NewProjectDialog";
+import { DeleteProjectDialog } from "@/components/dashboard/DeleteProjectDialog";
 import type { Project } from "@/types/project";
+import { useToast } from "@/hooks/use-toast";
+import { projectService } from "@/services/projectService";
 
 interface ProjectsTabContentProps {
   userId: string | undefined;
@@ -13,6 +16,7 @@ interface ProjectsTabContentProps {
 
 export function ProjectsTabContent({ userId, isActiveTab }: ProjectsTabContentProps) {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const {
     projects,
     isLoading,
@@ -21,6 +25,11 @@ export function ProjectsTabContent({ userId, isActiveTab }: ProjectsTabContentPr
     loadProjects,
     handleCreateProject
   } = useProjectsData(userId);
+
+  // Delete project state
+  const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Load projects when this tab becomes active
   React.useEffect(() => {
@@ -47,6 +56,42 @@ export function ProjectsTabContent({ userId, isActiveTab }: ProjectsTabContentPr
     }
   };
 
+  const handleDeleteClick = (project: Project) => {
+    setProjectToDelete(project);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!projectToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      const { error } = await projectService.deleteProject(projectToDelete.id);
+      
+      if (error) {
+        throw new Error(error);
+      }
+      
+      toast({
+        title: "Projeto excluído",
+        description: `O projeto "${projectToDelete.name}" foi excluído com sucesso.`
+      });
+      
+      // Reload projects to reflect the change
+      loadProjects();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao excluir",
+        description: error.message || "Não foi possível excluir o projeto."
+      });
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteDialogOpen(false);
+      setProjectToDelete(null);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <ProjectsGrid 
@@ -54,6 +99,7 @@ export function ProjectsTabContent({ userId, isActiveTab }: ProjectsTabContentPr
         isLoading={isLoading}
         onNewProjectClick={() => setIsDialogOpen(true)}
         onProjectClick={handleProjectClick}
+        onDeleteProject={handleDeleteClick}
       />
 
       <NewProjectDialog 
@@ -61,6 +107,16 @@ export function ProjectsTabContent({ userId, isActiveTab }: ProjectsTabContentPr
         onOpenChange={setIsDialogOpen}
         onCreateProject={handleProjectCreated}
       />
+
+      {projectToDelete && (
+        <DeleteProjectDialog
+          isOpen={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+          projectName={projectToDelete.name}
+          onConfirmDelete={handleConfirmDelete}
+          isDeleting={isDeleting}
+        />
+      )}
     </div>
   );
 }

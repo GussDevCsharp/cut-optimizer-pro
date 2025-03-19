@@ -1,8 +1,7 @@
-
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useNavigate } from "react-router-dom";
-import { PlusCircle, Beaker } from "lucide-react";
+import { PlusCircle, Beaker, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { Project } from "@/types/project";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -11,10 +10,17 @@ interface ProjectTableProps {
   projects: Project[];
   onProjectClick: (project: Project) => void;
   onNewProjectClick: () => void;
+  onDeleteProject?: (project: Project) => void;
   showAdminCard: boolean;
 }
 
-export const ProjectTable = ({ projects, onProjectClick, onNewProjectClick, showAdminCard }: ProjectTableProps) => {
+export const ProjectTable = ({ 
+  projects, 
+  onProjectClick, 
+  onNewProjectClick, 
+  onDeleteProject,
+  showAdminCard 
+}: ProjectTableProps) => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
 
@@ -23,7 +29,6 @@ export const ProjectTable = ({ projects, onProjectClick, onNewProjectClick, show
     return date.toLocaleDateString('pt-BR');
   };
 
-  // Parse the project description to get efficiency data
   const getEfficiency = (project: Project): number | null => {
     try {
       if (project.description) {
@@ -39,7 +44,6 @@ export const ProjectTable = ({ projects, onProjectClick, onNewProjectClick, show
     }
   };
 
-  // Determine badge variant based on efficiency
   const getBadgeVariant = (efficiency: number | null) => {
     if (efficiency === null) return "secondary";
     if (efficiency >= 85) return "success";
@@ -63,7 +67,6 @@ export const ProjectTable = ({ projects, onProjectClick, onNewProjectClick, show
           </TableRow>
         </TableHeader>
         <TableBody>
-          {/* Row for new project button */}
           <TableRow>
             <TableCell className="font-medium">
               <div className="flex items-center space-x-2">
@@ -80,7 +83,6 @@ export const ProjectTable = ({ projects, onProjectClick, onNewProjectClick, show
             </TableCell>
           </TableRow>
 
-          {/* Row for testing (admin only) */}
           {showAdminCard && (
             <TableRow>
               <TableCell className="font-medium">
@@ -99,12 +101,11 @@ export const ProjectTable = ({ projects, onProjectClick, onNewProjectClick, show
             </TableRow>
           )}
 
-          {/* Rows for actual projects */}
           {projects.map((project) => {
             const efficiency = getEfficiency(project);
             
             return (
-              <TableRow key={project.id} onClick={() => onProjectClick(project)} className="cursor-pointer">
+              <TableRow key={project.id}>
                 <TableCell className="font-medium">{project.name}</TableCell>
                 {!isMobile && (
                   <TableCell>
@@ -118,10 +119,15 @@ export const ProjectTable = ({ projects, onProjectClick, onNewProjectClick, show
                   </TableCell>
                 )}
                 <TableCell>{formatDate(project.created_at)}</TableCell>
-                <TableCell className="text-right">
-                  <Button variant="outline" size="sm">
+                <TableCell className="text-right space-x-2">
+                  <Button variant="outline" size="sm" onClick={() => onProjectClick(project)}>
                     Abrir
                   </Button>
+                  {onDeleteProject && (
+                    <Button variant="destructive" size="sm" onClick={() => onDeleteProject(project)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </TableCell>
               </TableRow>
             );
