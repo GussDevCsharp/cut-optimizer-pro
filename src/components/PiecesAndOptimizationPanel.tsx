@@ -1,10 +1,9 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Puzzle, Scissors, Sparkles, RectangleHorizontal } from 'lucide-react';
 import { useSheetData, Piece } from '../hooks/useSheetData';
 import { PieceForm } from './pieces-panel/PieceForm';
 import { ImportPiecesForm } from './pieces-panel/ImportPiecesForm';
-import { optimizeCutting, OPTIMIZATION_STEPS } from '../utils/optimization/optimizationEngine';
+import { optimizeCutting } from '../utils/optimizationAlgorithm';
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useProjectActions } from "@/hooks/useProjectActions";
@@ -17,7 +16,6 @@ export const PiecesAndOptimizationPanel = () => {
   const { saveProject } = useProjectActions();
   const location = useLocation();
   const [isOptimizing, setIsOptimizing] = useState(false);
-  const [currentStep, setCurrentStep] = useState(0);
   
   const searchParams = new URLSearchParams(window.location.search);
   const projectId = location.state?.projectId || searchParams.get('projectId');
@@ -36,16 +34,12 @@ export const PiecesAndOptimizationPanel = () => {
       return;
     }
     
-    setCurrentStep(0);
     setIsOptimizing(true);
     
     try {
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      const optimizedPieces = optimizeCutting(pieces, sheet, (step) => {
-        setCurrentStep(step);
-      });
-      
+      const optimizedPieces = optimizeCutting(pieces, sheet);
       setPlacedPieces(optimizedPieces);
       
       const placedCount = optimizedPieces.length;
@@ -160,7 +154,7 @@ export const PiecesAndOptimizationPanel = () => {
         </CardContent>
       </Card>
       
-      <OptimizationLoadingDialog isOpen={isOptimizing} currentStep={currentStep} />
+      <OptimizationLoadingDialog isOpen={isOptimizing} />
     </>
   );
 };

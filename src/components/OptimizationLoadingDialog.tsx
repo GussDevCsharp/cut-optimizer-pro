@@ -2,24 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, Timer, Clock, CheckCircle2 } from "lucide-react";
+import { Loader2, Timer, Clock } from "lucide-react";
 
 interface OptimizationLoadingDialogProps {
   isOpen: boolean;
-  currentStep?: number;
-  steps?: string[];
 }
 
-export const OptimizationLoadingDialog = ({ 
-  isOpen, 
-  currentStep = 0, 
-  steps = [
-    "Preparando peças e organizando por tamanho",
-    "Calculando melhores posições",
-    "Otimizando uso do material",
-    "Finalizando posicionamento"
-  ]
-}: OptimizationLoadingDialogProps) => {
+export const OptimizationLoadingDialog = ({ isOpen }: OptimizationLoadingDialogProps) => {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [progress, setProgress] = useState(0);
   
@@ -75,31 +64,11 @@ export const OptimizationLoadingDialog = ({
           </div>
           
           <p className="text-center text-muted-foreground">
-            Calculando a melhor posição para suas peças...
+            Calculando a melhor posição para suas peças. Isso pode levar alguns segundos...
           </p>
           
           {/* Progress bar */}
           <Progress value={progress} className="w-full" />
-          
-          {/* Steps display */}
-          <div className="w-full space-y-2">
-            {steps.map((step, index) => (
-              <div key={index} className="flex items-center gap-2">
-                {index < currentStep ? (
-                  <CheckCircle2 className="h-5 w-5 text-green-500" />
-                ) : index === currentStep ? (
-                  <Loader2 className="h-5 w-5 text-primary animate-spin" />
-                ) : (
-                  <div className="h-5 w-5 rounded-full border border-muted-foreground flex items-center justify-center">
-                    <span className="text-xs text-muted-foreground">{index + 1}</span>
-                  </div>
-                )}
-                <span className={`text-sm ${index < currentStep ? 'text-muted-foreground line-through' : index === currentStep ? 'font-medium' : 'text-muted-foreground'}`}>
-                  {step}
-                </span>
-              </div>
-            ))}
-          </div>
           
           {/* Timer and estimated time */}
           <div className="grid grid-cols-2 w-full gap-4">
