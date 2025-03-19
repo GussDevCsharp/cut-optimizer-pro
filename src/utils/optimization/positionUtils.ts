@@ -36,36 +36,69 @@ export const findBestPosition = (
   }
   
   let bestPosition = null;
+  
+  // For horizontal preference, we want top-left (lowest Y, then lowest X)
+  // For vertical preference, we want bottom-left (highest Y, then lowest X)
   let lowestY = Number.MAX_SAFE_INTEGER;
+  let highestY = -1;
   let lowestX = Number.MAX_SAFE_INTEGER;
 
   // Try every possible position on the sheet
   for (const orientation of orientations) {
-    for (let y = 0; y <= sheet.height - orientation.height; y++) {
-      for (let x = 0; x <= sheet.width - orientation.width; x++) {
-        if (sheetGrid.isAreaAvailable(x, y, orientation.width, orientation.height, sheet.cutWidth)) {
-          // We found a valid position - check if it's "better" than our current best
-          // Better means closer to the top-left corner
-          if (y < lowestY || (y === lowestY && x < lowestX)) {
-            lowestY = y;
-            lowestX = x;
-            bestPosition = { x, y, rotated: orientation.rotated };
-            
-            // If we found a position at y=0, we can break early as this is already optimal
-            if (y === 0) {
-              break;
+    if (orientationPreference === 'horizontal') {
+      // Top-left priority (original behavior)
+      for (let y = 0; y <= sheet.height - orientation.height; y++) {
+        for (let x = 0; x <= sheet.width - orientation.width; x++) {
+          if (sheetGrid.isAreaAvailable(x, y, orientation.width, orientation.height, sheet.cutWidth)) {
+            // We found a valid position - check if it's "better" than our current best
+            // Better means closer to the top-left corner
+            if (y < lowestY || (y === lowestY && x < lowestX)) {
+              lowestY = y;
+              lowestX = x;
+              bestPosition = { x, y, rotated: orientation.rotated };
+              
+              // If we found a position at y=0, we can break early as this is already optimal
+              if (y === 0) {
+                break;
+              }
             }
           }
         }
+        
+        // If we found a position at the current y, we can move to the next piece
+        if (bestPosition && bestPosition.y === y) {
+          break;
+        }
       }
-      
-      // If we found a position at the current y, we can move to the next piece
-      if (bestPosition && bestPosition.y === y) {
-        break;
+    } else {
+      // Bottom-left priority for vertical orientation preference
+      // Start from the bottom of the sheet and work upward
+      for (let y = sheet.height - orientation.height; y >= 0; y--) {
+        for (let x = 0; x <= sheet.width - orientation.width; x++) {
+          if (sheetGrid.isAreaAvailable(x, y, orientation.width, orientation.height, sheet.cutWidth)) {
+            // We found a valid position - check if it's "better" than our current best
+            // Better means closer to the bottom-left corner (higher Y, lower X)
+            if (y > highestY || (y === highestY && x < lowestX)) {
+              highestY = y;
+              lowestX = x;
+              bestPosition = { x, y, rotated: orientation.rotated };
+              
+              // If we found a position at maximum y, we can break early as this is already optimal
+              if (y === sheet.height - orientation.height) {
+                break;
+              }
+            }
+          }
+        }
+        
+        // If we found a position at the current y, we can move to the next piece
+        if (bestPosition && bestPosition.y === y) {
+          break;
+        }
       }
     }
     
-    // If we found a position in the first orientation, try the next orientation
+    // If we found a position in the first orientation, use it and don't try the next orientation
     if (bestPosition) {
       break;
     }
