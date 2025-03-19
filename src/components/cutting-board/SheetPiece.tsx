@@ -11,12 +11,18 @@ interface SheetPieceProps {
 export const SheetPiece = ({ piece, scale, isMobile }: SheetPieceProps) => {
   // Calculate font size based on piece dimensions and device
   const minDimension = Math.min(piece.width, piece.height) * scale;
-  const fontSize = isMobile 
-    ? Math.max(Math.min(minDimension / 8, 12), 7) // Smaller text on mobile
-    : Math.max(Math.min(minDimension / 6, 14), 8);
+  let fontSize = isMobile 
+    ? Math.max(Math.min(minDimension / 8, 12), 8) // Smaller text on mobile
+    : Math.max(Math.min(minDimension / 6, 14), 9);
+  
+  // Make labels slightly smaller
+  const labelFontSize = Math.max(fontSize - 2, 7);
   
   // Calculate rotation transform
   const rotation = piece.rotated ? '90deg' : '0deg';
+  
+  // Generate a label for the piece (e.g., A1, B1)
+  const pieceLabel = `${String.fromCharCode(65 + (piece.id.charCodeAt(0) % 26))}${(parseInt(piece.id, 36) % 9) + 1}`;
   
   return (
     <div
@@ -37,9 +43,25 @@ export const SheetPiece = ({ piece, scale, isMobile }: SheetPieceProps) => {
         transformOrigin: piece.rotated ? 'center' : '0 0',
         boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
         borderRadius: '2px',
-        zIndex: 10, // Add z-index to ensure pieces don't overlap visually
+        zIndex: 10,
       }}
     >
+      {/* Piece label (like A1, B2, etc.) */}
+      <div 
+        className="absolute top-1 left-1 font-medium" 
+        style={{ fontSize: `${labelFontSize}px`, color: 'rgba(0,0,0,0.7)' }}
+      >
+        {pieceLabel}
+      </div>
+      
+      {/* Center width dimension */}
+      <div 
+        className="font-medium text-center" 
+        style={{ fontSize: `${fontSize}px`, color: 'rgba(0,0,0,0.8)' }}
+      >
+        {piece.width}
+      </div>
+      
       {/* Display width at the bottom of the piece */}
       <div 
         className="absolute bottom-0.5 w-full text-center font-medium" 
@@ -56,6 +78,18 @@ export const SheetPiece = ({ piece, scale, isMobile }: SheetPieceProps) => {
           color: 'rgba(0,0,0,0.7)', 
           writingMode: 'vertical-rl', 
           transform: 'rotate(180deg)' 
+        }}
+      >
+        {piece.height}
+      </div>
+      
+      {/* Center height dimension for rotated view */}
+      <div 
+        className="absolute transform -rotate-90 font-medium"
+        style={{ 
+          fontSize: `${fontSize}px`, 
+          color: 'rgba(0,0,0,0.8)',
+          display: piece.height > piece.width * 1.5 ? 'block' : 'none'
         }}
       >
         {piece.height}

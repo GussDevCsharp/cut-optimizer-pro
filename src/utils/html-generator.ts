@@ -69,6 +69,7 @@ export const generateCuttingPlanHtml = (
           .sheet-page {
             page-break-after: always;
             padding-bottom: 30px;
+            position: relative;
           }
           .sheet-page:last-child {
             page-break-after: avoid;
@@ -103,6 +104,19 @@ export const generateCuttingPlanHtml = (
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
             border-radius: 2px;
           }
+          .piece-label {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            font-size: 10px;
+            font-weight: 500;
+            color: rgba(0,0,0,0.75);
+          }
+          .dimension-center {
+            font-weight: 600;
+            font-size: 12px;
+            color: rgba(0,0,0,0.85);
+          }
           .dimension-width { 
             position: absolute; 
             bottom: 2px; 
@@ -123,6 +137,28 @@ export const generateCuttingPlanHtml = (
             font-size: 10px;
             font-weight: 500;
             color: rgba(0,0,0,0.75);
+          }
+          .sheet-dimension-width {
+            position: absolute;
+            bottom: -20px;
+            width: 100%;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 500;
+            color: #555;
+          }
+          .sheet-dimension-height {
+            position: absolute;
+            left: -20px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            writing-mode: vertical-lr;
+            transform: rotate(180deg);
+            font-size: 12px;
+            font-weight: 500;
+            color: #555;
           }
           .project-info {
             margin-bottom: 10px;
@@ -182,7 +218,7 @@ export const generateCuttingPlanHtml = (
         <script>
           function calculateScale() {
             // Get available print area (accounting for margins)
-            const availableWidth = window.innerWidth - 80; // 40px margin on each side
+            const availableWidth = window.innerWidth - 100; // 50px margin on each side
             const availableHeight = window.innerHeight - 250; // Header + info + margins
             
             // Calculate scale to fit the sheet in the available area
@@ -223,7 +259,7 @@ export const generateCuttingPlanHtml = (
                 const fontSize = Math.max(8 * scale, 6);
                 piece.style.fontSize = fontSize + 'px';
                 
-                const dimensionElements = piece.querySelectorAll('.dimension-width, .dimension-height');
+                const dimensionElements = piece.querySelectorAll('.dimension-width, .dimension-height, .piece-label, .dimension-center');
                 dimensionElements.forEach(el => {
                   el.style.fontSize = fontSize + 'px';
                 });
@@ -238,30 +274,44 @@ export const generateCuttingPlanHtml = (
         
         ${sheets.map(sheetIndex => {
           const sheetPieces = placedPieces.filter(p => p.sheetIndex === sheetIndex);
+          // Generate a consistent letter code for each piece based on its id
+          const generatePieceLabel = (id) => {
+            return `${String.fromCharCode(65 + (id.charCodeAt(0) % 26))}${(parseInt(id, 36) % 9) + 1}`;
+          };
+          
           return `
             <div class="sheet-page">
               <div class="sheet-title">Chapa ${sheetIndex + 1}</div>
               <div class="sheet-container">
-                ${sheetPieces.map((piece) => `
-                  <div class="piece" 
-                    data-x="${piece.x}"
-                    data-y="${piece.y}"
-                    data-width="${piece.width}"
-                    data-height="${piece.height}"
-                    style="
-                      left: ${piece.x}px; 
-                      top: ${piece.y}px; 
-                      width: ${piece.width}px; 
-                      height: ${piece.height}px; 
-                      background-color: ${piece.color}; 
-                      transform: rotate(${piece.rotated ? '90deg' : '0deg'});
-                      transform-origin: center;
-                    "
-                  >
-                    <span class="dimension-width">${piece.width}</span>
-                    <span class="dimension-height">${piece.height}</span>
-                  </div>
-                `).join('')}
+                <div class="sheet-dimension-width">${sheet.width}</div>
+                <div class="sheet-dimension-height">${sheet.height}</div>
+                
+                ${sheetPieces.map((piece) => {
+                  const pieceLabel = generatePieceLabel(piece.id);
+                  return `
+                    <div class="piece" 
+                      data-x="${piece.x}"
+                      data-y="${piece.y}"
+                      data-width="${piece.width}"
+                      data-height="${piece.height}"
+                      style="
+                        left: ${piece.x}px; 
+                        top: ${piece.y}px; 
+                        width: ${piece.width}px; 
+                        height: ${piece.height}px; 
+                        background-color: ${piece.color}; 
+                        transform: rotate(${piece.rotated ? '90deg' : '0deg'});
+                        transform-origin: center;
+                      "
+                    >
+                      <span class="piece-label">${pieceLabel}</span>
+                      <span class="dimension-center">${piece.width}</span>
+                      <span class="dimension-width">${piece.width}</span>
+                      <span class="dimension-height">${piece.height}</span>
+                      ${piece.height > piece.width * 1.5 ? `<span class="dimension-center" style="transform: rotate(-90deg)">${piece.height}</span>` : ''}
+                    </div>
+                  `;
+                }).join('')}
               </div>
             </div>
           `;

@@ -50,6 +50,9 @@ export const SheetCarousel = ({
   // State to track the carousel API
   const [api, setApi] = useState<any>(null);
 
+  // Font size for sheet dimensions
+  const dimensionFontSize = isMobile ? 10 : 12;
+
   // Use an effect to navigate to the current sheet index when it changes
   useEffect(() => {
     if (api) {
@@ -92,26 +95,57 @@ export const SheetCarousel = ({
           {sheets.map((sheetIndex) => {
             return (
               <CarouselItem key={sheetIndex}>
-                <div 
-                  ref={containerRef}
-                  className="relative mx-auto border border-gray-300 bg-white grid-pattern"
-                  style={{
-                    width: displayWidth,
-                    height: displayHeight,
-                    maxWidth: '100%',
-                    maxHeight: '100%',
-                    backgroundSize: `${isMobile ? '10px 10px' : '20px 20px'}`,
-                  }}
-                >
-                  {/* Render pieces only for the current sheet */}
-                  {sheetIndex === currentSheetIndex && displayPieces.map((piece, index) => (
-                    <SheetPiece 
-                      key={`${piece.id}-${index}`} 
-                      piece={piece} 
-                      scale={scale} 
-                      isMobile={isMobile}
-                    />
-                  ))}
+                <div className="relative mx-auto">
+                  {/* Sheet dimensions - width at bottom */}
+                  <div 
+                    className="absolute -bottom-5 w-full text-center font-medium text-gray-600" 
+                    style={{ fontSize: `${dimensionFontSize}px` }}
+                  >
+                    {sheet.width}
+                  </div>
+                  
+                  {/* Sheet dimensions - height on left */}
+                  <div 
+                    className="absolute -left-5 h-full flex items-center justify-center font-medium text-gray-600"
+                    style={{ 
+                      fontSize: `${dimensionFontSize}px`, 
+                      writingMode: 'vertical-rl', 
+                      transform: 'rotate(180deg)' 
+                    }}
+                  >
+                    {sheet.height}
+                  </div>
+                  
+                  {/* Main sheet container with grid pattern */}
+                  <div 
+                    ref={containerRef}
+                    className="relative mx-auto border border-gray-300 bg-white grid-pattern"
+                    style={{
+                      width: displayWidth,
+                      height: displayHeight,
+                      maxWidth: '100%',
+                      maxHeight: '100%',
+                      backgroundSize: `${isMobile ? '10px 10px' : '20px 20px'}`,
+                    }}
+                  >
+                    {/* Render pieces only for the current sheet */}
+                    {sheetIndex === currentSheetIndex && displayPieces.map((piece, index) => (
+                      <SheetPiece 
+                        key={`${piece.id}-${index}`} 
+                        piece={piece} 
+                        scale={scale} 
+                        isMobile={isMobile}
+                      />
+                    ))}
+                    
+                    {/* Check if there are any cuts to show as dotted lines */}
+                    {sheetIndex === currentSheetIndex && sheet.cutWidth > 0 && displayPieces.length > 0 && (
+                      <>
+                        {/* Optional: Render cut lines as dotted lines if needed */}
+                        {/* (This could be implemented to show cutting paths) */}
+                      </>
+                    )}
+                  </div>
                 </div>
               </CarouselItem>
             );
@@ -120,7 +154,7 @@ export const SheetCarousel = ({
       </Carousel>
       
       {/* Navigation controls */}
-      <div className="flex justify-center mt-2 mb-4">
+      <div className="flex justify-center mt-8 mb-4"> {/* Increased top margin to make room for the sheet width label */}
         <Button 
           variant="outline" 
           size={isMobile ? "icon" : "sm"} 
