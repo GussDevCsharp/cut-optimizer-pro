@@ -5,15 +5,13 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import type { Project } from "@/types/project";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
-import { Trash2 } from "lucide-react";
 
 interface ProjectCardProps {
   project: Project;
   onClick: (project: Project) => void;
-  onDeleteClick?: (project: Project) => void;
 }
 
-export const ProjectCard = ({ project, onClick, onDeleteClick }: ProjectCardProps) => {
+export const ProjectCard = ({ project, onClick }: ProjectCardProps) => {
   const isMobile = useIsMobile();
   const [imageError, setImageError] = useState(false);
 
@@ -22,6 +20,7 @@ export const ProjectCard = ({ project, onClick, onDeleteClick }: ProjectCardProp
     return date.toLocaleDateString('pt-BR');
   };
 
+  // Parse the project description to get efficiency data
   const getEfficiency = (): number | null => {
     try {
       if (project.description) {
@@ -39,6 +38,7 @@ export const ProjectCard = ({ project, onClick, onDeleteClick }: ProjectCardProp
 
   const efficiency = getEfficiency();
   
+  // Determine badge variant based on efficiency
   const getBadgeVariant = (efficiency: number | null) => {
     if (efficiency === null) return "secondary";
     if (efficiency >= 85) return "success";
@@ -46,22 +46,17 @@ export const ProjectCard = ({ project, onClick, onDeleteClick }: ProjectCardProp
     return "destructive";
   };
 
+  // Check if project has a valid image URL (not the placeholder)
   const hasProjectImage = project.preview_url && 
                           project.preview_url !== "/placeholder.svg" && 
                           !imageError;
 
+  // Handle click securely
   const handleProjectClick = () => {
     try {
       onClick(project);
     } catch (error) {
       console.error("Error clicking project:", error);
-    }
-  };
-
-  const handleDeleteClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onDeleteClick) {
-      onDeleteClick(project);
     }
   };
 
@@ -101,18 +96,6 @@ export const ProjectCard = ({ project, onClick, onDeleteClick }: ProjectCardProp
             {efficiency.toFixed(1)}% eficiência
           </Badge>
         )}
-        
-        {onDeleteClick && (
-          <Button
-            variant="destructive"
-            size="icon"
-            className="absolute top-2 left-2 h-7 w-7 opacity-80 hover:opacity-100"
-            onClick={handleDeleteClick}
-            aria-label="Excluir projeto"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        )}
       </div>
       <CardHeader className={`${isMobile ? 'p-3 pb-0' : 'p-4 pb-0'}`}>
         <CardTitle className={`${isMobile ? 'text-base' : 'text-lg'}`}>{project.name}</CardTitle>
@@ -125,4 +108,4 @@ export const ProjectCard = ({ project, onClick, onDeleteClick }: ProjectCardProp
       </CardFooter>
     </Card>
   );
-}
+};

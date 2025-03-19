@@ -90,35 +90,6 @@ export const projectService = {
   
   async deleteProject(id: string): Promise<ApiResponse<null>> {
     try {
-      // First check if there are any files in storage associated with this project
-      // and delete them to avoid orphaned files
-      try {
-        // Get project details to see if there's an image to delete
-        const { data: project } = await projectsTable()
-          .select('preview_url')
-          .eq('id', id)
-          .single();
-          
-        if (project?.preview_url && project.preview_url !== '/placeholder.svg') {
-          // Extract the file path from the URL
-          const url = new URL(project.preview_url);
-          const pathParts = url.pathname.split('/');
-          const filePath = pathParts.slice(pathParts.indexOf('project-assets') + 1).join('/');
-          
-          if (filePath) {
-            // Delete the file from storage
-            await supabase.storage
-              .from('project-assets')
-              .remove([filePath]);
-          }
-        }
-      } catch (storageError) {
-        // Log but continue - we still want to delete the project even if
-        // image deletion fails
-        console.error("Error deleting project image:", storageError);
-      }
-      
-      // Now delete the project
       const { error } = await projectsTable()
         .delete()
         .eq('id', id);

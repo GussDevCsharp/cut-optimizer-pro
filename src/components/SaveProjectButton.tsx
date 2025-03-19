@@ -6,13 +6,15 @@ import { useSheetData } from "@/hooks/useSheetData";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useRef } from "react";
 
-export function SaveProjectButton({ 
-  projectId,
-  className = "" 
-}: {
+interface SaveProjectButtonProps {
   projectId: string | null;
   className?: string;
-}) {
+}
+
+export function SaveProjectButton({ 
+  projectId, 
+  className = "" 
+}: SaveProjectButtonProps) {
   const { saveProject, isSaving, isUploadingImage } = useProjectActions();
   const { projectName, sheet, pieces, placedPieces } = useSheetData();
   const { toast } = useToast();
