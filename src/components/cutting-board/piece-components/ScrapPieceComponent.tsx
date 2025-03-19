@@ -26,6 +26,9 @@ export const ScrapPieceComponent = ({ piece, scale, isMobile }: ScrapPieceProps)
   // Determine if we need to show vertical dimension based on aspect ratio
   const showVerticalDimension = piece.height > piece.width * 1.2;
   
+  // Format dimensions for display
+  const dimensionText = `${piece.width} x ${piece.height}`;
+  
   return (
     <div
       style={{
@@ -49,13 +52,25 @@ export const ScrapPieceComponent = ({ piece, scale, isMobile }: ScrapPieceProps)
         zIndex: 5, // Scraps have lower z-index
       }}
     >
-      {/* Piece label (like "Sobra") */}
+      {/* Piece label (like "Área Disponível") */}
       <PieceLabel 
-        label="Sobra" 
+        label="Área Disponível" 
         fontSize={labelFontSize} 
         color="rgba(0,100,0,0.8)" 
         position="top-left" 
       />
+      
+      {/* Main dimension display in center */}
+      <div 
+        className="absolute font-semibold flex items-center justify-center w-full h-full"
+        style={{ 
+          fontSize: `${fontSize + 1}px`, 
+          color: "rgba(0,100,0,0.9)",
+          textShadow: "0px 0px 2px rgba(255,255,255,0.8)"
+        }}
+      >
+        {dimensionText}
+      </div>
       
       {/* Piece dimensions */}
       <PieceDimensions 

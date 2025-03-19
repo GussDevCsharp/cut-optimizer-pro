@@ -35,7 +35,7 @@ export const SheetDisplay = ({
         className="absolute -bottom-5 w-full text-center font-medium text-gray-600" 
         style={{ fontSize: `${dimensionFontSize}px` }}
       >
-        {sheet.width}mm
+        {sheet.width}
       </div>
       
       {/* Sheet dimensions - height on left */}
@@ -47,27 +47,7 @@ export const SheetDisplay = ({
           transform: 'rotate(180deg)' 
         }}
       >
-        {sheet.height}mm
-      </div>
-      
-      {/* Sheet dimensions - width at top */}
-      <div 
-        className="absolute -top-5 w-full text-center font-medium text-gray-600" 
-        style={{ fontSize: `${dimensionFontSize}px` }}
-      >
-        {sheet.width}mm
-      </div>
-      
-      {/* Sheet dimensions - height on right */}
-      <div 
-        className="absolute -right-5 h-full flex items-center justify-center font-medium text-gray-600"
-        style={{ 
-          fontSize: `${dimensionFontSize}px`, 
-          writingMode: 'vertical-rl', 
-          transform: 'rotate(180deg)' 
-        }}
-      >
-        {sheet.height}mm
+        {sheet.height}
       </div>
       
       {/* Main sheet container with grid pattern */}
@@ -81,26 +61,6 @@ export const SheetDisplay = ({
           backgroundSize: `${isMobile ? '10px 10px' : '20px 20px'}`,
         }}
       >
-        {/* In-sheet width dimension */}
-        <div 
-          className="absolute bottom-2 left-0 right-0 text-center font-medium text-gray-500 z-10 bg-white/60 py-1 rounded-sm"
-          style={{ fontSize: `${dimensionFontSize * 1.2}px` }}
-        >
-          {sheet.width} mm
-        </div>
-        
-        {/* In-sheet height dimension */}
-        <div 
-          className="absolute top-10 left-2 font-medium text-gray-500 z-10 bg-white/60 px-1 py-1 rounded-sm"
-          style={{ 
-            fontSize: `${dimensionFontSize * 1.2}px`,
-            writingMode: 'vertical-rl',
-            transform: 'rotate(180deg)'
-          }}
-        >
-          {sheet.height} mm
-        </div>
-        
         {/* Render scrap pieces first (lower z-index) */}
         {sheetIndex === currentSheetIndex && displayScraps.map((scrap, index) => (
           <SheetPiece 
