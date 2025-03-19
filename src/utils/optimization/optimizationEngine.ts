@@ -7,7 +7,7 @@ import { sortPiecesByArea, findBestPosition } from './positionUtils';
 // Define step progress constants
 export const OPTIMIZATION_STEPS = {
   PREPARING: 0,
-  CALCULATING: 1,
+  ANALYZING: 1,
   OPTIMIZING: 2,
   FINALIZING: 3
 };
@@ -43,8 +43,8 @@ export const optimizeCutting = (
   // Initialize sheet grids array with the first sheet
   const sheetGrids: SheetGrid[] = [new SheetGrid(sheet.width, sheet.height)];
   
-  // Move to calculating step
-  onStepProgress?.(OPTIMIZATION_STEPS.CALCULATING);
+  // Move to analyzing step
+  onStepProgress?.(OPTIMIZATION_STEPS.ANALYZING);
   
   // Try to place each piece
   let piecesProcessed = 0;
