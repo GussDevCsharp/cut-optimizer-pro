@@ -35,7 +35,7 @@ export const SheetDisplay = ({
         className="absolute -bottom-5 w-full text-center font-medium text-gray-600" 
         style={{ fontSize: `${dimensionFontSize}px` }}
       >
-        {sheet.width}
+        {sheet.width}mm
       </div>
       
       {/* Sheet dimensions - height on left */}
@@ -47,7 +47,27 @@ export const SheetDisplay = ({
           transform: 'rotate(180deg)' 
         }}
       >
-        {sheet.height}
+        {sheet.height}mm
+      </div>
+      
+      {/* Sheet dimensions - width at top */}
+      <div 
+        className="absolute -top-5 w-full text-center font-medium text-gray-600" 
+        style={{ fontSize: `${dimensionFontSize}px` }}
+      >
+        {sheet.width}mm
+      </div>
+      
+      {/* Sheet dimensions - height on right */}
+      <div 
+        className="absolute -right-5 h-full flex items-center justify-center font-medium text-gray-600"
+        style={{ 
+          fontSize: `${dimensionFontSize}px`, 
+          writingMode: 'vertical-rl', 
+          transform: 'rotate(180deg)' 
+        }}
+      >
+        {sheet.height}mm
       </div>
       
       {/* Main sheet container with grid pattern */}
