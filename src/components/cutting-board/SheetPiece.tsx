@@ -1,23 +1,65 @@
 
 import React from 'react';
-import { PlacedPiece, ScrapPiece } from '../../hooks/useSheetData';
-import { RegularPiece } from './piece-components/RegularPiece';
-import { ScrapPieceComponent } from './piece-components/ScrapPieceComponent';
+import { PlacedPiece } from '../../hooks/useSheetData';
 
 interface SheetPieceProps {
-  piece: PlacedPiece | ScrapPiece;
+  piece: PlacedPiece;
   scale: number;
   isMobile?: boolean;
 }
 
 export const SheetPiece = ({ piece, scale, isMobile }: SheetPieceProps) => {
-  // Check if this is a scrap piece
-  const isScrap = 'isScrap' in piece && piece.isScrap;
+  // Calculate font size based on piece dimensions and device
+  const minDimension = Math.min(piece.width, piece.height) * scale;
+  const fontSize = isMobile 
+    ? Math.max(Math.min(minDimension / 8, 12), 7) // Smaller text on mobile
+    : Math.max(Math.min(minDimension / 6, 14), 8);
   
-  // Route to the appropriate component based on piece type
-  if (isScrap) {
-    return <ScrapPieceComponent piece={piece as ScrapPiece} scale={scale} isMobile={isMobile} />;
-  }
+  // Calculate rotation transform
+  const rotation = piece.rotated ? '90deg' : '0deg';
   
-  return <RegularPiece piece={piece} scale={scale} isMobile={isMobile} />;
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        left: piece.x * scale,
+        top: piece.y * scale,
+        width: piece.width * scale,
+        height: piece.height * scale,
+        backgroundColor: piece.color,
+        border: '1px solid rgba(0,0,0,0.2)',
+        boxSizing: 'border-box',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'hidden',
+        transform: `rotate(${rotation})`,
+        transformOrigin: piece.rotated ? 'center' : '0 0',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+        borderRadius: '2px',
+        zIndex: 10, // Add z-index to ensure pieces don't overlap visually
+      }}
+    >
+      {/* Display width at the bottom of the piece */}
+      <div 
+        className="absolute bottom-0.5 w-full text-center font-medium" 
+        style={{ fontSize: `${fontSize}px`, color: 'rgba(0,0,0,0.7)' }}
+      >
+        {piece.width}
+      </div>
+      
+      {/* Display height on the left side of the piece with vertical text */}
+      <div 
+        className="absolute left-0.5 h-full flex items-center font-medium" 
+        style={{ 
+          fontSize: `${fontSize}px`, 
+          color: 'rgba(0,0,0,0.7)', 
+          writingMode: 'vertical-rl', 
+          transform: 'rotate(180deg)' 
+        }}
+      >
+        {piece.height}
+      </div>
+    </div>
+  );
 };

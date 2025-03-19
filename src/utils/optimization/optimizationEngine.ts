@@ -1,21 +1,19 @@
 
-import { Piece, PlacedPiece, Sheet, ScrapPiece } from '../../hooks/useSheetData';
+import { Piece, PlacedPiece, Sheet } from '../../hooks/useSheetData';
 import { SheetGrid } from './SheetGrid';
 import { generatePastelColor } from './colorUtils';
 import { sortPiecesByArea, findBestPosition } from './positionUtils';
-import { findMaxRectangles } from './maxRectFinder';
 
 // Main optimization function that handles multiple sheets and prioritizes filling existing sheets
 export const optimizeCutting = (
   pieces: Piece[],
   sheet: Sheet
-): { placedPieces: PlacedPiece[], scrapPieces: ScrapPiece[] } => {
+): PlacedPiece[] => {
   console.log("Starting optimization with", pieces.length, "piece types");
   
   // Sort pieces by area (largest first)
   const sortedPieces = sortPiecesByArea(pieces);
   const placedPieces: PlacedPiece[] = [];
-  const scrapPieces: ScrapPiece[] = [];
   
   // Expand pieces based on quantity
   const expandedPieces: Piece[] = [];
@@ -99,44 +97,6 @@ export const optimizeCutting = (
     }
   }
   
-  // After all pieces are placed, find and mark scraps on each sheet
-  for (let sheetIndex = 0; sheetIndex < sheetGrids.length; sheetIndex++) {
-    const grid = sheetGrids[sheetIndex];
-    const minScrapSize = Math.max(sheet.cutWidth * 10, 50); // Min size must be greater than cut width
-    
-    // Find maximum rectangles (scraps) that can be used
-    const scraps = findMaxRectangles(grid, minScrapSize);
-    
-    // Add scraps to the list with a unique identifier and assign to this sheet
-    scraps.forEach((scrap, index) => {
-      const scrapId = `scrap-${sheetIndex}-${index}`;
-      
-      scrapPieces.push({
-        id: scrapId,
-        x: scrap.x,
-        y: scrap.y,
-        width: scrap.width,
-        height: scrap.height,
-        quantity: 1,
-        canRotate: true,
-        rotated: false,
-        color: "#9BDEAC", // Light green color for scraps
-        sheetIndex: sheetIndex,
-        isScrap: true
-      });
-      
-      // Also add to the sheet grid for proper tracking
-      grid.addScrapPiece({
-        x: scrap.x,
-        y: scrap.y,
-        width: scrap.width,
-        height: scrap.height
-      });
-    });
-  }
-  
   console.log("Optimization complete. Placed", placedPieces.length, "pieces on", sheetGrids.length, "sheets");
-  console.log("Found", scrapPieces.length, "usable scrap pieces");
-  
-  return { placedPieces, scrapPieces };
+  return placedPieces;
 };

@@ -1,19 +1,11 @@
 
 import { Sheet } from '../../hooks/useSheetData';
 
-export interface ScrapPiece {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
 // Class to track occupied areas on the sheet
 export class SheetGrid {
   private grid: boolean[][];
   private width: number;
   private height: number;
-  private scrapPieces: ScrapPiece[] = [];
   
   constructor(width: number, height: number) {
     this.width = width;
@@ -74,33 +66,6 @@ export class SheetGrid {
         }
       }
     }
-  }
-  
-  // Add a scrap piece
-  addScrapPiece(scrap: ScrapPiece): void {
-    this.scrapPieces.push(scrap);
-  }
-  
-  // Get all scrap pieces
-  getScrapPieces(): ScrapPiece[] {
-    return this.scrapPieces;
-  }
-  
-  // Check if a cell is occupied
-  isCellOccupied(x: number, y: number): boolean {
-    if (x < 0 || y < 0 || x >= this.width || y >= this.height) {
-      return true; // Out of bounds is considered occupied
-    }
-    return this.grid[y][x];
-  }
-  
-  // Get grid dimensions
-  getWidth(): number {
-    return this.width;
-  }
-  
-  getHeight(): number {
-    return this.height;
   }
   
   // Debug method to print the grid

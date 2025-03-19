@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Sparkles, RectangleHorizontal } from 'lucide-react';
 import { useSheetData } from '../hooks/useSheetData';
@@ -9,7 +10,7 @@ import { useState } from "react";
 import OptimizationLoadingDialog from './OptimizationLoadingDialog';
 
 export const OptimizationControls = () => {
-  const { sheet, pieces, placedPieces, setPlacedPieces, setScrapPieces, projectName } = useSheetData();
+  const { sheet, pieces, placedPieces, setPlacedPieces, projectName } = useSheetData();
   const { saveProject } = useProjectActions();
   const location = useLocation();
   const [isOptimizing, setIsOptimizing] = useState(false);
@@ -30,25 +31,23 @@ export const OptimizationControls = () => {
     setIsOptimizing(true);
     
     try {
-      // Run the optimization algorithm with scrap detection
-      const { placedPieces: optimizedPieces, scrapPieces: detectedScraps } = optimizeCutting(pieces, sheet);
+      // Slight delay to ensure the loading dialog is shown
+      await new Promise(resolve => setTimeout(resolve, 100));
       
-      // Update state with the optimized pieces and scraps
+      const optimizedPieces = optimizeCutting(pieces, sheet);
       setPlacedPieces(optimizedPieces);
-      setScrapPieces(detectedScraps);
       
       // Show toast with result
       const placedCount = optimizedPieces.length;
       const totalCount = pieces.reduce((total, piece) => total + piece.quantity, 0);
-      const scrapCount = detectedScraps.length;
       
       if (placedCount === totalCount) {
         toast.success("Otimização concluída com sucesso!", {
-          description: `Todas as ${totalCount} peças foram posicionadas na chapa. ${scrapCount} áreas disponíveis foram identificadas.`
+          description: `Todas as ${totalCount} peças foram posicionadas na chapa.`
         });
       } else {
         toast.warning("Otimização parcial!", {
-          description: `Foram posicionadas ${placedCount} de ${totalCount} peças na chapa. ${scrapCount} áreas disponíveis foram identificadas.`
+          description: `Foram posicionadas ${placedCount} de ${totalCount} peças na chapa.`
         });
       }
       
@@ -58,8 +57,7 @@ export const OptimizationControls = () => {
           const projectData = {
             sheet,
             pieces,
-            placedPieces: optimizedPieces,
-            scrapPieces: detectedScraps
+            placedPieces: optimizedPieces
           };
           
           await saveProject(projectId, projectName, projectData);
@@ -68,11 +66,6 @@ export const OptimizationControls = () => {
           console.error("Error saving project after optimization:", error);
         }
       }
-    } catch (error) {
-      console.error("Erro durante a otimização:", error);
-      toast.error("Erro na otimização", {
-        description: "Ocorreu um erro ao otimizar o corte. Por favor, tente novamente."
-      });
     } finally {
       // Hide loading dialog
       setIsOptimizing(false);
@@ -81,9 +74,8 @@ export const OptimizationControls = () => {
   
   const handleClear = async () => {
     setPlacedPieces([]);
-    setScrapPieces([]);
     toast.info("Visualização limpa", {
-      description: "Todas as peças e sobras foram removidas da visualização."
+      description: "Todas as peças foram removidas da visualização."
     });
     
     // Save the project with cleared placed pieces
@@ -92,8 +84,7 @@ export const OptimizationControls = () => {
         const projectData = {
           sheet,
           pieces,
-          placedPieces: [],
-          scrapPieces: []
+          placedPieces: []
         };
         
         await saveProject(projectId, projectName, projectData);

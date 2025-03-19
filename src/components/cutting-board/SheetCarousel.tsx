@@ -1,19 +1,19 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { 
   Carousel, 
   CarouselContent, 
   CarouselItem,
 } from "@/components/ui/carousel";
-import { Sheet, PlacedPiece, ScrapPiece } from '../../hooks/useSheetData';
+import { Sheet, PlacedPiece } from '../../hooks/useSheetData';
+import { SheetPiece } from './SheetPiece';
 import { SheetThumbnails } from './SheetThumbnails';
-import { SheetDisplay } from './SheetDisplay';
-import { SheetNavigation } from './SheetNavigation';
 
 interface SheetCarouselProps {
   sheet: Sheet;
   placedPieces: PlacedPiece[];
-  scrapPieces: ScrapPiece[];
   sheetCount: number;
   currentSheetIndex: number;
   setCurrentSheetIndex: (index: number) => void;
@@ -23,14 +23,13 @@ interface SheetCarouselProps {
 export const SheetCarousel = ({ 
   sheet, 
   placedPieces, 
-  scrapPieces,
   sheetCount, 
   currentSheetIndex, 
   setCurrentSheetIndex,
   isMobile
 }: SheetCarouselProps) => {
+  const containerRef = useRef<HTMLDivElement>(null);
   const [displayPieces, setDisplayPieces] = useState<PlacedPiece[]>([]);
-  const [displayScraps, setDisplayScraps] = useState<ScrapPiece[]>([]);
   
   // Calculate container dimensions based on screen size
   const containerWidth = isMobile ? window.innerWidth - 40 : 800;  
@@ -51,9 +50,6 @@ export const SheetCarousel = ({
   // State to track the carousel API
   const [api, setApi] = useState<any>(null);
 
-  // Font size for sheet dimensions
-  const dimensionFontSize = isMobile ? 10 : 12;
-
   // Use an effect to navigate to the current sheet index when it changes
   useEffect(() => {
     if (api) {
@@ -69,14 +65,7 @@ export const SheetCarousel = ({
     } else {
       setDisplayPieces([]);
     }
-    
-    if (scrapPieces && scrapPieces.length > 0) {
-      const filteredScraps = scrapPieces.filter(p => p.sheetIndex === currentSheetIndex);
-      setDisplayScraps(filteredScraps);
-    } else {
-      setDisplayScraps([]);
-    }
-  }, [placedPieces, scrapPieces, currentSheetIndex]);
+  }, [placedPieces, currentSheetIndex]);
 
   // Function to handle sheet change
   const handleSheetChange = (api: any) => {
@@ -100,38 +89,64 @@ export const SheetCarousel = ({
         onSelect={(api) => handleSheetChange(api)}
       >
         <CarouselContent>
-          {sheets.map((sheetIndex) => (
-            <CarouselItem key={sheetIndex}>
-              <SheetDisplay 
-                sheet={sheet}
-                displayPieces={displayPieces}
-                displayScraps={displayScraps}
-                scale={scale}
-                displayWidth={displayWidth}
-                displayHeight={displayHeight}
-                dimensionFontSize={dimensionFontSize}
-                sheetIndex={sheetIndex}
-                currentSheetIndex={currentSheetIndex}
-                isMobile={isMobile}
-              />
-            </CarouselItem>
-          ))}
+          {sheets.map((sheetIndex) => {
+            return (
+              <CarouselItem key={sheetIndex}>
+                <div 
+                  ref={containerRef}
+                  className="relative mx-auto border border-gray-300 bg-white grid-pattern"
+                  style={{
+                    width: displayWidth,
+                    height: displayHeight,
+                    maxWidth: '100%',
+                    maxHeight: '100%',
+                    backgroundSize: `${isMobile ? '10px 10px' : '20px 20px'}`,
+                  }}
+                >
+                  {/* Render pieces only for the current sheet */}
+                  {sheetIndex === currentSheetIndex && displayPieces.map((piece, index) => (
+                    <SheetPiece 
+                      key={`${piece.id}-${index}`} 
+                      piece={piece} 
+                      scale={scale} 
+                      isMobile={isMobile}
+                    />
+                  ))}
+                </div>
+              </CarouselItem>
+            );
+          })}
         </CarouselContent>
       </Carousel>
       
       {/* Navigation controls */}
-      <SheetNavigation 
-        currentSheetIndex={currentSheetIndex}
-        sheetCount={sheetCount}
-        setCurrentSheetIndex={setCurrentSheetIndex}
-        isMobile={isMobile}
-      />
+      <div className="flex justify-center mt-2 mb-4">
+        <Button 
+          variant="outline" 
+          size={isMobile ? "icon" : "sm"} 
+          onClick={() => setCurrentSheetIndex(Math.max(0, currentSheetIndex - 1))}
+          disabled={currentSheetIndex === 0}
+          className={isMobile ? "w-8 h-8 mr-2" : "mr-2"}
+        >
+          <ChevronLeft className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'}`} />
+          {!isMobile && "Anterior"}
+        </Button>
+        <Button 
+          variant="outline" 
+          size={isMobile ? "icon" : "sm"} 
+          onClick={() => setCurrentSheetIndex(Math.min(sheetCount - 1, currentSheetIndex + 1))}
+          disabled={currentSheetIndex === sheetCount - 1}
+          className={isMobile ? "w-8 h-8" : ""}
+        >
+          {!isMobile && "Próxima"}
+          <ChevronRight className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'}`} />
+        </Button>
+      </div>
       
       {/* Sheet thumbnails */}
       <SheetThumbnails
         sheet={sheet}
         placedPieces={placedPieces}
-        scrapPieces={scrapPieces}
         sheetCount={sheetCount}
         currentSheetIndex={currentSheetIndex}
         onSelectSheet={setCurrentSheetIndex}
