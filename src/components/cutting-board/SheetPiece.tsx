@@ -24,6 +24,9 @@ export const SheetPiece = ({ piece, scale, isMobile }: SheetPieceProps) => {
   // Generate a label for the piece (e.g., A1, B1)
   const pieceLabel = `${String.fromCharCode(65 + (piece.id.charCodeAt(0) % 26))}${(parseInt(piece.id, 36) % 9) + 1}`;
   
+  // Determine if we need to show vertical dimension based on aspect ratio
+  const showVerticalDimension = piece.height > piece.width * 1.2;
+  
   return (
     <div
       style={{
@@ -40,7 +43,7 @@ export const SheetPiece = ({ piece, scale, isMobile }: SheetPieceProps) => {
         justifyContent: 'center',
         overflow: 'hidden',
         transform: `rotate(${rotation})`,
-        transformOrigin: piece.rotated ? 'center' : '0 0',
+        transformOrigin: 'center',
         boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
         borderRadius: '2px',
         zIndex: 10,
@@ -62,10 +65,24 @@ export const SheetPiece = ({ piece, scale, isMobile }: SheetPieceProps) => {
         {piece.width}
       </div>
       
+      {/* Vertical dimension for tall pieces */}
+      {showVerticalDimension && (
+        <div 
+          className="absolute transform -rotate-90 font-medium"
+          style={{ 
+            fontSize: `${fontSize}px`, 
+            color: 'rgba(0,0,0,0.8)',
+            zIndex: 2
+          }}
+        >
+          {piece.height}
+        </div>
+      )}
+      
       {/* Display width at the bottom of the piece */}
       <div 
         className="absolute bottom-0.5 w-full text-center font-medium" 
-        style={{ fontSize: `${fontSize}px`, color: 'rgba(0,0,0,0.7)' }}
+        style={{ fontSize: `${labelFontSize}px`, color: 'rgba(0,0,0,0.7)' }}
       >
         {piece.width}
       </div>
@@ -74,22 +91,10 @@ export const SheetPiece = ({ piece, scale, isMobile }: SheetPieceProps) => {
       <div 
         className="absolute left-0.5 h-full flex items-center font-medium" 
         style={{ 
-          fontSize: `${fontSize}px`, 
+          fontSize: `${labelFontSize}px`, 
           color: 'rgba(0,0,0,0.7)', 
           writingMode: 'vertical-rl', 
           transform: 'rotate(180deg)' 
-        }}
-      >
-        {piece.height}
-      </div>
-      
-      {/* Center height dimension for rotated view */}
-      <div 
-        className="absolute transform -rotate-90 font-medium"
-        style={{ 
-          fontSize: `${fontSize}px`, 
-          color: 'rgba(0,0,0,0.8)',
-          display: piece.height > piece.width * 1.5 ? 'block' : 'none'
         }}
       >
         {piece.height}

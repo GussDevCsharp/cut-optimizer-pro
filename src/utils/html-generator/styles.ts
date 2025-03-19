@@ -52,11 +52,15 @@ export const getCuttingPlanStyles = (): string => {
       box-sizing: border-box;
       border-radius: 4px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      background-image: linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+      background-size: 20px 20px;
     }
     .sheet-page {
       page-break-after: always;
       padding-bottom: 30px;
       position: relative;
+      margin-top: 20px;
     }
     .sheet-page:last-child {
       page-break-after: avoid;
@@ -78,52 +82,8 @@ export const getCuttingPlanStyles = (): string => {
       background-color: #9b87f5;
       margin-right: 8px;
     }
-    .piece { 
-      position: absolute; 
-      border: 1px solid rgba(0,0,0,0.1); 
-      display: flex; 
-      flex-direction: column; 
-      align-items: center; 
-      justify-content: center; 
-      font-size: 12px; 
-      box-sizing: border-box; 
-      overflow: hidden;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-      border-radius: 2px;
-    }
-    .piece-label {
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      font-size: 10px;
-      font-weight: 500;
-      color: rgba(0,0,0,0.75);
-    }
-    .dimension-center {
-      font-weight: 600;
-      font-size: 12px;
-      color: rgba(0,0,0,0.85);
-    }
-    .dimension-width { 
-      position: absolute; 
-      bottom: 2px; 
-      width: 100%; 
-      text-align: center; 
-      font-size: 10px;
-      font-weight: 500;
-      color: rgba(0,0,0,0.75);
-    }
-    .dimension-height { 
-      position: absolute; 
-      left: 2px; 
-      height: 100%; 
-      writing-mode: vertical-lr; 
-      transform: rotate(180deg); 
-      display: flex; 
-      align-items: center; 
-      font-size: 10px;
-      font-weight: 500;
-      color: rgba(0,0,0,0.75);
+    .piece {
+      /* Styles inline in the piece element for better PDF rendering */
     }
     .sheet-dimension-width {
       position: absolute;
@@ -173,6 +133,7 @@ export const getCuttingPlanStyles = (): string => {
       .piece {
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
+        border: 1px solid rgba(0,0,0,0.15) !important;
       }
     }
   `;
