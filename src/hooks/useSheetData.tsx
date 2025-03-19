@@ -18,6 +18,10 @@ export interface PlacedPiece extends Piece {
   sheetIndex: number; // Add sheetIndex to track which sheet the piece is on
 }
 
+export interface ScrapPiece extends PlacedPiece {
+  isScrap: boolean;
+}
+
 export interface Sheet {
   width: number;
   height: number;
@@ -37,11 +41,14 @@ interface SheetContextType {
   removePiece: (id: string) => void;
   placedPieces: PlacedPiece[];
   setPlacedPieces: (pieces: PlacedPiece[]) => void;
+  scrapPieces: ScrapPiece[];
+  setScrapPieces: (scraps: ScrapPiece[]) => void;
   stats: {
     usedArea: number;
     wasteArea: number;
     efficiency: number;
     sheetCount: number; // Add sheet count to stats
+    scrapArea: number; // Add scrap area to stats
   };
   currentSheetIndex: number; // Add current sheet index
   setCurrentSheetIndex: (index: number) => void; // Add setter for current sheet index
@@ -59,6 +66,7 @@ export const SheetProvider = ({ children }: { children: ReactNode }) => {
   
   const [pieces, setPieces] = useState<Piece[]>([]);
   const [placedPieces, setPlacedPieces] = useState<PlacedPiece[]>([]);
+  const [scrapPieces, setScrapPieces] = useState<ScrapPiece[]>([]);
   const [currentSheetIndex, setCurrentSheetIndex] = useState<number>(0);
 
   const addPiece = (piece: Piece) => {
@@ -82,18 +90,26 @@ export const SheetProvider = ({ children }: { children: ReactNode }) => {
 
   // Calculate usage statistics for the current sheet
   const currentSheetPieces = placedPieces.filter(p => p.sheetIndex === currentSheetIndex);
+  const currentSheetScraps = scrapPieces.filter(p => p.sheetIndex === currentSheetIndex);
+  
   const totalSheetArea = sheet.width * sheet.height;
   const usedArea = currentSheetPieces.reduce((total, piece) => {
     return total + (piece.width * piece.height);
   }, 0);
-  const wasteArea = totalSheetArea - usedArea;
-  const efficiency = totalSheetArea > 0 ? (usedArea / totalSheetArea) * 100 : 0;
+  
+  const scrapArea = currentSheetScraps.reduce((total, scrap) => {
+    return total + (scrap.width * scrap.height);
+  }, 0);
+  
+  const wasteArea = totalSheetArea - usedArea - scrapArea;
+  const efficiency = totalSheetArea > 0 ? ((usedArea + scrapArea) / totalSheetArea) * 100 : 0;
 
   const stats = {
     usedArea,
     wasteArea,
     efficiency,
-    sheetCount
+    sheetCount,
+    scrapArea
   };
 
   return (
@@ -104,12 +120,14 @@ export const SheetProvider = ({ children }: { children: ReactNode }) => {
         sheet,
         setSheet,
         pieces,
-        setPieces, // Add the new method to the context
+        setPieces,
         addPiece,
         updatePiece,
         removePiece,
         placedPieces,
         setPlacedPieces,
+        scrapPieces,
+        setScrapPieces,
         stats,
         currentSheetIndex,
         setCurrentSheetIndex,

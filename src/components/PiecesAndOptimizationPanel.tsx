@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Puzzle, Scissors, Sparkles, RectangleHorizontal } from 'lucide-react';
 import { useSheetData, Piece } from '../hooks/useSheetData';
@@ -12,7 +13,7 @@ import { useState } from "react";
 import OptimizationLoadingDialog from './OptimizationLoadingDialog';
 
 export const PiecesAndOptimizationPanel = () => {
-  const { sheet, pieces, placedPieces, setPlacedPieces, projectName, addPiece, updatePiece, removePiece } = useSheetData();
+  const { sheet, pieces, placedPieces, setPlacedPieces, setScrapPieces, projectName, addPiece, updatePiece, removePiece } = useSheetData();
   const { saveProject } = useProjectActions();
   const location = useLocation();
   const [isOptimizing, setIsOptimizing] = useState(false);
@@ -39,19 +40,21 @@ export const PiecesAndOptimizationPanel = () => {
     try {
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      const optimizedPieces = optimizeCutting(pieces, sheet);
+      const { placedPieces: optimizedPieces, scrapPieces: detectedScraps } = optimizeCutting(pieces, sheet);
       setPlacedPieces(optimizedPieces);
+      setScrapPieces(detectedScraps);
       
       const placedCount = optimizedPieces.length;
       const totalCount = pieces.reduce((total, piece) => total + piece.quantity, 0);
+      const scrapCount = detectedScraps.length;
       
       if (placedCount === totalCount) {
         toast.success("Otimização concluída com sucesso!", {
-          description: `Todas as ${totalCount} peças foram posicionadas na chapa.`
+          description: `Todas as ${totalCount} peças foram posicionadas na chapa. ${scrapCount} sobras foram identificadas.`
         });
       } else {
         toast.warning("Otimização parcial!", {
-          description: `Foram posicionadas ${placedCount} de ${totalCount} peças na chapa.`
+          description: `Foram posicionadas ${placedCount} de ${totalCount} peças na chapa. ${scrapCount} sobras foram identificadas.`
         });
       }
       
@@ -60,7 +63,8 @@ export const PiecesAndOptimizationPanel = () => {
           const projectData = {
             sheet,
             pieces,
-            placedPieces: optimizedPieces
+            placedPieces: optimizedPieces,
+            scrapPieces: detectedScraps
           };
           
           await saveProject(projectId, projectName, projectData);
@@ -76,8 +80,9 @@ export const PiecesAndOptimizationPanel = () => {
   
   const handleClear = async () => {
     setPlacedPieces([]);
+    setScrapPieces([]);
     toast.info("Visualização limpa", {
-      description: "Todas as peças foram removidas da visualização."
+      description: "Todas as peças e sobras foram removidas da visualização."
     });
     
     if (projectName && projectId) {
@@ -85,7 +90,8 @@ export const PiecesAndOptimizationPanel = () => {
         const projectData = {
           sheet,
           pieces,
-          placedPieces: []
+          placedPieces: [],
+          scrapPieces: []
         };
         
         await saveProject(projectId, projectName, projectData);

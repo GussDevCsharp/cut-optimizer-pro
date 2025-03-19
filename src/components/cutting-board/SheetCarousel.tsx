@@ -7,13 +7,14 @@ import {
   CarouselContent, 
   CarouselItem,
 } from "@/components/ui/carousel";
-import { Sheet, PlacedPiece } from '../../hooks/useSheetData';
+import { Sheet, PlacedPiece, ScrapPiece } from '../../hooks/useSheetData';
 import { SheetPiece } from './SheetPiece';
 import { SheetThumbnails } from './SheetThumbnails';
 
 interface SheetCarouselProps {
   sheet: Sheet;
   placedPieces: PlacedPiece[];
+  scrapPieces: ScrapPiece[];
   sheetCount: number;
   currentSheetIndex: number;
   setCurrentSheetIndex: (index: number) => void;
@@ -23,6 +24,7 @@ interface SheetCarouselProps {
 export const SheetCarousel = ({ 
   sheet, 
   placedPieces, 
+  scrapPieces,
   sheetCount, 
   currentSheetIndex, 
   setCurrentSheetIndex,
@@ -30,6 +32,7 @@ export const SheetCarousel = ({
 }: SheetCarouselProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [displayPieces, setDisplayPieces] = useState<PlacedPiece[]>([]);
+  const [displayScraps, setDisplayScraps] = useState<ScrapPiece[]>([]);
   
   // Calculate container dimensions based on screen size
   const containerWidth = isMobile ? window.innerWidth - 40 : 800;  
@@ -68,7 +71,14 @@ export const SheetCarousel = ({
     } else {
       setDisplayPieces([]);
     }
-  }, [placedPieces, currentSheetIndex]);
+    
+    if (scrapPieces && scrapPieces.length > 0) {
+      const filteredScraps = scrapPieces.filter(p => p.sheetIndex === currentSheetIndex);
+      setDisplayScraps(filteredScraps);
+    } else {
+      setDisplayScraps([]);
+    }
+  }, [placedPieces, scrapPieces, currentSheetIndex]);
 
   // Function to handle sheet change
   const handleSheetChange = (api: any) => {
@@ -128,7 +138,17 @@ export const SheetCarousel = ({
                       backgroundSize: `${isMobile ? '10px 10px' : '20px 20px'}`,
                     }}
                   >
-                    {/* Render pieces only for the current sheet */}
+                    {/* Render scrap pieces first (lower z-index) */}
+                    {sheetIndex === currentSheetIndex && displayScraps.map((scrap, index) => (
+                      <SheetPiece 
+                        key={`${scrap.id}-${index}`} 
+                        piece={scrap} 
+                        scale={scale} 
+                        isMobile={isMobile}
+                      />
+                    ))}
+                    
+                    {/* Render regular pieces on top */}
                     {sheetIndex === currentSheetIndex && displayPieces.map((piece, index) => (
                       <SheetPiece 
                         key={`${piece.id}-${index}`} 
@@ -181,6 +201,7 @@ export const SheetCarousel = ({
       <SheetThumbnails
         sheet={sheet}
         placedPieces={placedPieces}
+        scrapPieces={scrapPieces}
         sheetCount={sheetCount}
         currentSheetIndex={currentSheetIndex}
         onSelectSheet={setCurrentSheetIndex}

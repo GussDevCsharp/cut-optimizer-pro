@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 
 export const CuttingBoard = () => {
-  const { sheet, placedPieces, stats, currentSheetIndex, setCurrentSheetIndex, projectName } = useSheetData();
+  const { sheet, placedPieces, scrapPieces, stats, currentSheetIndex, setCurrentSheetIndex, projectName } = useSheetData();
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const [sheetCount, setSheetCount] = useState(1);
@@ -56,6 +56,7 @@ export const CuttingBoard = () => {
           <SheetCarousel 
             sheet={sheet}
             placedPieces={placedPieces}
+            scrapPieces={scrapPieces}
             sheetCount={sheetCount}
             currentSheetIndex={currentSheetIndex}
             setCurrentSheetIndex={setCurrentSheetIndex}
