@@ -8,9 +8,10 @@ import { useProjectActions } from "@/hooks/useProjectActions";
 import { useLocation } from 'react-router-dom';
 import { useState } from "react";
 import OptimizationLoadingDialog from './OptimizationLoadingDialog';
+import { OrientationPreferenceSelector } from './sheet-panel/OrientationPreferenceSelector';
 
 export const OptimizationControls = () => {
-  const { sheet, pieces, placedPieces, setPlacedPieces, projectName } = useSheetData();
+  const { sheet, pieces, placedPieces, setPlacedPieces, projectName, orientationPreference } = useSheetData();
   const { saveProject } = useProjectActions();
   const location = useLocation();
   const [isOptimizing, setIsOptimizing] = useState(false);
@@ -34,7 +35,7 @@ export const OptimizationControls = () => {
       // Slight delay to ensure the loading dialog is shown
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      const optimizedPieces = optimizeCutting(pieces, sheet);
+      const optimizedPieces = optimizeCutting(pieces, sheet, orientationPreference);
       setPlacedPieces(optimizedPieces);
       
       // Show toast with result
@@ -100,6 +101,8 @@ export const OptimizationControls = () => {
   return (
     <>
       <div className="flex flex-col gap-4">
+        <OrientationPreferenceSelector />
+        
         <Button 
           className="w-full gap-2" 
           onClick={handleOptimize}

@@ -7,9 +7,11 @@ import { sortPiecesByArea, findBestPosition } from './positionUtils';
 // Main optimization function that handles multiple sheets and prioritizes filling existing sheets
 export const optimizeCutting = (
   pieces: Piece[],
-  sheet: Sheet
+  sheet: Sheet,
+  orientationPreference: 'vertical' | 'horizontal' = 'horizontal'
 ): PlacedPiece[] => {
   console.log("Starting optimization with", pieces.length, "piece types");
+  console.log("Orientation preference:", orientationPreference);
   
   // Sort pieces by area (largest first)
   const sortedPieces = sortPiecesByArea(pieces);
@@ -37,7 +39,7 @@ export const optimizeCutting = (
     
     // Try to place on existing sheets, starting from the first sheet
     for (let sheetIndex = 0; sheetIndex < sheetGrids.length; sheetIndex++) {
-      const position = findBestPosition(piece, sheetGrids[sheetIndex], sheet);
+      const position = findBestPosition(piece, sheetGrids[sheetIndex], sheet, orientationPreference);
       
       if (position) {
         // Place on this sheet
@@ -73,7 +75,7 @@ export const optimizeCutting = (
       console.log("Created new sheet:", newSheetIndex);
       
       // Try to place on the new sheet
-      const newPosition = findBestPosition(piece, newSheetGrid, sheet);
+      const newPosition = findBestPosition(piece, newSheetGrid, sheet, orientationPreference);
       
       if (newPosition) {
         const placedPiece: PlacedPiece = {

@@ -15,13 +15,25 @@ export const sortPiecesByArea = (pieces: Piece[]): Piece[] => {
 export const findBestPosition = (
   piece: Piece,
   sheetGrid: SheetGrid,
-  sheet: Sheet
+  sheet: Sheet,
+  orientationPreference: 'vertical' | 'horizontal' = 'horizontal'
 ): { x: number; y: number; rotated: boolean } | null => {
-  // Try both orientations
-  const orientations = [
-    { width: piece.width, height: piece.height, rotated: false },
-    { width: piece.height, height: piece.width, rotated: true && piece.canRotate } // Only rotate if allowed
-  ].filter(o => !o.rotated || piece.canRotate); // Filter out rotated option if rotation not allowed
+  // Set up orientations based on the preference
+  let orientations = [];
+  
+  if (orientationPreference === 'horizontal') {
+    // Try original orientation first (horizontal priority)
+    orientations = [
+      { width: piece.width, height: piece.height, rotated: false },
+      { width: piece.height, height: piece.width, rotated: true && piece.canRotate } // Only rotate if allowed
+    ].filter(o => !o.rotated || piece.canRotate); // Filter out rotated option if rotation not allowed
+  } else {
+    // Try rotated orientation first (vertical priority)
+    orientations = [
+      { width: piece.height, height: piece.width, rotated: true && piece.canRotate }, // Only rotate if allowed
+      { width: piece.width, height: piece.height, rotated: false }
+    ].filter(o => !o.rotated || (o.rotated && piece.canRotate)); // Filter out rotated option if rotation not allowed
+  }
   
   let bestPosition = null;
   let lowestY = Number.MAX_SAFE_INTEGER;
