@@ -45,6 +45,7 @@ interface SheetContextType {
   };
   currentSheetIndex: number; // Add current sheet index
   setCurrentSheetIndex: (index: number) => void; // Add setter for current sheet index
+  resetData: () => void; // Add resetData method
 }
 
 const SheetContext = createContext<SheetContextType | undefined>(undefined);
@@ -73,6 +74,19 @@ export const SheetProvider = ({ children }: { children: ReactNode }) => {
 
   const removePiece = (id: string) => {
     setPieces(pieces.filter(piece => piece.id !== id));
+  };
+
+  // Reset all data to initial state
+  const resetData = () => {
+    setProjectName('');
+    setSheet({
+      width: 1220,
+      height: 2440,
+      cutWidth: 4,
+    });
+    setPieces([]);
+    setPlacedPieces([]);
+    setCurrentSheetIndex(0);
   };
 
   // Calculate the number of sheets used
@@ -104,7 +118,7 @@ export const SheetProvider = ({ children }: { children: ReactNode }) => {
         sheet,
         setSheet,
         pieces,
-        setPieces, // Add the new method to the context
+        setPieces,
         addPiece,
         updatePiece,
         removePiece,
@@ -113,6 +127,7 @@ export const SheetProvider = ({ children }: { children: ReactNode }) => {
         stats,
         currentSheetIndex,
         setCurrentSheetIndex,
+        resetData,
       }}
     >
       {children}

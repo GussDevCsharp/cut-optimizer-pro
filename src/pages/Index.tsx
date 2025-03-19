@@ -17,7 +17,7 @@ export default function Index() {
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { resetData } = useSheetData();
+  const { setProjectName } = useSheetData(); // Remove resetData as it doesn't exist
   const { loadProject } = useProjectActions();
   
   // Extract project information from location state
@@ -43,7 +43,8 @@ export default function Index() {
       fetchProject();
     } else {
       // No project ID, reset to new project
-      resetData();
+      // Instead of resetData(), set name to empty
+      setProjectName("");
       setCurrentProject(null);
     }
   }, [projectId]);
@@ -56,7 +57,7 @@ export default function Index() {
           <div className="container mx-auto flex justify-between items-center">
             <h1 className="text-xl font-semibold">{currentProject.name}</h1>
             <div className="flex gap-2">
-              <SaveProjectButton />
+              <SaveProjectButton projectId={currentProject.id} />
               {currentProject && (
                 <DeleteProject 
                   project={{ 
@@ -77,7 +78,7 @@ export default function Index() {
       
       <div className={isMobile ? "px-2 pb-20" : "container mx-auto p-4 pb-20"}>
         {projectId ? (
-          <ProjectLoader projectId={projectId} projectName={projectName}>
+          <ProjectLoader>
             {isMobile ? <MobileLayout /> : <DesktopLayout />}
           </ProjectLoader>
         ) : (
