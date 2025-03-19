@@ -1,4 +1,3 @@
-
 import { Piece, PlacedPiece, Sheet } from '../../hooks/useSheetData';
 import { SheetGrid } from './SheetGrid';
 import { generatePastelColor } from './colorUtils';
@@ -46,12 +45,13 @@ export const optimizeCutting = (
           x: position.x,
           y: position.y,
           rotated: position.rotated,
+          // Use the original width and height but keep track of rotation state
           width: position.rotated ? piece.height : piece.width,
           height: position.rotated ? piece.width : piece.height,
           sheetIndex: sheetIndex
         };
         
-        // Mark the area as occupied
+        // Mark the area as occupied with the correct dimensions
         sheetGrids[sheetIndex].occupyArea(position.x, position.y, placedPiece.width, placedPiece.height);
         placedPieces.push(placedPiece);
         placed = true;
@@ -81,12 +81,13 @@ export const optimizeCutting = (
           x: newPosition.x,
           y: newPosition.y,
           rotated: newPosition.rotated,
+          // Use the original width and height but keep track of rotation state
           width: newPosition.rotated ? piece.height : piece.width,
           height: newPosition.rotated ? piece.width : piece.height,
           sheetIndex: newSheetIndex
         };
         
-        // Mark the area as occupied
+        // Mark the area as occupied with the correct dimensions
         newSheetGrid.occupyArea(newPosition.x, newPosition.y, placedPiece.width, placedPiece.height);
         placedPieces.push(placedPiece);
         

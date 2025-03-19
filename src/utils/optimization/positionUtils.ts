@@ -38,24 +38,15 @@ export const findBestPosition = (
             lowestY = y;
             lowestX = x;
             bestPosition = { x, y, rotated: orientation.rotated };
-            
-            // If we found a position at y=0, we can break early as this is already optimal
-            if (y === 0) {
-              break;
-            }
           }
         }
       }
       
-      // If we found a position at the current y, we can move to the next piece
+      // Break to the next Y coordinate if we found a position at the current Y
+      // This helps maintain the same orientation for pieces in the same row
       if (bestPosition && bestPosition.y === y) {
         break;
       }
-    }
-    
-    // If we found a position in the first orientation, try the next orientation
-    if (bestPosition) {
-      break;
     }
   }
 
