@@ -43,7 +43,7 @@ export const AvailableAreasDisplay = ({ availableAreas, scale, isMobile }: Avail
               width: area.width * scale,
               height: area.height * scale,
               border: '1px dashed rgba(139, 92, 246, 0.5)',
-              backgroundColor: 'rgba(229, 222, 255, 0.2)',
+              backgroundColor: '#F1F0FB', // Light gray background
               boxSizing: 'border-box',
               display: 'flex',
               alignItems: 'center',
