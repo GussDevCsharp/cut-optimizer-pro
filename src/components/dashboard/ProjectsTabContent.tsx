@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useProjectsData } from "@/hooks/useProjectsData";
 import { ProjectsGrid } from "@/components/dashboard/ProjectsGrid";
@@ -32,7 +32,7 @@ export function ProjectsTabContent({ userId, isActiveTab }: ProjectsTabContentPr
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Load projects when this tab becomes active
-  React.useEffect(() => {
+  useEffect(() => {
     if (isActiveTab) {
       loadProjects();
     }

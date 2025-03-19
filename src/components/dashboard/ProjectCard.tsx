@@ -1,3 +1,4 @@
+
 import { Card, CardTitle, CardDescription, CardHeader, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -107,6 +108,7 @@ export const ProjectCard = ({ project, onClick, onDeleteClick }: ProjectCardProp
             size="icon"
             className="absolute top-2 left-2 h-7 w-7 opacity-80 hover:opacity-100"
             onClick={handleDeleteClick}
+            aria-label="Excluir projeto"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -123,4 +125,4 @@ export const ProjectCard = ({ project, onClick, onDeleteClick }: ProjectCardProp
       </CardFooter>
     </Card>
   );
-};
+}
