@@ -4,12 +4,24 @@ import { SheetGrid } from './SheetGrid';
 import { generatePastelColor } from './colorUtils';
 import { sortPiecesByArea, findBestPosition } from './positionUtils';
 
+// Define step progress constants
+export const OPTIMIZATION_STEPS = {
+  PREPARING: 0,
+  CALCULATING: 1,
+  OPTIMIZING: 2,
+  FINALIZING: 3
+};
+
 // Main optimization function that handles multiple sheets and prioritizes filling existing sheets
 export const optimizeCutting = (
   pieces: Piece[],
-  sheet: Sheet
+  sheet: Sheet,
+  onStepProgress?: (step: number) => void
 ): PlacedPiece[] => {
   console.log("Starting optimization with", pieces.length, "piece types");
+  
+  // Set initial step
+  onStepProgress?.(OPTIMIZATION_STEPS.PREPARING);
   
   // Sort pieces by area (largest first)
   const sortedPieces = sortPiecesByArea(pieces);
@@ -31,9 +43,18 @@ export const optimizeCutting = (
   // Initialize sheet grids array with the first sheet
   const sheetGrids: SheetGrid[] = [new SheetGrid(sheet.width, sheet.height)];
   
+  // Move to calculating step
+  onStepProgress?.(OPTIMIZATION_STEPS.CALCULATING);
+  
   // Try to place each piece
+  let piecesProcessed = 0;
   for (const piece of expandedPieces) {
     let placed = false;
+    
+    // Update to optimizing step when we're halfway through
+    if (piecesProcessed === Math.floor(expandedPieces.length / 2)) {
+      onStepProgress?.(OPTIMIZATION_STEPS.OPTIMIZING);
+    }
     
     // Try to place on existing sheets, starting from the first sheet
     for (let sheetIndex = 0; sheetIndex < sheetGrids.length; sheetIndex++) {
@@ -95,7 +116,12 @@ export const optimizeCutting = (
         console.warn(`Failed to place piece ${piece.width}x${piece.height} even on a new sheet!`);
       }
     }
+    
+    piecesProcessed++;
   }
+  
+  // Final step
+  onStepProgress?.(OPTIMIZATION_STEPS.FINALIZING);
   
   console.log("Optimization complete. Placed", placedPieces.length, "pieces on", sheetGrids.length, "sheets");
   return placedPieces;

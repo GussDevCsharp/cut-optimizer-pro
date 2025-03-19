@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Sparkles, RectangleHorizontal } from 'lucide-react';
 import { useSheetData } from '../hooks/useSheetData';
-import { optimizeCutting } from '../utils/optimizationAlgorithm';
+import { optimizeCutting, OPTIMIZATION_STEPS } from '../utils/optimization/optimizationEngine';
 import { toast } from "sonner";
 import { useProjectActions } from "@/hooks/useProjectActions";
 import { useLocation } from 'react-router-dom';
@@ -14,6 +14,7 @@ export const OptimizationControls = () => {
   const { saveProject } = useProjectActions();
   const location = useLocation();
   const [isOptimizing, setIsOptimizing] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
   
   // Get projectId from URL params or location state
   const searchParams = new URLSearchParams(window.location.search);
@@ -27,14 +28,18 @@ export const OptimizationControls = () => {
       return;
     }
     
-    // Show loading dialog
+    // Reset step counter and show loading dialog
+    setCurrentStep(0);
     setIsOptimizing(true);
     
     try {
       // Slight delay to ensure the loading dialog is shown
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      const optimizedPieces = optimizeCutting(pieces, sheet);
+      const optimizedPieces = optimizeCutting(pieces, sheet, (step) => {
+        setCurrentStep(step);
+      });
+      
       setPlacedPieces(optimizedPieces);
       
       // Show toast with result
@@ -130,8 +135,8 @@ export const OptimizationControls = () => {
         </div>
       </div>
       
-      {/* Loading dialog */}
-      <OptimizationLoadingDialog isOpen={isOptimizing} />
+      {/* Loading dialog with step progress */}
+      <OptimizationLoadingDialog isOpen={isOptimizing} currentStep={currentStep} />
     </>
   );
 };
