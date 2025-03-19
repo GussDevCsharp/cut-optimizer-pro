@@ -13,6 +13,14 @@ export class SheetGrid {
     this.grid = Array(height).fill(null).map(() => Array(width).fill(false));
   }
   
+  // Check if a single cell is available (not occupied)
+  isCellAvailable(x: number, y: number): boolean {
+    if (x < 0 || y < 0 || x >= this.width || y >= this.height) {
+      return false;
+    }
+    return !this.grid[y][x];
+  }
+  
   // Check if an area is available for a piece (including cut width)
   isAreaAvailable(x: number, y: number, pieceWidth: number, pieceHeight: number, cutWidth: number): boolean {
     // Check that the piece fits within sheet boundaries

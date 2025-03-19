@@ -10,6 +10,8 @@ import {
 import { Sheet, PlacedPiece } from '../../hooks/useSheetData';
 import { SheetPiece } from './SheetPiece';
 import { SheetThumbnails } from './SheetThumbnails';
+import { findAvailableAreas, AvailableArea } from '../../utils/optimization/availableAreasUtils';
+import { AvailableAreasDisplay } from './AvailableAreasDisplay';
 
 interface SheetCarouselProps {
   sheet: Sheet;
@@ -30,6 +32,7 @@ export const SheetCarousel = ({
 }: SheetCarouselProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [displayPieces, setDisplayPieces] = useState<PlacedPiece[]>([]);
+  const [availableAreas, setAvailableAreas] = useState<AvailableArea[]>([]);
   
   // Calculate container dimensions based on screen size
   const containerWidth = isMobile ? window.innerWidth - 40 : 800;  
@@ -62,10 +65,21 @@ export const SheetCarousel = ({
     if (placedPieces && placedPieces.length > 0) {
       const filteredPieces = placedPieces.filter(p => p.sheetIndex === currentSheetIndex);
       setDisplayPieces(filteredPieces);
+      
+      // Calculate available areas for the current sheet
+      const areas = findAvailableAreas(sheet, placedPieces, currentSheetIndex);
+      setAvailableAreas(areas);
     } else {
       setDisplayPieces([]);
+      // If no pieces are placed, the whole sheet is available
+      setAvailableAreas([{
+        x: 0,
+        y: 0,
+        width: sheet.width,
+        height: sheet.height
+      }]);
     }
-  }, [placedPieces, currentSheetIndex]);
+  }, [placedPieces, currentSheetIndex, sheet]);
 
   // Function to handle sheet change
   const handleSheetChange = (api: any) => {
@@ -103,6 +117,15 @@ export const SheetCarousel = ({
                     backgroundSize: `${isMobile ? '10px 10px' : '20px 20px'}`,
                   }}
                 >
+                  {/* Display available areas */}
+                  {sheetIndex === currentSheetIndex && availableAreas.length > 0 && (
+                    <AvailableAreasDisplay 
+                      availableAreas={availableAreas} 
+                      scale={scale} 
+                      isMobile={isMobile} 
+                    />
+                  )}
+                  
                   {/* Render pieces only for the current sheet */}
                   {sheetIndex === currentSheetIndex && displayPieces.map((piece, index) => (
                     <SheetPiece 
