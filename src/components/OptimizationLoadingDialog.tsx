@@ -15,9 +15,9 @@ export const OptimizationLoadingDialog = ({
   currentStep = 0, 
   steps = [
     "Preparando peças e organizando por tamanho",
-    "Analisando para uso eficiente de sobras",
-    "Otimizando posicionamento para sobras maiores",
-    "Finalizando layout de corte"
+    "Calculando melhores posições",
+    "Otimizando uso do material",
+    "Finalizando posicionamento"
   ]
 }: OptimizationLoadingDialogProps) => {
   const [elapsedTime, setElapsedTime] = useState(0);
@@ -75,7 +75,7 @@ export const OptimizationLoadingDialog = ({
           </div>
           
           <p className="text-center text-muted-foreground">
-            Calculando o melhor posicionamento para gerar sobras maiores...
+            Calculando a melhor posição para suas peças...
           </p>
           
           {/* Progress bar */}
