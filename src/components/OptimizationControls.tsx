@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Sparkles, RectangleHorizontal } from 'lucide-react';
 import { useSheetData } from '../hooks/useSheetData';
@@ -31,9 +30,6 @@ export const OptimizationControls = () => {
     setIsOptimizing(true);
     
     try {
-      // Slight delay to ensure the loading dialog is shown
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
       // Run the optimization algorithm with scrap detection
       const { placedPieces: optimizedPieces, scrapPieces: detectedScraps } = optimizeCutting(pieces, sheet);
       
@@ -48,11 +44,11 @@ export const OptimizationControls = () => {
       
       if (placedCount === totalCount) {
         toast.success("Otimização concluída com sucesso!", {
-          description: `Todas as ${totalCount} peças foram posicionadas na chapa. ${scrapCount} sobras foram identificadas.`
+          description: `Todas as ${totalCount} peças foram posicionadas na chapa. ${scrapCount} áreas disponíveis foram identificadas.`
         });
       } else {
         toast.warning("Otimização parcial!", {
-          description: `Foram posicionadas ${placedCount} de ${totalCount} peças na chapa. ${scrapCount} sobras foram identificadas.`
+          description: `Foram posicionadas ${placedCount} de ${totalCount} peças na chapa. ${scrapCount} áreas disponíveis foram identificadas.`
         });
       }
       
@@ -72,6 +68,11 @@ export const OptimizationControls = () => {
           console.error("Error saving project after optimization:", error);
         }
       }
+    } catch (error) {
+      console.error("Erro durante a otimização:", error);
+      toast.error("Erro na otimização", {
+        description: "Ocorreu um erro ao otimizar o corte. Por favor, tente novamente."
+      });
     } finally {
       // Hide loading dialog
       setIsOptimizing(false);
