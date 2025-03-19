@@ -25,8 +25,6 @@ export interface Sheet {
   materialId?: string; // Add materialId to track the selected material
 }
 
-export type OrientationPreference = 'horizontal' | 'vertical';
-
 interface SheetContextType {
   projectName: string;
   setProjectName: (name: string) => void;
@@ -47,8 +45,6 @@ interface SheetContextType {
   };
   currentSheetIndex: number; // Add current sheet index
   setCurrentSheetIndex: (index: number) => void; // Add setter for current sheet index
-  orientationPreference: OrientationPreference;
-  setOrientationPreference: (preference: OrientationPreference) => void;
 }
 
 const SheetContext = createContext<SheetContextType | undefined>(undefined);
@@ -64,7 +60,6 @@ export const SheetProvider = ({ children }: { children: ReactNode }) => {
   const [pieces, setPieces] = useState<Piece[]>([]);
   const [placedPieces, setPlacedPieces] = useState<PlacedPiece[]>([]);
   const [currentSheetIndex, setCurrentSheetIndex] = useState<number>(0);
-  const [orientationPreference, setOrientationPreference] = useState<OrientationPreference>('horizontal');
 
   const addPiece = (piece: Piece) => {
     setPieces([...pieces, piece]);
@@ -118,8 +113,6 @@ export const SheetProvider = ({ children }: { children: ReactNode }) => {
         stats,
         currentSheetIndex,
         setCurrentSheetIndex,
-        orientationPreference,
-        setOrientationPreference,
       }}
     >
       {children}

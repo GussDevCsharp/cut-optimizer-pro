@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Puzzle, Scissors, Sparkles, RectangleHorizontal } from 'lucide-react';
 import { useSheetData, Piece } from '../hooks/useSheetData';
@@ -11,10 +10,9 @@ import { useProjectActions } from "@/hooks/useProjectActions";
 import { useLocation } from 'react-router-dom';
 import { useState } from "react";
 import OptimizationLoadingDialog from './OptimizationLoadingDialog';
-import { OrientationPreferenceSelector } from './sheet-panel/OrientationPreferenceSelector';
 
 export const PiecesAndOptimizationPanel = () => {
-  const { sheet, pieces, placedPieces, setPlacedPieces, projectName, addPiece, updatePiece, removePiece, orientationPreference } = useSheetData();
+  const { sheet, pieces, placedPieces, setPlacedPieces, projectName, addPiece, updatePiece, removePiece } = useSheetData();
   const { saveProject } = useProjectActions();
   const location = useLocation();
   const [isOptimizing, setIsOptimizing] = useState(false);
@@ -41,7 +39,7 @@ export const PiecesAndOptimizationPanel = () => {
     try {
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      const optimizedPieces = optimizeCutting(pieces, sheet, orientationPreference);
+      const optimizedPieces = optimizeCutting(pieces, sheet);
       setPlacedPieces(optimizedPieces);
       
       const placedCount = optimizedPieces.length;
@@ -122,8 +120,6 @@ export const PiecesAndOptimizationPanel = () => {
           </div>
           
           <PieceForm onAddPiece={addPiece} projectId={projectId} />
-          
-          <OrientationPreferenceSelector />
           
           <div className="flex gap-2 mt-4">
             <Button 
