@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -34,42 +33,32 @@ export const SheetCarousel = ({
   const [displayPieces, setDisplayPieces] = useState<PlacedPiece[]>([]);
   const [availableAreas, setAvailableAreas] = useState<AvailableArea[]>([]);
   
-  // Calculate container dimensions based on screen size
   const containerWidth = isMobile ? window.innerWidth - 40 : 800;  
   const containerHeight = isMobile ? Math.min(window.innerHeight * 0.5, 400) : 600;
   
-  // Calculate scale factor to fit the sheet in the container
   const scaleX = containerWidth / sheet.width;
   const scaleY = containerHeight / sheet.height;
-  const scale = Math.min(scaleX, scaleY, 1); // Don't zoom in, only zoom out if needed
+  const scale = Math.min(scaleX, scaleY, 1);
   
-  // Calculate dimensions of the sheet in the display
   const displayWidth = sheet.width * scale;
   const displayHeight = sheet.height * scale;
   
-  // Group pieces by sheet index
   const sheets = Array.from({ length: sheetCount }, (_, i) => i);
 
-  // State to track the carousel API
   const [api, setApi] = useState<any>(null);
 
-  // Use an effect to navigate to the current sheet index when it changes
   useEffect(() => {
     if (api) {
       api.scrollTo(currentSheetIndex);
     }
   }, [currentSheetIndex, api]);
   
-  // Filter pieces for the current sheet index when it changes
   useEffect(() => {
     if (placedPieces && placedPieces.length > 0) {
       const filteredPieces = placedPieces.filter(p => p.sheetIndex === currentSheetIndex);
       setDisplayPieces(filteredPieces);
       
-      // Calculate available areas for this sheet
       const areas = findAvailableAreas(placedPieces, sheet, currentSheetIndex);
-      
-      // Group adjacent scrap areas
       const groupedAreas = groupAdjacentScraps(areas);
       
       setAvailableAreas(groupedAreas);
@@ -79,7 +68,6 @@ export const SheetCarousel = ({
     }
   }, [placedPieces, currentSheetIndex, sheet]);
 
-  // Function to handle sheet change
   const handleSheetChange = (api: any) => {
     if (api) {
       const selectedIndex = api.selectedScrollSnap();
@@ -115,7 +103,6 @@ export const SheetCarousel = ({
                     backgroundSize: `${isMobile ? '10px 10px' : '20px 20px'}`,
                   }}
                 >
-                  {/* Display sheet width and height */}
                   <div 
                     className="absolute left-1/2 transform -translate-x-1/2 text-xs text-gray-500 font-medium bg-white/70 px-2 py-0.5 rounded-md"
                     style={{ top: '10px', zIndex: 20 }}
@@ -129,17 +116,16 @@ export const SheetCarousel = ({
                     {sheet.height} mm
                   </div>
                   
-                  {/* Render available areas */}
                   {sheetIndex === currentSheetIndex && availableAreas.map((area, idx) => (
                     <AvailableAreaDisplay
                       key={`area-${idx}`}
                       area={area}
                       scale={scale}
                       isMobile={isMobile}
+                      colorIndex={idx}
                     />
                   ))}
                   
-                  {/* Render pieces only for the current sheet */}
                   {sheetIndex === currentSheetIndex && displayPieces.map((piece, index) => (
                     <SheetPiece 
                       key={`${piece.id}-${index}`} 
@@ -155,7 +141,6 @@ export const SheetCarousel = ({
         </CarouselContent>
       </Carousel>
       
-      {/* Navigation controls */}
       <div className="flex justify-center mt-2 mb-4">
         <Button 
           variant="outline" 
@@ -179,7 +164,6 @@ export const SheetCarousel = ({
         </Button>
       </div>
       
-      {/* Sheet thumbnails */}
       <SheetThumbnails
         sheet={sheet}
         placedPieces={placedPieces}
