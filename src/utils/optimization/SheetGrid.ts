@@ -6,15 +6,11 @@ export class SheetGrid {
   private grid: boolean[][];
   private width: number;
   private height: number;
-  private horizontalCuts: Set<number>; // Store y-coordinates of horizontal cuts
-  private verticalCuts: Set<number>; // Store x-coordinates of vertical cuts
   
   constructor(width: number, height: number) {
     this.width = width;
     this.height = height;
     this.grid = Array(height).fill(null).map(() => Array(width).fill(false));
-    this.horizontalCuts = new Set<number>();
-    this.verticalCuts = new Set<number>();
   }
   
   // Check if an area is available for a piece (including cut width)
@@ -61,9 +57,8 @@ export class SheetGrid {
     return true;
   }
   
-  // Mark an area as occupied and register the cuts
+  // Mark an area as occupied
   occupyArea(x: number, y: number, pieceWidth: number, pieceHeight: number): void {
-    // Mark grid cells as occupied
     for (let i = y; i < y + pieceHeight; i++) {
       for (let j = x; j < x + pieceWidth; j++) {
         if (i >= 0 && i < this.height && j >= 0 && j < this.width) {
@@ -71,20 +66,6 @@ export class SheetGrid {
         }
       }
     }
-    
-    // Register the cuts (edges of the piece)
-    this.horizontalCuts.add(y); // Top edge
-    this.horizontalCuts.add(y + pieceHeight); // Bottom edge
-    this.verticalCuts.add(x); // Left edge
-    this.verticalCuts.add(x + pieceWidth); // Right edge
-  }
-  
-  // Get the existing cuts for alignment calculation
-  getExistingCuts(): { horizontalCuts: number[], verticalCuts: number[] } {
-    return {
-      horizontalCuts: Array.from(this.horizontalCuts),
-      verticalCuts: Array.from(this.verticalCuts)
-    };
   }
 
   // Find all unoccupied (scrap) areas that are large enough to be useful
