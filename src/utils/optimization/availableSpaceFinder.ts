@@ -25,8 +25,8 @@ export const findAvailableAreas = (
     grid.occupyArea(piece.x, piece.y, piece.width, piece.height);
   }
   
-  // Find available areas (scraps)
-  const minAreaSize = 50; // Minimum size area to display (to avoid tiny spaces)
+  // Find available areas (scraps) - increasing minimum size to only show larger areas
+  const minAreaSize = 400; // Increased minimum size to only show larger scraps (was 50)
   const scrapAreas = grid.findScrapAreas(minAreaSize);
   
   // Convert to AvailableArea format and mark as scrap

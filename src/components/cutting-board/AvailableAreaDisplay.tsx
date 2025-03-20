@@ -18,6 +18,9 @@ export const AvailableAreaDisplay = ({ area, scale, isMobile }: AvailableAreaDis
   // Different styling for scrap areas vs regular available areas
   const isScrap = area.isScrap === true;
   
+  // Calculate area to display
+  const areaSize = area.width * area.height;
+  
   return (
     <div
       style={{
@@ -48,7 +51,7 @@ export const AvailableAreaDisplay = ({ area, scale, isMobile }: AvailableAreaDis
         }}
       >
         <span>{area.width} x {area.height}</span>
-        {isScrap && <span style={{ fontSize: `${fontSize * 0.8}px` }}>Sobra</span>}
+        {isScrap && areaSize >= 400 && <span style={{ fontSize: `${fontSize * 0.8}px` }}>Sobra</span>}
       </div>
     </div>
   );
