@@ -128,7 +128,7 @@ export const optimizeCutting = (
 export const compatibilityOptimizeCutting = (
   pieces: Piece[],
   sheet: Sheet
-): PlacedPiece[] => {
+): { placedPieces: PlacedPiece[], scrapAreas: ScrapArea[] } => {
   const result = optimizeCutting(pieces, sheet);
-  return result.placedPieces;
+  return result;
 };
