@@ -7,7 +7,6 @@ export interface AvailableArea {
   y: number;
   width: number;
   height: number;
-  isScrap?: boolean;
 }
 
 // Find available areas on the sheet
@@ -25,115 +24,66 @@ export const findAvailableAreas = (
     grid.occupyArea(piece.x, piece.y, piece.width, piece.height);
   }
   
-  // Find available areas (scraps) - increasing minimum size to only show larger areas
-  const minAreaSize = 400; // Increased minimum size to only show larger scraps (was 50)
-  const scrapAreas = grid.findScrapAreas(minAreaSize);
+  // Find available areas
+  const availableAreas: AvailableArea[] = [];
+  const minAreaSize = 50; // Minimum size area to display (to avoid tiny spaces)
   
-  // Convert to AvailableArea format and mark as scrap
-  const availableAreas: AvailableArea[] = scrapAreas.map(area => ({
-    ...area,
-    isScrap: true
-  }));
-  
-  // Sort areas by size (largest first)
-  const sortedAreas = availableAreas.sort((a, b) => {
-    const areaA = a.width * a.height;
-    const areaB = b.width * b.height;
-    return areaB - areaA;
-  });
-  
-  // Return only the top 3 largest scrap areas
-  return sortedAreas.slice(0, 3);
-};
-
-// Group adjacent scrap areas that can be combined
-export const groupAdjacentScraps = (
-  scraps: AvailableArea[]
-): AvailableArea[] => {
-  if (scraps.length <= 1) return scraps;
-  
-  const grouped: AvailableArea[] = [];
-  const visited = new Set<number>();
-  
-  const areAdjacent = (a: AvailableArea, b: AvailableArea): boolean => {
-    // Two rectangles are adjacent if they share an edge
-    // Check if right edge of a touches left edge of b
-    const aRightTouchesBLeft = a.x + a.width === b.x && 
-      ((a.y <= b.y && a.y + a.height > b.y) || 
-       (b.y <= a.y && b.y + b.height > a.y));
-    
-    // Check if left edge of a touches right edge of b
-    const aLeftTouchesBRight = a.x === b.x + b.width && 
-      ((a.y <= b.y && a.y + a.height > b.y) || 
-       (b.y <= a.y && b.y + b.height > a.y));
-    
-    // Check if bottom edge of a touches top edge of b
-    const aBottomTouchesBTop = a.y + a.height === b.y && 
-      ((a.x <= b.x && a.x + a.width > b.x) || 
-       (b.x <= a.x && b.x + b.width > a.x));
-    
-    // Check if top edge of a touches bottom edge of b
-    const aTopTouchesBBottom = a.y === b.y + b.height && 
-      ((a.x <= b.x && a.x + a.width > b.x) || 
-       (b.x <= a.x && b.x + b.width > a.x));
-    
-    return aRightTouchesBLeft || aLeftTouchesBRight || 
-           aBottomTouchesBTop || aTopTouchesBBottom;
-  };
-  
-  const canCombine = (a: AvailableArea, b: AvailableArea): boolean => {
-    // Can only combine if they form a rectangle
-    if (a.x === b.x && a.width === b.width) {
-      // Vertically adjacent with same width
-      return true;
-    }
-    if (a.y === b.y && a.height === b.height) {
-      // Horizontally adjacent with same height
-      return true;
-    }
-    return false;
-  };
-  
-  const combineAreas = (a: AvailableArea, b: AvailableArea): AvailableArea => {
-    const minX = Math.min(a.x, b.x);
-    const minY = Math.min(a.y, b.y);
-    const maxX = Math.max(a.x + a.width, b.x + b.width);
-    const maxY = Math.max(a.y + a.height, b.y + b.height);
-    
-    return {
-      x: minX,
-      y: minY,
-      width: maxX - minX,
-      height: maxY - minY,
-      isScrap: true
-    };
-  };
-  
-  // Try to combine adjacent areas
-  for (let i = 0; i < scraps.length; i++) {
-    if (visited.has(i)) continue;
-    
-    let current = scraps[i];
-    visited.add(i);
-    
-    let combined = true;
-    while (combined) {
-      combined = false;
-      
-      for (let j = 0; j < scraps.length; j++) {
-        if (visited.has(j) && j !== i) continue;
-        
-        if (areAdjacent(current, scraps[j]) && canCombine(current, scraps[j])) {
-          current = combineAreas(current, scraps[j]);
-          visited.add(j);
-          combined = true;
-          break;
+  // Scan the grid for available spaces
+  let y = 0;
+  while (y < sheet.height) {
+    let x = 0;
+    while (x < sheet.width) {
+      // If this position is available, find the largest rectangle starting from here
+      if (!grid.isOccupied(x, y)) {
+        // Find max width (how far we can go to the right)
+        let maxWidth = 0;
+        for (let testX = x; testX < sheet.width; testX++) {
+          if (grid.isOccupied(testX, y)) {
+            break;
+          }
+          maxWidth = testX - x + 1;
         }
+        
+        // Find max height (how far we can go down with the max width)
+        let maxHeight = 0;
+        let validRect = true;
+        
+        for (let testY = y; testY < sheet.height && validRect; testY++) {
+          for (let testX = x; testX < x + maxWidth; testX++) {
+            if (grid.isOccupied(testX, testY)) {
+              validRect = false;
+              break;
+            }
+          }
+          
+          if (validRect) {
+            maxHeight = testY - y + 1;
+          } else {
+            break;
+          }
+        }
+        
+        // Add if area is large enough
+        if (maxWidth >= minAreaSize && maxHeight >= minAreaSize) {
+          availableAreas.push({
+            x,
+            y,
+            width: maxWidth,
+            height: maxHeight
+          });
+          
+          // Mark this area as occupied so we don't find overlapping areas
+          grid.occupyArea(x, y, maxWidth, maxHeight);
+        }
+        
+        // Skip past this rectangle
+        x += maxWidth;
+      } else {
+        x++;
       }
     }
-    
-    grouped.push(current);
+    y++;
   }
   
-  return grouped;
+  return availableAreas;
 };

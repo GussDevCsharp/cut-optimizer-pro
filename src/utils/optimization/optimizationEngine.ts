@@ -37,7 +37,7 @@ export const optimizeCutting = (
     
     // Try to place on existing sheets, starting from the first sheet
     for (let sheetIndex = 0; sheetIndex < sheetGrids.length; sheetIndex++) {
-      const position = findBestPosition(piece, sheetGrids[sheetIndex], sheet, false); // Set adjacency to false to eliminate spaces
+      const position = findBestPosition(piece, sheetGrids[sheetIndex], sheet);
       
       if (position) {
         // Place on this sheet
@@ -73,7 +73,7 @@ export const optimizeCutting = (
       console.log("Created new sheet:", newSheetIndex);
       
       // Try to place on the new sheet
-      const newPosition = findBestPosition(piece, newSheetGrid, sheet, false); // Set adjacency to false to eliminate spaces
+      const newPosition = findBestPosition(piece, newSheetGrid, sheet);
       
       if (newPosition) {
         const placedPiece: PlacedPiece = {
