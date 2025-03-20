@@ -3,6 +3,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Sheet, PlacedPiece } from '../hooks/useSheetData';
 import { generateCuttingPlanHtml } from './html-generator';
 import { generatePdf } from './pdf-generator';
+import { useState } from 'react';
+
+export type Orientation = 'vertical' | 'horizontal';
 
 export const usePrintingService = (
   sheet: Sheet,
@@ -12,6 +15,7 @@ export const usePrintingService = (
   projectName: string
 ) => {
   const { toast } = useToast();
+  const [orientation, setOrientation] = useState<Orientation>('vertical');
 
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
@@ -24,7 +28,7 @@ export const usePrintingService = (
       return;
     }
     
-    printWindow.document.write(generateCuttingPlanHtml(sheet, placedPieces, sheetCount, sheets, projectName));
+    printWindow.document.write(generateCuttingPlanHtml(sheet, placedPieces, sheetCount, sheets, projectName, orientation));
     
     printWindow.document.close();
     printWindow.focus();
@@ -34,5 +38,5 @@ export const usePrintingService = (
     }, 500);
   };
 
-  return { handlePrint };
+  return { handlePrint, orientation, setOrientation };
 };

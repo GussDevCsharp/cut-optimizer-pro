@@ -3,17 +3,19 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Sheet, PlacedPiece } from '../hooks/useSheetData';
 import { generateCuttingPlanHtml } from './html-generator';
+import { Orientation } from './printing-service';
 
 export const generatePdf = async (
   sheet: Sheet,
   placedPieces: PlacedPiece[],
   sheetCount: number,
   sheets: number[],
-  projectName: string
+  projectName: string,
+  orientation: Orientation = 'vertical'
 ): Promise<Blob> => {
   // Create a temporary container for the HTML content
   const container = document.createElement('div');
-  container.innerHTML = generateCuttingPlanHtml(sheet, placedPieces, sheetCount, sheets, projectName);
+  container.innerHTML = generateCuttingPlanHtml(sheet, placedPieces, sheetCount, sheets, projectName, orientation);
   container.style.position = 'absolute';
   container.style.left = '-9999px';
   document.body.appendChild(container);
@@ -21,8 +23,9 @@ export const generatePdf = async (
   // Wait for images/fonts to load
   await new Promise(resolve => setTimeout(resolve, 500));
   
-  // Create PDF document with A4 size
-  const pdf = new jsPDF('p', 'mm', 'a4');
+  // Create PDF document with A4 size and set orientation
+  const pdfOrientation = orientation === 'horizontal' ? 'l' : 'p';
+  const pdf = new jsPDF(pdfOrientation, 'mm', 'a4');
   const pdfWidth = pdf.internal.pageSize.getWidth();
   const pdfHeight = pdf.internal.pageSize.getHeight();
   
