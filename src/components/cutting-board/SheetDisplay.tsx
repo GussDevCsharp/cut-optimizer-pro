@@ -35,7 +35,7 @@ export const SheetDisplay = ({
         backgroundSize: `${isMobile ? '10px 10px' : '20px 20px'}`,
       }}
     >
-      {/* Render scrap area labels */}
+      {/* Render scrap area labels with new colors */}
       {displayScrapAreas.map((area, index) => (
         <ScrapAreaLabel
           key={`scrap-${index}`}
