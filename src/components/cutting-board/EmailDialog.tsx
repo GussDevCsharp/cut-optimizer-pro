@@ -21,7 +21,12 @@ interface EmailDialogProps {
   projectName: string;
 }
 
-export const EmailDialog = ({ open, onOpenChange, pdfGenerator, projectName }: EmailDialogProps) => {
+// For the StatsDisplay.tsx component which uses a different interface
+interface StatsDisplayEmailDialogProps {
+  onSendEmail: (email: string) => Promise<boolean>;
+}
+
+export const EmailDialog = ({ open, onOpenChange, pdfGenerator, projectName, onSendEmail }: EmailDialogProps & Partial<StatsDisplayEmailDialogProps>) => {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -45,25 +50,43 @@ export const EmailDialog = ({ open, onOpenChange, pdfGenerator, projectName }: E
     setIsLoading(true);
     
     try {
-      // Generate the PDF
-      const pdfBlob = await pdfGenerator();
-      
-      // Here you would typically send the PDF via email
-      // For now, let's just simulate success
-      const success = await simulateSendEmail(email, pdfBlob, projectName);
-      
-      if (success) {
-        toast({
-          title: "Email enviado",
-          description: "O plano de corte foi enviado para o seu email.",
-        });
-        onOpenChange(false);
-      } else {
-        toast({
-          title: "Erro ao enviar",
-          description: "Não foi possível enviar o email. Tente novamente.",
-          variant: "destructive",
-        });
+      // If onSendEmail prop is provided, use it (for StatsDisplay)
+      if (onSendEmail) {
+        const success = await onSendEmail(email);
+        if (success) {
+          toast({
+            title: "Email enviado",
+            description: "O plano de corte foi enviado para o seu email.",
+          });
+          onOpenChange(false);
+        } else {
+          toast({
+            title: "Erro ao enviar",
+            description: "Não foi possível enviar o email. Tente novamente.",
+            variant: "destructive",
+          });
+        }
+      } else if (pdfGenerator) {
+        // Generate the PDF (for PrinterService)
+        const pdfBlob = await pdfGenerator();
+        
+        // Here you would typically send the PDF via email
+        // For now, let's just simulate success
+        const success = await simulateSendEmail(email, pdfBlob, projectName);
+        
+        if (success) {
+          toast({
+            title: "Email enviado",
+            description: "O plano de corte foi enviado para o seu email.",
+          });
+          onOpenChange(false);
+        } else {
+          toast({
+            title: "Erro ao enviar",
+            description: "Não foi possível enviar o email. Tente novamente.",
+            variant: "destructive",
+          });
+        }
       }
     } catch (error) {
       console.error("Error sending email:", error);

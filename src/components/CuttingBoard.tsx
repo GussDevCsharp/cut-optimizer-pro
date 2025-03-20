@@ -7,6 +7,9 @@ import { PrinterService } from './cutting-board/PrinterService';
 import { useIsMobile } from '../hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
+import { usePrintingService } from '@/utils/printing-service';
+import { useSharingService } from '@/utils/sharing-service';
+import { useEmailService } from '@/utils/email-service';
 
 export const CuttingBoard = () => {
   const { sheet, placedPieces, stats, currentSheetIndex, setCurrentSheetIndex, projectName } = useSheetData();
@@ -26,6 +29,11 @@ export const CuttingBoard = () => {
   
   // Group pieces by sheet index
   const sheets = Array.from({ length: sheetCount }, (_, i) => i);
+  
+  // Initialize the printing, sharing, and email services
+  const { handlePrint, orientation } = usePrintingService(sheet, placedPieces, stats.sheetCount, sheets, projectName);
+  const { handleSharePdf } = useSharingService(sheet, placedPieces, stats.sheetCount, sheets, projectName);
+  const { handleEmailPdf } = useEmailService(sheet, placedPieces, stats.sheetCount, sheets, projectName);
 
   return (
     <Card className="h-full border shadow-subtle flex flex-col animate-fade-in bg-gradient-to-br from-white to-lilac/5">
@@ -37,6 +45,9 @@ export const CuttingBoard = () => {
           stats={stats}
           projectName={projectName}
           isMobile={isMobile}
+          onPrint={handlePrint}
+          onSharePdf={handleSharePdf}
+          onEmailPdf={handleEmailPdf}
         />
 
         {/* Sheet carousel */}
