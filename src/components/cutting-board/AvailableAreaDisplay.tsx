@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { AvailableArea } from '../../utils/optimization/availableSpaceFinder';
-import { getRandomColor } from '../../utils/colorUtils';
 
 interface AvailableAreaDisplayProps {
   area: AvailableArea;
@@ -56,6 +55,24 @@ export const AvailableAreaDisplay = ({ area, scale, isMobile, colorIndex = 0 }: 
   const backgroundColor = isScrap ? scrapColors[colorIdx] : 'rgba(200, 200, 255, 0.05)';
   const borderColor = isScrap ? scrapBorderColors[colorIdx] : 'rgba(0,0,0,0.2)';
   
+  // Determine label position based on the colorIndex to avoid overlapping
+  // This will stagger the labels: top-left, top-right, bottom-left, bottom-right
+  let labelPosition;
+  switch (colorIndex % 4) {
+    case 0:
+      labelPosition = { top: '10%', left: '10%', transform: 'none' };
+      break;
+    case 1:
+      labelPosition = { top: '10%', right: '10%', transform: 'none' };
+      break;
+    case 2:
+      labelPosition = { bottom: '10%', left: '10%', transform: 'none' };
+      break;
+    case 3:
+    default:
+      labelPosition = { bottom: '10%', right: '10%', transform: 'none' };
+  }
+  
   return (
     <div
       style={{
@@ -75,7 +92,7 @@ export const AvailableAreaDisplay = ({ area, scale, isMobile, colorIndex = 0 }: 
       }}
     >
       <div
-        className="flex flex-col items-center justify-center p-1 rounded"
+        className="flex flex-col items-center justify-center p-1 rounded absolute"
         style={{
           backgroundColor: isScrap ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.6)',
           fontSize: `${fontSize}px`,
@@ -83,6 +100,7 @@ export const AvailableAreaDisplay = ({ area, scale, isMobile, colorIndex = 0 }: 
           fontWeight: isScrap ? 600 : 500,
           boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
           padding: '2px 4px',
+          ...labelPosition,
         }}
       >
         <span>{area.width} x {area.height}</span>

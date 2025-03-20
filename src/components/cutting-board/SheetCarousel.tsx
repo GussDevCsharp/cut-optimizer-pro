@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -30,6 +29,7 @@ export const SheetCarousel = ({
   setCurrentSheetIndex,
   isMobile
 }: SheetCarouselProps) => {
+  
   const containerRef = useRef<HTMLDivElement>(null);
   const [displayPieces, setDisplayPieces] = useState<PlacedPiece[]>([]);
   const [availableAreas, setAvailableAreas] = useState<AvailableArea[]>([]);
