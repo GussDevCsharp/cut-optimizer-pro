@@ -2,7 +2,7 @@
 import { Piece, PlacedPiece, Sheet } from '../../hooks/useSheetData';
 import { SheetGrid } from './SheetGrid';
 import { generatePastelColor } from './colorUtils';
-import { sortPiecesByArea, findBestPosition } from './positionUtils';
+import { sortPiecesByArea, findBestPosition, groupSimilarPieces } from './positionUtils';
 
 // Main optimization function that handles multiple sheets and prioritizes filling existing sheets
 export const optimizeCutting = (
@@ -11,13 +11,13 @@ export const optimizeCutting = (
 ): PlacedPiece[] => {
   console.log("Starting optimization with", pieces.length, "piece types");
   
-  // Sort pieces by area (largest first)
-  const sortedPieces = sortPiecesByArea(pieces);
+  // Sort and group similar pieces together for more efficient cutting
+  const groupedPieces = groupSimilarPieces(pieces);
   const placedPieces: PlacedPiece[] = [];
   
   // Expand pieces based on quantity
   const expandedPieces: Piece[] = [];
-  sortedPieces.forEach(piece => {
+  groupedPieces.forEach(piece => {
     for (let i = 0; i < piece.quantity; i++) {
       expandedPieces.push({
         ...piece,
@@ -37,7 +37,16 @@ export const optimizeCutting = (
     
     // Try to place on existing sheets, starting from the first sheet
     for (let sheetIndex = 0; sheetIndex < sheetGrids.length; sheetIndex++) {
-      const position = findBestPosition(piece, sheetGrids[sheetIndex], sheet, false); // Set adjacency to false to eliminate spaces
+      // Filter placed pieces to only those on the current sheet
+      const currentSheetPieces = placedPieces.filter(p => p.sheetIndex === sheetIndex);
+      
+      const position = findBestPosition(
+        piece, 
+        sheetGrids[sheetIndex], 
+        sheet, 
+        currentSheetPieces, 
+        false // Set adjacency to false to eliminate spaces
+      );
       
       if (position) {
         // Place on this sheet
@@ -72,8 +81,8 @@ export const optimizeCutting = (
       
       console.log("Created new sheet:", newSheetIndex);
       
-      // Try to place on the new sheet
-      const newPosition = findBestPosition(piece, newSheetGrid, sheet, false); // Set adjacency to false to eliminate spaces
+      // Try to place on the new sheet (no existing pieces yet)
+      const newPosition = findBestPosition(piece, newSheetGrid, sheet, [], false);
       
       if (newPosition) {
         const placedPiece: PlacedPiece = {

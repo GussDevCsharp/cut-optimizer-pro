@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -96,48 +97,59 @@ export const SheetCarousel = ({
           {sheets.map((sheetIndex) => {
             return (
               <CarouselItem key={sheetIndex}>
-                <div 
-                  ref={containerRef}
-                  className="relative mx-auto border border-gray-300 bg-white grid-pattern"
-                  style={{
-                    width: displayWidth,
-                    height: displayHeight,
-                    maxWidth: '100%',
-                    maxHeight: '100%',
-                    backgroundSize: `${isMobile ? '10px 10px' : '20px 20px'}`,
-                  }}
-                >
+                <div className="relative mx-auto">
+                  {/* Width dimension label - positioned ABOVE the sheet */}
                   <div 
                     className="absolute left-1/2 transform -translate-x-1/2 text-xs text-gray-500 font-medium bg-white/70 px-2 py-0.5 rounded-md"
-                    style={{ top: '10px', zIndex: 20 }}
+                    style={{ 
+                      bottom: `calc(100% + 5px)`, 
+                      zIndex: 20 
+                    }}
                   >
                     {sheet.width} mm
                   </div>
+                  
+                  {/* Height dimension label - positioned to the LEFT of the sheet */}
                   <div 
-                    className="absolute top-1/2 right-0 transform -translate-y-1/2 rotate-90 text-xs text-gray-500 font-medium bg-white/70 px-2 py-0.5 rounded-md"
-                    style={{ marginRight: '10px', zIndex: 20 }}
+                    className="absolute top-1/2 transform -translate-y-1/2 rotate-90 text-xs text-gray-500 font-medium bg-white/70 px-2 py-0.5 rounded-md"
+                    style={{ 
+                      right: `calc(100% + 5px)`, 
+                      zIndex: 20 
+                    }}
                   >
                     {sheet.height} mm
                   </div>
                   
-                  {sheetIndex === currentSheetIndex && availableAreas.map((area, idx) => (
-                    <AvailableAreaDisplay
-                      key={`area-${idx}`}
-                      area={area}
-                      scale={scale}
-                      isMobile={isMobile}
-                      colorIndex={idx}
-                    />
-                  ))}
-                  
-                  {sheetIndex === currentSheetIndex && displayPieces.map((piece, index) => (
-                    <SheetPiece 
-                      key={`${piece.id}-${index}`} 
-                      piece={piece} 
-                      scale={scale} 
-                      isMobile={isMobile}
-                    />
-                  ))}
+                  <div 
+                    ref={containerRef}
+                    className="relative border border-gray-300 bg-white grid-pattern"
+                    style={{
+                      width: displayWidth,
+                      height: displayHeight,
+                      maxWidth: '100%',
+                      maxHeight: '100%',
+                      backgroundSize: `${isMobile ? '10px 10px' : '20px 20px'}`,
+                    }}
+                  >
+                    {sheetIndex === currentSheetIndex && availableAreas.map((area, idx) => (
+                      <AvailableAreaDisplay
+                        key={`area-${idx}`}
+                        area={area}
+                        scale={scale}
+                        isMobile={isMobile}
+                        colorIndex={idx}
+                      />
+                    ))}
+                    
+                    {sheetIndex === currentSheetIndex && displayPieces.map((piece, index) => (
+                      <SheetPiece 
+                        key={`${piece.id}-${index}`} 
+                        piece={piece} 
+                        scale={scale} 
+                        isMobile={isMobile}
+                      />
+                    ))}
+                  </div>
                 </div>
               </CarouselItem>
             );
