@@ -1,12 +1,14 @@
 
 import { Sheet, PlacedPiece } from '../hooks/useSheetData';
+import { Orientation } from './printing-service';
 
 export const generateCuttingPlanHtml = (
   sheet: Sheet,
   placedPieces: PlacedPiece[],
   sheetCount: number,
   sheets: number[],
-  projectName: string
+  projectName: string,
+  orientation: Orientation = 'vertical'
 ): string => {
   return `
     <html>
@@ -138,7 +140,10 @@ export const generateCuttingPlanHtml = (
             border-top: 1px solid #E2E2E2;
           }
           @media print {
-            @page { margin: 0.5cm; }
+            @page { 
+              margin: 0.5cm; 
+              size: ${orientation === 'horizontal' ? 'landscape' : 'portrait'};
+            }
             body { margin: 1cm; }
             .sheet-page { page-break-after: always; }
             .sheet-page:last-child { page-break-after: avoid; }
@@ -176,6 +181,10 @@ export const generateCuttingPlanHtml = (
           <div class="print-info-item">
             <span class="print-info-label">Largura de corte:</span>
             <span class="print-info-value">${sheet.cutWidth}mm</span>
+          </div>
+          <div class="print-info-item">
+            <span class="print-info-label">Orientação:</span>
+            <span class="print-info-value">${orientation === 'vertical' ? 'Vertical' : 'Horizontal'}</span>
           </div>
         </div>
         

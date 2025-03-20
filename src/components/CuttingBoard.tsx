@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useSheetData } from '../hooks/useSheetData';
 import { StatsDisplay } from './cutting-board/StatsDisplay';
 import { SheetCarousel } from './cutting-board/SheetCarousel';
-import { usePrinterService } from './cutting-board/PrinterService';
+import { PrinterService } from './cutting-board/PrinterService';
 import { useIsMobile } from '../hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
@@ -27,15 +27,6 @@ export const CuttingBoard = () => {
   // Group pieces by sheet index
   const sheets = Array.from({ length: sheetCount }, (_, i) => i);
 
-  // Initialize the printer service
-  const { handlePrint, handleSharePdf, handleEmailPdf } = usePrinterService({ 
-    sheet, 
-    placedPieces, 
-    sheetCount, 
-    sheets,
-    projectName 
-  });
-
   return (
     <Card className="h-full border shadow-subtle flex flex-col animate-fade-in bg-gradient-to-br from-white to-lilac/5">
       <CardContent className={`${isMobile ? 'p-2' : 'p-4'} flex-1 relative`}>
@@ -43,10 +34,7 @@ export const CuttingBoard = () => {
         <StatsDisplay 
           sheet={sheet} 
           placedPieces={placedPieces} 
-          stats={stats} 
-          onPrint={handlePrint}
-          onSharePdf={handleSharePdf}
-          onEmailPdf={handleEmailPdf}
+          stats={stats}
           projectName={projectName}
           isMobile={isMobile}
         />

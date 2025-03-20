@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Printer, Share, Download, Mail } from 'lucide-react';
 import { usePrintingService, Orientation } from '@/utils/printing-service';
@@ -11,7 +11,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 export const PrinterService = () => {
   const { sheet, placedPieces, stats, projectName } = useSheetData();
-  const [emailDialogOpen, setEmailDialogOpen] = React.useState(false);
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const sheets = Array.from({ length: stats.sheetCount }, (_, i) => i);
   
   const { handlePrint, orientation, setOrientation } = usePrintingService(
