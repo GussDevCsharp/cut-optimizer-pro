@@ -10,10 +10,13 @@ import {
 import { Sheet, PlacedPiece } from '../../hooks/useSheetData';
 import { SheetPiece } from './SheetPiece';
 import { SheetThumbnails } from './SheetThumbnails';
+import { ScrapArea } from '../../utils/optimization/optimizationEngine';
+import { ScrapAreaLabel } from './ScrapAreaLabel';
 
 interface SheetCarouselProps {
   sheet: Sheet;
   placedPieces: PlacedPiece[];
+  scrapAreas: ScrapArea[];
   sheetCount: number;
   currentSheetIndex: number;
   setCurrentSheetIndex: (index: number) => void;
@@ -23,6 +26,7 @@ interface SheetCarouselProps {
 export const SheetCarousel = ({ 
   sheet, 
   placedPieces, 
+  scrapAreas,
   sheetCount, 
   currentSheetIndex, 
   setCurrentSheetIndex,
@@ -30,6 +34,7 @@ export const SheetCarousel = ({
 }: SheetCarouselProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [displayPieces, setDisplayPieces] = useState<PlacedPiece[]>([]);
+  const [displayScrapAreas, setDisplayScrapAreas] = useState<ScrapArea[]>([]);
   
   // Calculate container dimensions based on screen size
   const containerWidth = isMobile ? window.innerWidth - 40 : 800;  
@@ -65,7 +70,14 @@ export const SheetCarousel = ({
     } else {
       setDisplayPieces([]);
     }
-  }, [placedPieces, currentSheetIndex]);
+    
+    if (scrapAreas && scrapAreas.length > 0) {
+      const filteredScrapAreas = scrapAreas.filter(a => a.sheetIndex === currentSheetIndex);
+      setDisplayScrapAreas(filteredScrapAreas);
+    } else {
+      setDisplayScrapAreas([]);
+    }
+  }, [placedPieces, scrapAreas, currentSheetIndex]);
 
   // Function to handle sheet change
   const handleSheetChange = (api: any) => {
@@ -112,6 +124,50 @@ export const SheetCarousel = ({
                       isMobile={isMobile}
                     />
                   ))}
+                  
+                  {/* Render scrap area labels only for the current sheet */}
+                  {sheetIndex === currentSheetIndex && displayScrapAreas.map((area, index) => (
+                    <ScrapAreaLabel
+                      key={`scrap-${index}`}
+                      area={area}
+                      scale={scale}
+                      isMobile={isMobile}
+                    />
+                  ))}
+                  
+                  {/* Display sheet dimensions outside the sheet */}
+                  <div 
+                    style={{
+                      position: 'absolute',
+                      width: displayWidth,
+                      textAlign: 'center',
+                      top: -20,
+                      left: 0,
+                      fontSize: isMobile ? 10 : 12,
+                      fontWeight: 500,
+                      color: 'rgba(0,0,0,0.7)'
+                    }}
+                  >
+                    {sheet.width}
+                  </div>
+                  
+                  <div 
+                    style={{
+                      position: 'absolute',
+                      height: displayHeight,
+                      writingMode: 'vertical-lr',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      left: -20,
+                      top: 0,
+                      fontSize: isMobile ? 10 : 12,
+                      fontWeight: 500,
+                      color: 'rgba(0,0,0,0.7)'
+                    }}
+                  >
+                    {sheet.height}
+                  </div>
                 </div>
               </CarouselItem>
             );

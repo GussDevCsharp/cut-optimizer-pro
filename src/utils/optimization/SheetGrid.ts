@@ -67,6 +67,56 @@ export class SheetGrid {
       }
     }
   }
+
+  // Find all unoccupied (scrap) areas that are large enough to be useful
+  findScrapAreas(minSize: number = 50): Array<{ x: number; y: number; width: number; height: number }> {
+    const scrapAreas: Array<{ x: number; y: number; width: number; height: number }> = [];
+    const visited = Array(this.height).fill(null).map(() => Array(this.width).fill(false));
+    
+    for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
+        // If cell is occupied or already visited, skip
+        if (this.grid[y][x] || visited[y][x]) continue;
+        
+        // Find the maximum width of free space from this point
+        let maxWidth = 0;
+        while (x + maxWidth < this.width && !this.grid[y][x + maxWidth]) {
+          maxWidth++;
+        }
+        
+        if (maxWidth === 0) continue;
+        
+        // Find the maximum height with the same width
+        let maxHeight = 0;
+        let isUniform = true;
+        
+        while (isUniform && y + maxHeight < this.height) {
+          for (let j = 0; j < maxWidth; j++) {
+            if (this.grid[y + maxHeight][x + j]) {
+              isUniform = false;
+              break;
+            }
+          }
+          if (isUniform) maxHeight++;
+        }
+        
+        // Mark this area as visited
+        for (let i = 0; i < maxHeight; i++) {
+          for (let j = 0; j < maxWidth; j++) {
+            visited[y + i][x + j] = true;
+          }
+        }
+        
+        // Only add areas larger than minSize
+        const area = maxWidth * maxHeight;
+        if (area >= minSize) {
+          scrapAreas.push({ x, y, width: maxWidth, height: maxHeight });
+        }
+      }
+    }
+    
+    return scrapAreas;
+  }
   
   // Debug method to print the grid
   printGrid(): void {

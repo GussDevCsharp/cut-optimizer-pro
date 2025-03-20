@@ -4,16 +4,26 @@ import { SheetGrid } from './SheetGrid';
 import { generatePastelColor } from './colorUtils';
 import { sortPiecesByArea, findBestPosition } from './positionUtils';
 
+// Define the scrap area interface
+export interface ScrapArea {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  sheetIndex: number;
+}
+
 // Main optimization function that handles multiple sheets and prioritizes filling existing sheets
 export const optimizeCutting = (
   pieces: Piece[],
   sheet: Sheet
-): PlacedPiece[] => {
+): { placedPieces: PlacedPiece[], scrapAreas: ScrapArea[] } => {
   console.log("Starting optimization with", pieces.length, "piece types");
   
   // Sort pieces by area (largest first)
   const sortedPieces = sortPiecesByArea(pieces);
   const placedPieces: PlacedPiece[] = [];
+  const scrapAreas: ScrapArea[] = [];
   
   // Expand pieces based on quantity
   const expandedPieces: Piece[] = [];
@@ -97,6 +107,19 @@ export const optimizeCutting = (
     }
   }
   
+  // Find scrap areas on each sheet
+  for (let sheetIndex = 0; sheetIndex < sheetGrids.length; sheetIndex++) {
+    const sheetScrapAreas = sheetGrids[sheetIndex].findScrapAreas(100); // Min area of 100 square units
+    
+    // Add sheet index to each scrap area
+    scrapAreas.push(...sheetScrapAreas.map(area => ({
+      ...area,
+      sheetIndex
+    })));
+  }
+  
   console.log("Optimization complete. Placed", placedPieces.length, "pieces on", sheetGrids.length, "sheets");
-  return placedPieces;
+  console.log("Found", scrapAreas.length, "usable scrap areas");
+  
+  return { placedPieces, scrapAreas };
 };

@@ -1,5 +1,6 @@
 
 import { useState, createContext, useContext, ReactNode } from 'react';
+import { ScrapArea } from '../utils/optimization/optimizationEngine';
 
 export interface Piece {
   id: string;
@@ -37,6 +38,8 @@ interface SheetContextType {
   removePiece: (id: string) => void;
   placedPieces: PlacedPiece[];
   setPlacedPieces: (pieces: PlacedPiece[]) => void;
+  scrapAreas: ScrapArea[];
+  setScrapAreas: (areas: ScrapArea[]) => void;
   stats: {
     usedArea: number;
     wasteArea: number;
@@ -59,6 +62,7 @@ export const SheetProvider = ({ children }: { children: ReactNode }) => {
   
   const [pieces, setPieces] = useState<Piece[]>([]);
   const [placedPieces, setPlacedPieces] = useState<PlacedPiece[]>([]);
+  const [scrapAreas, setScrapAreas] = useState<ScrapArea[]>([]);
   const [currentSheetIndex, setCurrentSheetIndex] = useState<number>(0);
 
   const addPiece = (piece: Piece) => {
@@ -104,12 +108,14 @@ export const SheetProvider = ({ children }: { children: ReactNode }) => {
         sheet,
         setSheet,
         pieces,
-        setPieces, // Add the new method to the context
+        setPieces,
         addPiece,
         updatePiece,
         removePiece,
         placedPieces,
         setPlacedPieces,
+        scrapAreas,
+        setScrapAreas,
         stats,
         currentSheetIndex,
         setCurrentSheetIndex,
