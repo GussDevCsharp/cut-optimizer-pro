@@ -10,7 +10,7 @@ import {
 import { Sheet, PlacedPiece } from '../../hooks/useSheetData';
 import { SheetPiece } from './SheetPiece';
 import { SheetThumbnails } from './SheetThumbnails';
-import { findAvailableAreas, AvailableArea } from '../../utils/optimization/availableSpaceFinder';
+import { findAvailableAreas, groupAdjacentScraps, AvailableArea } from '../../utils/optimization/availableSpaceFinder';
 import { AvailableAreaDisplay } from './AvailableAreaDisplay';
 
 interface SheetCarouselProps {
@@ -68,7 +68,11 @@ export const SheetCarousel = ({
       
       // Calculate available areas for this sheet
       const areas = findAvailableAreas(placedPieces, sheet, currentSheetIndex);
-      setAvailableAreas(areas);
+      
+      // Group adjacent scrap areas
+      const groupedAreas = groupAdjacentScraps(areas);
+      
+      setAvailableAreas(groupedAreas);
     } else {
       setDisplayPieces([]);
       setAvailableAreas([]);
