@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Printer, Mail, Share2 } from "lucide-react";
 import { Sheet, PlacedPiece } from '../../hooks/useSheetData';
@@ -40,7 +40,6 @@ export const StatsDisplay = ({
   isMobile 
 }: StatsDisplayProps) => {
   const navigate = useNavigate();
-  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   
   return (
     <div className={`mb-4 text-sm flex ${isMobile ? 'flex-col gap-2' : 'justify-between items-center'}`}>
@@ -92,25 +91,17 @@ export const StatsDisplay = ({
             Compartilhar
           </Button>
         ) : (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="gap-2"
-            onClick={() => setEmailDialogOpen(true)}
-          >
-            <Mail size={16} />
-            Email
-          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Mail size={16} />
+                Email
+              </Button>
+            </DialogTrigger>
+            <EmailDialog onSendEmail={onEmailPdf} />
+          </Dialog>
         )}
       </div>
-      
-      <EmailDialog 
-        open={emailDialogOpen}
-        onOpenChange={setEmailDialogOpen}
-        projectName={projectName}
-        pdfGenerator={() => Promise.resolve(new Blob())} // Dummy function, we're using onSendEmail instead
-        onSendEmail={onEmailPdf}
-      />
     </div>
   );
 };
