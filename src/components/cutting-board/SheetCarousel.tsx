@@ -6,6 +6,7 @@ import { ScrapArea } from '../../utils/optimization/optimizationEngine';
 import { SheetThumbnails } from './SheetThumbnails';
 import { CarouselNavigation } from './CarouselNavigation';
 import { SheetCarouselContent } from './SheetCarouselContent';
+import { SheetHeader } from './SheetHeader';
 
 interface SheetCarouselProps {
   sheet: Sheet;
@@ -57,11 +58,13 @@ export const SheetCarousel = ({
 
   return (
     <div>
-      <div className="flex justify-center items-center mb-2">
-        <span className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>
-          Chapa {currentSheetIndex + 1} de {sheetCount}
-        </span>
-      </div>
+      {/* Sheet header */}
+      <SheetHeader 
+        currentSheetIndex={currentSheetIndex} 
+        sheetCount={sheetCount} 
+        isMobile={isMobile} 
+      />
+      
       <Carousel
         className="w-full"
         setApi={setApi}
