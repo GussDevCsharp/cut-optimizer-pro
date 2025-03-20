@@ -11,6 +11,7 @@ interface SheetDisplayProps {
   displayScrapAreas: ScrapArea[];
   scale: number;
   isMobile?: boolean;
+  customScrapColors?: boolean;
 }
 
 export const SheetDisplay = ({ 
@@ -18,7 +19,8 @@ export const SheetDisplay = ({
   displayPieces, 
   displayScrapAreas, 
   scale, 
-  isMobile 
+  isMobile,
+  customScrapColors = true
 }: SheetDisplayProps) => {
   // Calculate dimensions of the sheet in the display
   const displayWidth = sheet.width * scale;
@@ -35,13 +37,14 @@ export const SheetDisplay = ({
         backgroundSize: `${isMobile ? '10px 10px' : '20px 20px'}`,
       }}
     >
-      {/* Render scrap area labels with new colors */}
+      {/* Render scrap area labels with customizable colors */}
       {displayScrapAreas.map((area, index) => (
         <ScrapAreaLabel
           key={`scrap-${index}`}
           area={area}
           scale={scale}
           isMobile={isMobile}
+          customColors={customScrapColors}
         />
       ))}
       

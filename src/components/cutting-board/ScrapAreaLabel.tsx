@@ -1,39 +1,33 @@
 
 import React from 'react';
 import { ScrapArea } from '../../utils/optimization/optimizationEngine';
+import { getScrapAreaColor } from '../../utils/colorUtils';
 
 interface ScrapAreaLabelProps {
   area: ScrapArea;
   scale: number;
   isMobile?: boolean;
+  customColors?: boolean;
 }
 
-// Array of pastel colors for scrap areas
-const scrapAreaColors = [
-  'rgba(214, 188, 250, 0.15)', // Light purple (lilac)
-  'rgba(253, 225, 211, 0.15)', // Soft peach
-  'rgba(211, 228, 253, 0.15)', // Soft blue
-  'rgba(242, 252, 226, 0.15)', // Soft green
-  'rgba(254, 247, 205, 0.15)', // Soft yellow
-  'rgba(229, 222, 255, 0.15)', // Soft purple
-  'rgba(255, 222, 226, 0.15)', // Soft pink
-  'rgba(254, 198, 161, 0.15)', // Soft orange
-  'rgba(241, 240, 251, 0.15)', // Soft gray
-];
-
-export const ScrapAreaLabel = ({ area, scale, isMobile }: ScrapAreaLabelProps) => {
+export const ScrapAreaLabel = ({ area, scale, isMobile, customColors = true }: ScrapAreaLabelProps) => {
   // Calculate font size based on area dimensions and device
   const minDimension = Math.min(area.width, area.height) * scale;
   const fontSize = isMobile 
     ? Math.max(Math.min(minDimension / 8, 10), 6) // Smaller text on mobile
     : Math.max(Math.min(minDimension / 6, 12), 8);
   
-  // Get a color based on the area's position to ensure consistent coloring
-  const colorIndex = (area.x + area.y + area.sheetIndex) % scrapAreaColors.length;
-  const backgroundColor = scrapAreaColors[colorIndex];
+  // Determine color index based on area properties for consistent colors
+  const colorSeed = area.x + area.y + area.sheetIndex;
   
-  // Determine border color - slightly darker version of the background
-  const borderColor = backgroundColor.replace('0.15', '0.3');
+  // Get background and border colors
+  const backgroundColor = customColors 
+    ? getScrapAreaColor(colorSeed, 0.15)  // Light background
+    : 'rgba(200,200,200,0.1)';            // Default light gray
+    
+  const borderColor = customColors
+    ? getScrapAreaColor(colorSeed, 0.3)   // Slightly darker for border
+    : 'rgba(0,0,0,0.2)';                  // Default dark gray
   
   return (
     <div
