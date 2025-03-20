@@ -36,11 +36,14 @@ export const findAvailableAreas = (
   }));
   
   // Sort areas by size (largest first)
-  return availableAreas.sort((a, b) => {
+  const sortedAreas = availableAreas.sort((a, b) => {
     const areaA = a.width * a.height;
     const areaB = b.width * b.height;
     return areaB - areaA;
   });
+  
+  // Return only the top 3 largest scrap areas
+  return sortedAreas.slice(0, 3);
 };
 
 // Group adjacent scrap areas that can be combined

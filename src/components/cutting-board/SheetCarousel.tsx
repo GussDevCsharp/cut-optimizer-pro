@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -58,10 +59,13 @@ export const SheetCarousel = ({
       const filteredPieces = placedPieces.filter(p => p.sheetIndex === currentSheetIndex);
       setDisplayPieces(filteredPieces);
       
+      // Get only the 3 largest areas (already limited in findAvailableAreas function)
       const areas = findAvailableAreas(placedPieces, sheet, currentSheetIndex);
       const groupedAreas = groupAdjacentScraps(areas);
       
-      setAvailableAreas(groupedAreas);
+      // If there are more than 3 grouped areas, take only the 3 largest
+      const limitedAreas = groupedAreas.slice(0, 3);
+      setAvailableAreas(limitedAreas);
     } else {
       setDisplayPieces([]);
       setAvailableAreas([]);
