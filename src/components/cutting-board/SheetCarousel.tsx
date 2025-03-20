@@ -98,24 +98,18 @@ export const SheetCarousel = ({
             return (
               <CarouselItem key={sheetIndex}>
                 <div className="relative mx-auto">
-                  {/* Width dimension label - positioned ABOVE the sheet */}
+                  {/* Width dimension label - positioned on top outside the sheet */}
                   <div 
-                    className="absolute left-1/2 transform -translate-x-1/2 text-xs text-gray-500 font-medium bg-white/70 px-2 py-0.5 rounded-md"
-                    style={{ 
-                      bottom: `calc(100% + 5px)`, 
-                      zIndex: 20 
-                    }}
+                    className="absolute left-1/2 transform -translate-x-1/2 text-xs text-gray-500 font-medium bg-white/90 px-2 py-0.5 rounded-md"
+                    style={{ top: '-20px', zIndex: 20 }}
                   >
                     {sheet.width} mm
                   </div>
                   
-                  {/* Height dimension label - positioned to the LEFT of the sheet */}
+                  {/* Height dimension label - positioned on the right outside the sheet */}
                   <div 
-                    className="absolute top-1/2 transform -translate-y-1/2 rotate-90 text-xs text-gray-500 font-medium bg-white/70 px-2 py-0.5 rounded-md"
-                    style={{ 
-                      right: `calc(100% + 5px)`, 
-                      zIndex: 20 
-                    }}
+                    className="absolute top-1/2 transform -translate-y-1/2 rotate-90 text-xs text-gray-500 font-medium bg-white/90 px-2 py-0.5 rounded-md"
+                    style={{ right: '-35px', zIndex: 20 }}
                   >
                     {sheet.height} mm
                   </div>

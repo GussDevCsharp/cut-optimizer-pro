@@ -2,7 +2,7 @@
 import { Piece, PlacedPiece, Sheet } from '../../hooks/useSheetData';
 import { SheetGrid } from './SheetGrid';
 import { generatePastelColor } from './colorUtils';
-import { sortPiecesByArea, findBestPosition, groupSimilarPieces } from './positionUtils';
+import { sortPiecesByArea, findBestPosition } from './positionUtils';
 
 // Main optimization function that handles multiple sheets and prioritizes filling existing sheets
 export const optimizeCutting = (
@@ -11,106 +11,53 @@ export const optimizeCutting = (
 ): PlacedPiece[] => {
   console.log("Starting optimization with", pieces.length, "piece types");
   
-  // First, sort pieces by area (largest first) and group similar pieces
-  const groupedPieces = groupSimilarPieces(pieces);
+  // Sort pieces by area (largest first)
+  const sortedPieces = sortPiecesByArea(pieces);
   const placedPieces: PlacedPiece[] = [];
   
-  // Pre-allocate all pieces array based on quantities
+  // Expand pieces based on quantity
   const expandedPieces: Piece[] = [];
-  let totalPieces = 0;
-  
-  // Map for quick lookup of similar pieces by dimension
-  const dimensionMap = new Map<string, Piece[]>();
-  
-  // Precompute the expanded pieces and dimension maps - optimization
-  groupedPieces.forEach(piece => {
-    totalPieces += piece.quantity;
-    
-    // Create key for quick lookup
-    const normalKey = `${piece.width}x${piece.height}`;
-    const rotatedKey = piece.canRotate ? `${piece.height}x${piece.width}` : normalKey;
-    
-    if (!dimensionMap.has(normalKey)) {
-      dimensionMap.set(normalKey, []);
-    }
-    if (piece.canRotate && normalKey !== rotatedKey && !dimensionMap.has(rotatedKey)) {
-      dimensionMap.set(rotatedKey, []);
-    }
-    
-    // Expand pieces based on quantity
+  sortedPieces.forEach(piece => {
     for (let i = 0; i < piece.quantity; i++) {
-      const coloredPiece = {
+      expandedPieces.push({
         ...piece,
         color: piece.color || generatePastelColor()
-      };
-      expandedPieces.push(coloredPiece);
-      
-      // Add to dimension maps for quick lookup
-      dimensionMap.get(normalKey)?.push(coloredPiece);
-      if (piece.canRotate && normalKey !== rotatedKey) {
-        dimensionMap.get(rotatedKey)?.push(coloredPiece);
-      }
+      });
     }
   });
   
   console.log("Total pieces to place:", expandedPieces.length);
   
-  // Initialize a single sheet grid to start with
+  // Initialize sheet grids array with the first sheet
   const sheetGrids: SheetGrid[] = [new SheetGrid(sheet.width, sheet.height)];
   
-  // Cache sheet dimensions to avoid property lookups
-  const sheetWidth = sheet.width;
-  const sheetHeight = sheet.height;
-  
-  // Process pieces in optimal order
+  // Try to place each piece
   for (const piece of expandedPieces) {
     let placed = false;
     
-    // Get the width and height once
-    const pieceWidth = piece.width;
-    const pieceHeight = piece.height;
-    const canRotate = piece.canRotate;
-    
-    // Try to place on existing sheets
+    // Try to place on existing sheets, starting from the first sheet
     for (let sheetIndex = 0; sheetIndex < sheetGrids.length; sheetIndex++) {
-      const currentGrid = sheetGrids[sheetIndex];
-      
-      // Filter placed pieces to only those on the current sheet - optimization
-      // Only compute this once per sheet, not for every position check
-      const currentSheetPieces = placedPieces.filter(p => p.sheetIndex === sheetIndex);
-      
-      // Find the best position on this sheet
-      const position = findBestPosition(
-        piece, 
-        currentGrid, 
-        sheet, 
-        currentSheetPieces, 
-        false // No spacing between pieces
-      );
+      const position = findBestPosition(piece, sheetGrids[sheetIndex], sheet, false); // Set adjacency to false to eliminate spaces
       
       if (position) {
-        // Calculate dimensions based on rotation - only calculate once
-        const finalWidth = position.rotated ? pieceHeight : pieceWidth;
-        const finalHeight = position.rotated ? pieceWidth : pieceHeight;
-        
-        // Place the piece
+        // Place on this sheet
         const placedPiece: PlacedPiece = {
           ...piece,
           x: position.x,
           y: position.y,
           rotated: position.rotated,
-          width: finalWidth,
-          height: finalHeight,
+          width: position.rotated ? piece.height : piece.width,
+          height: position.rotated ? piece.width : piece.height,
           sheetIndex: sheetIndex
         };
         
         // Mark the area as occupied
-        currentGrid.occupyArea(position.x, position.y, finalWidth, finalHeight);
+        sheetGrids[sheetIndex].occupyArea(position.x, position.y, placedPiece.width, placedPiece.height);
         placedPieces.push(placedPiece);
         placed = true;
         
-        if (placedPieces.length < 5) { // Only log for the first few pieces
-          console.log(`Placed piece ${finalWidth}x${finalHeight} at (${position.x},${position.y}) on sheet ${sheetIndex}, rotated: ${position.rotated}`);
+        if (placedPieces.length < 5) { // Only log for first few pieces to avoid console spam
+          console.log(`Placed piece ${placedPiece.width}x${placedPiece.height} at (${position.x},${position.y}) on sheet ${sheetIndex}, rotated: ${position.rotated}`);
         }
         
         break; // Move to the next piece
@@ -120,31 +67,32 @@ export const optimizeCutting = (
     // If not placed on any existing sheet, create a new sheet
     if (!placed) {
       const newSheetIndex = sheetGrids.length;
-      const newSheetGrid = new SheetGrid(sheetWidth, sheetHeight);
+      const newSheetGrid = new SheetGrid(sheet.width, sheet.height);
       sheetGrids.push(newSheetGrid);
       
+      console.log("Created new sheet:", newSheetIndex);
+      
       // Try to place on the new sheet
-      const newPosition = findBestPosition(piece, newSheetGrid, sheet, [], false);
+      const newPosition = findBestPosition(piece, newSheetGrid, sheet, false); // Set adjacency to false to eliminate spaces
       
       if (newPosition) {
-        const finalWidth = newPosition.rotated ? pieceHeight : pieceWidth;
-        const finalHeight = newPosition.rotated ? pieceWidth : pieceHeight;
-        
         const placedPiece: PlacedPiece = {
           ...piece,
           x: newPosition.x,
           y: newPosition.y,
           rotated: newPosition.rotated,
-          width: finalWidth,
-          height: finalHeight,
+          width: newPosition.rotated ? piece.height : piece.width,
+          height: newPosition.rotated ? piece.width : piece.height,
           sheetIndex: newSheetIndex
         };
         
         // Mark the area as occupied
-        newSheetGrid.occupyArea(newPosition.x, newPosition.y, finalWidth, finalHeight);
+        newSheetGrid.occupyArea(newPosition.x, newPosition.y, placedPiece.width, placedPiece.height);
         placedPieces.push(placedPiece);
+        
+        console.log(`Placed piece ${placedPiece.width}x${placedPiece.height} at (${newPosition.x},${newPosition.y}) on new sheet ${newSheetIndex}, rotated: ${newPosition.rotated}`);
       } else {
-        console.warn(`Failed to place piece ${pieceWidth}x${pieceHeight} even on a new sheet!`);
+        console.warn(`Failed to place piece ${piece.width}x${piece.height} even on a new sheet!`);
       }
     }
   }
