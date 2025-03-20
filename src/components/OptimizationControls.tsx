@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Sparkles, RectangleHorizontal } from 'lucide-react';
 import { useSheetData } from '../hooks/useSheetData';
@@ -15,7 +14,6 @@ export const OptimizationControls = () => {
   const location = useLocation();
   const [isOptimizing, setIsOptimizing] = useState(false);
   
-  // Get projectId from URL params or location state
   const searchParams = new URLSearchParams(window.location.search);
   const projectId = location.state?.projectId || searchParams.get('projectId');
   
@@ -27,48 +25,56 @@ export const OptimizationControls = () => {
       return;
     }
     
-    // Show loading dialog
     setIsOptimizing(true);
     
     try {
-      // Slight delay to ensure the loading dialog is shown
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      const optimizedPieces = optimizeCutting(pieces, sheet);
-      setPlacedPieces(optimizedPieces);
-      
-      // Show toast with result
-      const placedCount = optimizedPieces.length;
-      const totalCount = pieces.reduce((total, piece) => total + piece.quantity, 0);
-      
-      if (placedCount === totalCount) {
-        toast.success("Otimização concluída com sucesso!", {
-          description: `Todas as ${totalCount} peças foram posicionadas na chapa.`
-        });
-      } else {
-        toast.warning("Otimização parcial!", {
-          description: `Foram posicionadas ${placedCount} de ${totalCount} peças na chapa.`
-        });
-      }
-      
-      // Save the project with optimized pieces
-      if (projectName && projectId) {
+      setTimeout(async () => {
         try {
-          const projectData = {
-            sheet,
-            pieces,
-            placedPieces: optimizedPieces
-          };
+          console.time('optimization');
+          const optimizedPieces = optimizeCutting(pieces, sheet);
+          console.timeEnd('optimization');
           
-          await saveProject(projectId, projectName, projectData);
-          console.log("Project saved after optimization");
+          setPlacedPieces(optimizedPieces);
+          
+          const placedCount = optimizedPieces.length;
+          const totalCount = pieces.reduce((total, piece) => total + piece.quantity, 0);
+          
+          if (placedCount === totalCount) {
+            toast.success("Otimização concluída com sucesso!", {
+              description: `Todas as ${totalCount} peças foram posicionadas na chapa.`
+            });
+          } else {
+            toast.warning("Otimização parcial!", {
+              description: `Foram posicionadas ${placedCount} de ${totalCount} peças na chapa.`
+            });
+          }
+          
+          if (projectName && projectId) {
+            try {
+              const projectData = {
+                sheet,
+                pieces,
+                placedPieces: optimizedPieces
+              };
+              
+              await saveProject(projectId, projectName, projectData);
+              console.log("Project saved after optimization");
+            } catch (error) {
+              console.error("Error saving project after optimization:", error);
+            }
+          }
         } catch (error) {
-          console.error("Error saving project after optimization:", error);
+          console.error("Optimization error:", error);
+          toast.error("Erro na otimização", {
+            description: "Ocorreu um erro ao otimizar o corte. Por favor, tente novamente."
+          });
+        } finally {
+          setIsOptimizing(false);
         }
-      }
-    } finally {
-      // Hide loading dialog
+      }, 50);
+    } catch (error) {
       setIsOptimizing(false);
+      console.error("Error starting optimization:", error);
     }
   };
   
@@ -78,7 +84,6 @@ export const OptimizationControls = () => {
       description: "Todas as peças foram removidas da visualização."
     });
     
-    // Save the project with cleared placed pieces
     if (projectName && projectId) {
       try {
         const projectData = {
@@ -130,7 +135,6 @@ export const OptimizationControls = () => {
         </div>
       </div>
       
-      {/* Loading dialog */}
       <OptimizationLoadingDialog isOpen={isOptimizing} />
     </>
   );

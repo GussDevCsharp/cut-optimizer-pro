@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Puzzle, Scissors, Sparkles, RectangleHorizontal } from 'lucide-react';
 import { useSheetData, Piece } from '../hooks/useSheetData';
@@ -37,40 +38,54 @@ export const PiecesAndOptimizationPanel = () => {
     setIsOptimizing(true);
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      const optimizedPieces = optimizeCutting(pieces, sheet);
-      setPlacedPieces(optimizedPieces);
-      
-      const placedCount = optimizedPieces.length;
-      const totalCount = pieces.reduce((total, piece) => total + piece.quantity, 0);
-      
-      if (placedCount === totalCount) {
-        toast.success("Otimização concluída com sucesso!", {
-          description: `Todas as ${totalCount} peças foram posicionadas na chapa.`
-        });
-      } else {
-        toast.warning("Otimização parcial!", {
-          description: `Foram posicionadas ${placedCount} de ${totalCount} peças na chapa.`
-        });
-      }
-      
-      if (projectName && projectId) {
+      // Use setTimeout to ensure the loading dialog is shown before heavy computation starts
+      setTimeout(async () => {
         try {
-          const projectData = {
-            sheet,
-            pieces,
-            placedPieces: optimizedPieces
-          };
+          console.time('optimization');
+          const optimizedPieces = optimizeCutting(pieces, sheet);
+          console.timeEnd('optimization');
           
-          await saveProject(projectId, projectName, projectData);
-          console.log("Project saved after optimization");
+          setPlacedPieces(optimizedPieces);
+          
+          const placedCount = optimizedPieces.length;
+          const totalCount = pieces.reduce((total, piece) => total + piece.quantity, 0);
+          
+          if (placedCount === totalCount) {
+            toast.success("Otimização concluída com sucesso!", {
+              description: `Todas as ${totalCount} peças foram posicionadas na chapa.`
+            });
+          } else {
+            toast.warning("Otimização parcial!", {
+              description: `Foram posicionadas ${placedCount} de ${totalCount} peças na chapa.`
+            });
+          }
+          
+          if (projectName && projectId) {
+            try {
+              const projectData = {
+                sheet,
+                pieces,
+                placedPieces: optimizedPieces
+              };
+              
+              await saveProject(projectId, projectName, projectData);
+              console.log("Project saved after optimization");
+            } catch (error) {
+              console.error("Error saving project after optimization:", error);
+            }
+          }
         } catch (error) {
-          console.error("Error saving project after optimization:", error);
+          console.error("Optimization error:", error);
+          toast.error("Erro na otimização", {
+            description: "Ocorreu um erro ao otimizar o corte. Por favor, tente novamente."
+          });
+        } finally {
+          setIsOptimizing(false);
         }
-      }
-    } finally {
+      }, 50); // Small delay to ensure UI updates before computation
+    } catch (error) {
       setIsOptimizing(false);
+      console.error("Error starting optimization:", error);
     }
   };
   
