@@ -123,3 +123,12 @@ export const optimizeCutting = (
   
   return { placedPieces, scrapAreas };
 };
+
+// Add a compatibility function to support code that still expects just placedPieces
+export const compatibilityOptimizeCutting = (
+  pieces: Piece[],
+  sheet: Sheet
+): PlacedPiece[] => {
+  const result = optimizeCutting(pieces, sheet);
+  return result.placedPieces;
+};
