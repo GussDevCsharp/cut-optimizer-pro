@@ -10,6 +10,8 @@ import {
 import { Sheet, PlacedPiece } from '../../hooks/useSheetData';
 import { SheetPiece } from './SheetPiece';
 import { SheetThumbnails } from './SheetThumbnails';
+import { findAvailableAreas, AvailableArea } from '../../utils/optimization/availableSpaceFinder';
+import { AvailableAreaDisplay } from './AvailableAreaDisplay';
 
 interface SheetCarouselProps {
   sheet: Sheet;
@@ -30,6 +32,7 @@ export const SheetCarousel = ({
 }: SheetCarouselProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [displayPieces, setDisplayPieces] = useState<PlacedPiece[]>([]);
+  const [availableAreas, setAvailableAreas] = useState<AvailableArea[]>([]);
   
   // Calculate container dimensions based on screen size
   const containerWidth = isMobile ? window.innerWidth - 40 : 800;  
@@ -62,10 +65,15 @@ export const SheetCarousel = ({
     if (placedPieces && placedPieces.length > 0) {
       const filteredPieces = placedPieces.filter(p => p.sheetIndex === currentSheetIndex);
       setDisplayPieces(filteredPieces);
+      
+      // Calculate available areas for this sheet
+      const areas = findAvailableAreas(placedPieces, sheet, currentSheetIndex);
+      setAvailableAreas(areas);
     } else {
       setDisplayPieces([]);
+      setAvailableAreas([]);
     }
-  }, [placedPieces, currentSheetIndex]);
+  }, [placedPieces, currentSheetIndex, sheet]);
 
   // Function to handle sheet change
   const handleSheetChange = (api: any) => {
@@ -103,6 +111,30 @@ export const SheetCarousel = ({
                     backgroundSize: `${isMobile ? '10px 10px' : '20px 20px'}`,
                   }}
                 >
+                  {/* Display sheet width and height */}
+                  <div 
+                    className="absolute left-1/2 transform -translate-x-1/2 text-xs text-gray-500 font-medium bg-white/70 px-2 py-0.5 rounded-md"
+                    style={{ top: '10px', zIndex: 20 }}
+                  >
+                    {sheet.width} mm
+                  </div>
+                  <div 
+                    className="absolute top-1/2 right-0 transform -translate-y-1/2 rotate-90 text-xs text-gray-500 font-medium bg-white/70 px-2 py-0.5 rounded-md"
+                    style={{ marginRight: '10px', zIndex: 20 }}
+                  >
+                    {sheet.height} mm
+                  </div>
+                  
+                  {/* Render available areas */}
+                  {sheetIndex === currentSheetIndex && availableAreas.map((area, idx) => (
+                    <AvailableAreaDisplay
+                      key={`area-${idx}`}
+                      area={area}
+                      scale={scale}
+                      isMobile={isMobile}
+                    />
+                  ))}
+                  
                   {/* Render pieces only for the current sheet */}
                   {sheetIndex === currentSheetIndex && displayPieces.map((piece, index) => (
                     <SheetPiece 
