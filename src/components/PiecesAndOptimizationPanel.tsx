@@ -3,7 +3,7 @@ import { Puzzle, Scissors, Sparkles, RectangleHorizontal } from 'lucide-react';
 import { useSheetData, Piece } from '../hooks/useSheetData';
 import { PieceForm } from './pieces-panel/PieceForm';
 import { ImportPiecesForm } from './pieces-panel/ImportPiecesForm';
-import { optimizeCutting } from '../utils/optimizationAlgorithm';
+import { compatibilityOptimizeCutting } from '../utils/optimizationAlgorithm';
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useProjectActions } from "@/hooks/useProjectActions";
@@ -39,7 +39,7 @@ export const PiecesAndOptimizationPanel = () => {
     try {
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      const optimizedPieces = optimizeCutting(pieces, sheet);
+      const optimizedPieces = compatibilityOptimizeCutting(pieces, sheet);
       setPlacedPieces(optimizedPieces);
       
       const placedCount = optimizedPieces.length;

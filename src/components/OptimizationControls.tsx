@@ -1,8 +1,7 @@
-
 import { Button } from "@/components/ui/button";
 import { Sparkles, RectangleHorizontal } from 'lucide-react';
 import { useSheetData } from '../hooks/useSheetData';
-import { optimizeCutting } from '../utils/optimizationAlgorithm';
+import { compatibilityOptimizeCutting } from '../utils/optimizationAlgorithm';
 import { toast } from "sonner";
 import { useProjectActions } from "@/hooks/useProjectActions";
 import { useLocation } from 'react-router-dom';
@@ -34,7 +33,7 @@ export const OptimizationControls = () => {
       // Slight delay to ensure the loading dialog is shown
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      const optimizedPieces = optimizeCutting(pieces, sheet);
+      const optimizedPieces = compatibilityOptimizeCutting(pieces, sheet);
       setPlacedPieces(optimizedPieces);
       
       // Show toast with result

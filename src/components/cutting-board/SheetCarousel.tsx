@@ -1,15 +1,11 @@
 
 import React, { useEffect, useRef, useState } from 'react';
-import { 
-  Carousel, 
-  CarouselContent, 
-  CarouselItem,
-} from "@/components/ui/carousel";
+import { Carousel } from "@/components/ui/carousel";
 import { Sheet, PlacedPiece } from '../../hooks/useSheetData';
 import { ScrapArea } from '../../utils/optimization/optimizationEngine';
 import { SheetThumbnails } from './SheetThumbnails';
-import { SheetDisplay } from './SheetDisplay';
 import { CarouselNavigation } from './CarouselNavigation';
+import { SheetCarouselContent } from './SheetCarouselContent';
 
 interface SheetCarouselProps {
   sheet: Sheet;
@@ -31,8 +27,6 @@ export const SheetCarousel = ({
   isMobile
 }: SheetCarouselProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [displayPieces, setDisplayPieces] = useState<PlacedPiece[]>([]);
-  const [displayScrapAreas, setDisplayScrapAreas] = useState<ScrapArea[]>([]);
   
   // Calculate container dimensions based on screen size
   const containerWidth = isMobile ? window.innerWidth - 40 : 800;  
@@ -42,9 +36,6 @@ export const SheetCarousel = ({
   const scaleX = containerWidth / sheet.width;
   const scaleY = containerHeight / sheet.height;
   const scale = Math.min(scaleX, scaleY, 1); // Don't zoom in, only zoom out if needed
-  
-  // Group pieces by sheet index
-  const sheets = Array.from({ length: sheetCount }, (_, i) => i);
 
   // State to track the carousel API
   const [api, setApi] = useState<any>(null);
@@ -55,23 +46,6 @@ export const SheetCarousel = ({
       api.scrollTo(currentSheetIndex);
     }
   }, [currentSheetIndex, api]);
-  
-  // Filter pieces for the current sheet index when it changes
-  useEffect(() => {
-    if (placedPieces && placedPieces.length > 0) {
-      const filteredPieces = placedPieces.filter(p => p.sheetIndex === currentSheetIndex);
-      setDisplayPieces(filteredPieces);
-    } else {
-      setDisplayPieces([]);
-    }
-    
-    if (scrapAreas && scrapAreas.length > 0) {
-      const filteredScrapAreas = scrapAreas.filter(a => a.sheetIndex === currentSheetIndex);
-      setDisplayScrapAreas(filteredScrapAreas);
-    } else {
-      setDisplayScrapAreas([]);
-    }
-  }, [placedPieces, scrapAreas, currentSheetIndex]);
 
   // Function to handle sheet change
   const handleSheetChange = (api: any) => {
@@ -94,23 +68,15 @@ export const SheetCarousel = ({
         opts={{ startIndex: currentSheetIndex, loop: false }}
         onSelect={(api) => handleSheetChange(api)}
       >
-        <CarouselContent>
-          {sheets.map((sheetIndex) => {
-            return (
-              <CarouselItem key={sheetIndex}>
-                {sheetIndex === currentSheetIndex && (
-                  <SheetDisplay
-                    sheet={sheet}
-                    displayPieces={displayPieces}
-                    displayScrapAreas={displayScrapAreas}
-                    scale={scale}
-                    isMobile={isMobile}
-                  />
-                )}
-              </CarouselItem>
-            );
-          })}
-        </CarouselContent>
+        <SheetCarouselContent
+          sheet={sheet}
+          placedPieces={placedPieces}
+          scrapAreas={scrapAreas}
+          sheetCount={sheetCount}
+          currentSheetIndex={currentSheetIndex}
+          scale={scale}
+          isMobile={isMobile}
+        />
       </Carousel>
       
       {/* Navigation controls */}
