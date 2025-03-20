@@ -28,6 +28,8 @@ export const ScrapAreaLabel = ({ area, scale, isMobile }: ScrapAreaLabelProps) =
         alignItems: 'center',
         justifyContent: 'center',
         overflow: 'hidden',
+        border: '1px dashed rgba(0,0,0,0.2)',
+        backgroundColor: 'rgba(200,200,200,0.1)',
       }}
     >
       <div 

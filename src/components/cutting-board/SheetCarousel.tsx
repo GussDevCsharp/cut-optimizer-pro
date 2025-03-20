@@ -115,22 +115,22 @@ export const SheetCarousel = ({
                     backgroundSize: `${isMobile ? '10px 10px' : '20px 20px'}`,
                   }}
                 >
-                  {/* Render pieces only for the current sheet */}
-                  {sheetIndex === currentSheetIndex && displayPieces.map((piece, index) => (
-                    <SheetPiece 
-                      key={`${piece.id}-${index}`} 
-                      piece={piece} 
-                      scale={scale} 
-                      isMobile={isMobile}
-                    />
-                  ))}
-                  
                   {/* Render scrap area labels only for the current sheet */}
                   {sheetIndex === currentSheetIndex && displayScrapAreas.map((area, index) => (
                     <ScrapAreaLabel
                       key={`scrap-${index}`}
                       area={area}
                       scale={scale}
+                      isMobile={isMobile}
+                    />
+                  ))}
+                  
+                  {/* Render pieces only for the current sheet */}
+                  {sheetIndex === currentSheetIndex && displayPieces.map((piece, index) => (
+                    <SheetPiece 
+                      key={`${piece.id}-${index}`} 
+                      piece={piece} 
+                      scale={scale} 
                       isMobile={isMobile}
                     />
                   ))}
