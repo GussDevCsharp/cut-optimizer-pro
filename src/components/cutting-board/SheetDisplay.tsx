@@ -12,6 +12,7 @@ interface SheetDisplayProps {
   scale: number;
   isMobile?: boolean;
   customScrapColors?: boolean;
+  showScrapDimensions?: boolean;
 }
 
 export const SheetDisplay = ({ 
@@ -20,7 +21,8 @@ export const SheetDisplay = ({
   displayScrapAreas, 
   scale, 
   isMobile,
-  customScrapColors = true
+  customScrapColors = true,
+  showScrapDimensions = true
 }: SheetDisplayProps) => {
   // Calculate dimensions of the sheet in the display
   const displayWidth = sheet.width * scale;
@@ -45,6 +47,7 @@ export const SheetDisplay = ({
           scale={scale}
           isMobile={isMobile}
           customColors={customScrapColors}
+          showDimensions={showScrapDimensions}
         />
       ))}
       

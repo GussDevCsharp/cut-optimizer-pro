@@ -62,6 +62,7 @@ export const CuttingBoard = () => {
             currentSheetIndex={currentSheetIndex}
             setCurrentSheetIndex={setCurrentSheetIndex}
             isMobile={isMobile}
+            showScrapDimensions={true}
           />
         )}
       </CardContent>

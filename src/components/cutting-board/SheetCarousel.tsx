@@ -16,6 +16,7 @@ interface SheetCarouselProps {
   currentSheetIndex: number;
   setCurrentSheetIndex: (index: number) => void;
   isMobile?: boolean;
+  showScrapDimensions?: boolean;
 }
 
 export const SheetCarousel = ({ 
@@ -25,7 +26,8 @@ export const SheetCarousel = ({
   sheetCount, 
   currentSheetIndex, 
   setCurrentSheetIndex,
-  isMobile
+  isMobile,
+  showScrapDimensions = true
 }: SheetCarouselProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   
@@ -79,6 +81,7 @@ export const SheetCarousel = ({
           currentSheetIndex={currentSheetIndex}
           scale={scale}
           isMobile={isMobile}
+          showScrapDimensions={showScrapDimensions}
         />
       </Carousel>
       

@@ -13,6 +13,7 @@ interface SheetCarouselContentProps {
   currentSheetIndex: number;
   scale: number;
   isMobile?: boolean;
+  showScrapDimensions?: boolean;
 }
 
 export const SheetCarouselContent = ({ 
@@ -22,7 +23,8 @@ export const SheetCarouselContent = ({
   sheetCount, 
   currentSheetIndex,
   scale,
-  isMobile
+  isMobile,
+  showScrapDimensions = true
 }: SheetCarouselContentProps) => {
   const [displayPieces, setDisplayPieces] = useState<PlacedPiece[]>([]);
   const [displayScrapAreas, setDisplayScrapAreas] = useState<ScrapArea[]>([]);
@@ -57,6 +59,7 @@ export const SheetCarouselContent = ({
                 displayScrapAreas={displayScrapAreas}
                 scale={scale}
                 isMobile={isMobile}
+                showScrapDimensions={showScrapDimensions}
               />
             )}
           </CarouselItem>

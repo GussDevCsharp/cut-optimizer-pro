@@ -8,9 +8,16 @@ interface ScrapAreaLabelProps {
   scale: number;
   isMobile?: boolean;
   customColors?: boolean;
+  showDimensions?: boolean;
 }
 
-export const ScrapAreaLabel = ({ area, scale, isMobile, customColors = true }: ScrapAreaLabelProps) => {
+export const ScrapAreaLabel = ({ 
+  area, 
+  scale, 
+  isMobile, 
+  customColors = true,
+  showDimensions = true 
+}: ScrapAreaLabelProps) => {
   // Calculate font size based on area dimensions and device
   const minDimension = Math.min(area.width, area.height) * scale;
   const fontSize = isMobile 
@@ -47,24 +54,26 @@ export const ScrapAreaLabel = ({ area, scale, isMobile, customColors = true }: S
         borderRadius: '2px',
       }}
     >
-      <div 
-        style={{ 
-          fontSize: `${fontSize}px`, 
-          color: 'rgba(0,0,0,0.6)', 
-          fontWeight: 500,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '4px',
-          background: 'rgba(255,255,255,0.8)',
-          borderRadius: '3px',
-          whiteSpace: 'nowrap',
-          boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-        }}
-      >
-        {area.width} × {area.height}
-      </div>
+      {showDimensions && (
+        <div 
+          style={{ 
+            fontSize: `${fontSize}px`, 
+            color: 'rgba(0,0,0,0.6)', 
+            fontWeight: 500,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '4px',
+            background: 'rgba(255,255,255,0.8)',
+            borderRadius: '3px',
+            whiteSpace: 'nowrap',
+            boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+          }}
+        >
+          {area.width} × {area.height}
+        </div>
+      )}
     </div>
   );
 };
