@@ -1,5 +1,5 @@
 
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { Sheet, PlacedPiece } from '../hooks/useSheetData';
 import { generatePdf } from './pdf-generator';
 
@@ -10,8 +10,6 @@ export const useSharingService = (
   sheets: number[],
   projectName: string
 ) => {
-  const { toast } = useToast();
-
   const handleSharePdf = async () => {
     toast({
       title: "Preparando arquivo",
