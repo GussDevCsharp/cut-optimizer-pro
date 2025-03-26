@@ -70,44 +70,40 @@ const ViewportHeightFix = () => {
 // Main App component
 const AppRoutes = () => {
   return (
-    <>
-      <Routes>
-        <Route path="/home" element={<Home />} />
-        <Route path="/" element={<Home />} />
-        
-        <Route path="/login" element={<Login />} />
-        <Route path="/cadastro" element={<Register />} />
-        
-        <Route 
-          path="/dashboard" 
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/app" 
-          element={
-            <ProtectedRoute>
-              <Index />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/testing" 
-          element={
-            <AdminRoute>
-              <Testing />
-            </AdminRoute>
-          } 
-        />
-        
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-      <Toaster />
-      <Sonner />
-    </>
+    <Routes>
+      <Route path="/home" element={<Home />} />
+      <Route path="/" element={<Home />} />
+      
+      <Route path="/login" element={<Login />} />
+      <Route path="/cadastro" element={<Register />} />
+      
+      <Route 
+        path="/dashboard" 
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/app" 
+        element={
+          <ProtectedRoute>
+            <Index />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/testing" 
+        element={
+          <AdminRoute>
+            <Testing />
+          </AdminRoute>
+        } 
+      />
+      
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
 };
 
@@ -123,6 +119,8 @@ const App = () => (
           <ViewportHeightFix />
           <BrowserRouter>
             <AppRoutes />
+            <Toaster />
+            <Sonner />
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>

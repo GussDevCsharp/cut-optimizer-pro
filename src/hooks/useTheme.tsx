@@ -33,24 +33,32 @@ export function ThemeProvider({
   
   // Initialize theme from localStorage safely
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
-    const savedTheme = localStorage.getItem(storageKey);
-    if (savedTheme && (savedTheme === 'dark' || savedTheme === 'light')) {
-      setTheme(savedTheme as Theme);
+    try {
+      if (typeof window !== 'undefined') {
+        const savedTheme = localStorage.getItem(storageKey);
+        if (savedTheme && (savedTheme === 'dark' || savedTheme === 'light')) {
+          setTheme(savedTheme as Theme);
+        }
+      }
+    } catch (e) {
+      console.error('Error accessing localStorage:', e);
     }
   }, [defaultTheme, storageKey]);
 
   // Apply theme changes to document and localStorage
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
-    const root = window.document.documentElement;
-    
-    root.classList.remove('light', 'dark');
-    root.classList.add(theme);
-    
-    localStorage.setItem(storageKey, theme);
+    try {
+      if (typeof window !== 'undefined') {
+        const root = window.document.documentElement;
+        
+        root.classList.remove('light', 'dark');
+        root.classList.add(theme);
+        
+        localStorage.setItem(storageKey, theme);
+      }
+    } catch (e) {
+      console.error('Error accessing localStorage or DOM:', e);
+    }
   }, [theme, storageKey]);
 
   const value = {
