@@ -83,6 +83,50 @@ export const parseNumberFromCell = (cell: any): number => {
   return numberMatch ? parseFloat(numberMatch[1]) : NaN;
 };
 
+// Process Excel data into pieces
+export const processExcelData = (data: any[][]): Piece[] => {
+  if (data.length === 0) {
+    throw new Error('Planilha vazia');
+  }
+  
+  if (data.length === 1) {
+    throw new Error('A planilha contém apenas cabeçalhos, sem dados');
+  }
+  
+  const importedPieces: Piece[] = [];
+  
+  // Find the header row and column indexes
+  const headerInfo = findHeaderRow(data);
+  console.log('Header info:', headerInfo);
+  
+  const columnIndexes = getColumnIndexes(headerInfo);
+  console.log('Column indexes:', columnIndexes);
+  
+  if (!columnIndexes.width || !columnIndexes.height) {
+    // Try a simpler approach - look at the first row and try to identify columns by position
+    console.log('Trying simple column detection');
+    // Assume first row might be header if it contains strings
+    const firstRowIsHeader = data[0].some(cell => typeof cell === 'string' && cell.toString().trim() !== '');
+    
+    const simpleColumnIndexes = {
+      width: 0,  // First column
+      height: 1, // Second column
+      quantity: 2 // Third column (if exists)
+    };
+    
+    console.log('Using simple column indexes:', simpleColumnIndexes);
+    
+    // Start from row 1 if first row is header, otherwise from row 0
+    const startRow = firstRowIsHeader ? 1 : 0;
+    
+    return processRowsWithSimpleIndexes(data, startRow, simpleColumnIndexes);
+  } else {
+    // Use header-based approach if columns were identified
+    const startRow = headerInfo.rowIndex + 1;
+    return processRowsWithHeaderIndexes(data, startRow, columnIndexes);
+  }
+};
+
 // Process rows using simple column indexes
 const processRowsWithSimpleIndexes = (
   data: any[][], 
@@ -121,8 +165,7 @@ const processRowsWithSimpleIndexes = (
         height,
         quantity: 1, // Each piece now has quantity 1
         canRotate: true,
-        color: getRandomColor(),
-        name: `Peça ${pieces.length + 1}`
+        color: getRandomColor()
       });
     }
   }
@@ -176,55 +219,12 @@ const processRowsWithHeaderIndexes = (
         height,
         quantity: 1, // Each piece now has quantity 1
         canRotate,
-        color: getRandomColor(),
-        name: `Peça ${pieces.length + 1}`
+        color: getRandomColor()
       });
     }
   }
   
   return pieces;
-};
-
-// Process Excel data into pieces
-export const processExcelData = (data: any[][]): Piece[] => {
-  if (data.length === 0) {
-    throw new Error('Planilha vazia');
-  }
-  
-  if (data.length === 1) {
-    throw new Error('A planilha contém apenas cabeçalhos, sem dados');
-  }
-  
-  // Find the header row and column indexes
-  const headerInfo = findHeaderRow(data);
-  console.log('Header info:', headerInfo);
-  
-  const columnIndexes = getColumnIndexes(headerInfo);
-  console.log('Column indexes:', columnIndexes);
-  
-  if (!columnIndexes.width || !columnIndexes.height) {
-    // Try a simpler approach - look at the first row and try to identify columns by position
-    console.log('Trying simple column detection');
-    // Assume first row might be header if it contains strings
-    const firstRowIsHeader = data[0].some(cell => typeof cell === 'string' && cell.toString().trim() !== '');
-    
-    const simpleColumnIndexes = {
-      width: 0,  // First column
-      height: 1, // Second column
-      quantity: 2 // Third column (if exists)
-    };
-    
-    console.log('Using simple column indexes:', simpleColumnIndexes);
-    
-    // Start from row 1 if first row is header, otherwise from row 0
-    const startRow = firstRowIsHeader ? 1 : 0;
-    
-    return processRowsWithSimpleIndexes(data, startRow, simpleColumnIndexes);
-  } else {
-    // Use header-based approach if columns were identified
-    const startRow = headerInfo.rowIndex + 1;
-    return processRowsWithHeaderIndexes(data, startRow, columnIndexes);
-  }
 };
 
 // Create and download example Excel file
@@ -265,42 +265,4 @@ export const loadXLSXLibrary = (): Promise<void> => {
     script.onerror = () => reject(new Error('Failed to load XLSX library'));
     document.head.appendChild(script);
   });
-};
-
-// Process CSV data into pieces
-export const processCsvData = (data: any[][]): Piece[] => {
-  if (data.length === 0) {
-    throw new Error('Arquivo CSV vazio');
-  }
-  
-  // Find the header row and column indexes - reuse Excel processing logic
-  const headerInfo = findHeaderRow(data);
-  console.log('Header info:', headerInfo);
-  
-  const columnIndexes = getColumnIndexes(headerInfo);
-  console.log('Column indexes:', columnIndexes);
-  
-  if (!columnIndexes.width || !columnIndexes.height) {
-    // Try a simpler approach - look at the first row and try to identify columns by position
-    console.log('Trying simple column detection');
-    // Assume first row might be header if it contains strings
-    const firstRowIsHeader = data[0].some(cell => typeof cell === 'string' && cell.toString().trim() !== '');
-    
-    const simpleColumnIndexes = {
-      width: 0,  // First column
-      height: 1, // Second column
-      quantity: 2 // Third column (if exists)
-    };
-    
-    console.log('Using simple column indexes:', simpleColumnIndexes);
-    
-    // Start from row 1 if first row is header, otherwise from row 0
-    const startRow = firstRowIsHeader ? 1 : 0;
-    
-    return processRowsWithSimpleIndexes(data, startRow, simpleColumnIndexes);
-  } else {
-    // Use header-based approach if columns were identified
-    const startRow = headerInfo.rowIndex + 1;
-    return processRowsWithHeaderIndexes(data, startRow, columnIndexes);
-  }
 };

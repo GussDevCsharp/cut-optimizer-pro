@@ -1,5 +1,5 @@
 
-import { Piece, PlacedPiece, Sheet } from '../../types/sheetTypes';
+import { Piece, PlacedPiece, Sheet } from '../../hooks/useSheetData';
 import { SheetGrid } from './SheetGrid';
 import { generatePastelColor } from './colorUtils';
 import { sortPiecesByArea, findBestPosition } from './positionUtils';

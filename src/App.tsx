@@ -13,7 +13,6 @@ import Dashboard from "./pages/Dashboard";
 import Testing from "./pages/Testing";
 import Home from "./pages/Home";
 import { useEffect } from "react";
-import { ThemeProvider } from "next-themes";
 
 // Protected route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -49,7 +48,7 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// Mobile viewport height fix - this component must be inside AuthProvider
+// Mobile viewport height fix
 const ViewportHeightFix = () => {
   useEffect(() => {
     // Fix for mobile viewport height issues with the vh unit
@@ -75,7 +74,7 @@ const ViewportHeightFix = () => {
   return null;
 };
 
-// Routes component that uses auth hooks - must be inside AuthProvider
+// Main App component
 const AppRoutes = () => {
   return (
     <Routes>
@@ -116,24 +115,20 @@ const AppRoutes = () => {
   );
 };
 
-// Query client
 const queryClient = new QueryClient();
 
-// Main App component 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <BrowserRouter>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <AuthProvider>
-          <TooltipProvider>
-            <ViewportHeightFix />
-            <Toaster />
-            <Sonner />
-            <AppRoutes />
-          </TooltipProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </BrowserRouter>
+    <AuthProvider>
+      <TooltipProvider>
+        <ViewportHeightFix />
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AppRoutes />
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

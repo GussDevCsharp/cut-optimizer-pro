@@ -1,4 +1,3 @@
-
 import { v4 as uuidv4 } from 'uuid';
 import { Piece, Sheet, PlacedPiece } from '../../hooks/useSheetData';
 import { ProjectData, LINE_PREFIXES } from './types';
@@ -83,8 +82,7 @@ const processPieceDataLine = (data: string[], projectData: ProjectData) => {
       height: parseInt(data[1], 10) || 0,
       quantity: parseInt(data[2], 10) || 1,
       canRotate: data[3]?.toLowerCase() === "true",
-      color: getRandomColor(), // Let the platform handle colors
-      name: data.length >= 5 && data[4] ? data[4] : `Peça ${projectData.pieces.length + 1}`
+      color: getRandomColor() // Let the platform handle colors
     };
     
     if (piece.width > 0 && piece.height > 0) {

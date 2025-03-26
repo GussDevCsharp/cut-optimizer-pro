@@ -1,16 +1,17 @@
 
 import { useState, useEffect } from 'react';
-import { ChevronLeft } from 'lucide-react';
+import { LogOut, Menu, Settings, ChevronLeft, Download } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useSheetData } from '../hooks/useSheetData';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useIsMobile } from '../hooks/use-mobile';
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { SettingsContainer } from './settings/SettingsContainer';
 import { useToast } from '@/hooks/use-toast';
-import InstallPrompt from './header/InstallPrompt';
-import DesktopMenu from './header/DesktopMenu';
-import MobileMenu from './header/MobileMenu';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
 export const Header = () => {
   const { projectName } = useSheetData();
@@ -26,28 +27,38 @@ export const Header = () => {
   // PWA installation state
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
+  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 10);
+    const handleBeforeInstallPrompt = (e: Event) => {
+      // Prevent the mini-infobar from appearing on mobile
+      e.preventDefault();
+      // Stash the event so it can be triggered later
+      setDeferredPrompt(e);
+      // Update UI to notify the user they can install the PWA
+      setIsInstallable(true);
+      
+      // Check if user already dismissed the dialog (using localStorage)
+      const installPromptDismissed = localStorage.getItem('pwaInstallPromptDismissed');
+      if (!installPromptDismissed) {
+        // Show the install dialog after a short delay
+        setTimeout(() => {
+          setShowInstallPrompt(true);
+        }, 2000);
+      }
     };
 
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    // Check if app is already installed
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      setIsInstallable(false);
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
   }, []);
-
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
-
-  const openSettings = () => {
-    setSettingsOpen(true);
-  };
-
-  const handleBackToDashboard = () => {
-    navigate("/dashboard");
-  };
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) {
@@ -71,9 +82,40 @@ export const Header = () => {
       });
       setIsInstallable(false);
     }
+
+    // Hide the dialog
+    setShowInstallPrompt(false);
     
     // Clear the saved prompt since it can't be used again
     setDeferredPrompt(null);
+  };
+
+  const dismissInstallPrompt = () => {
+    // Mark as dismissed in localStorage so we don't show it again
+    localStorage.setItem('pwaInstallPromptDismissed', 'true');
+    setShowInstallPrompt(false);
+  };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
+  const openSettings = () => {
+    setSettingsOpen(true);
+  };
+
+  const handleBackToDashboard = () => {
+    navigate("/dashboard");
   };
 
   return (
@@ -109,21 +151,74 @@ export const Header = () => {
             )}
 
             {isMobile ? (
-              <MobileMenu
-                user={user}
-                isInstallable={isInstallable}
-                onInstallClick={handleInstallClick}
-                onOpenSettings={openSettings}
-                onLogout={handleLogout}
-              />
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10">
+                    <Menu />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-64">
+                  <div className="flex flex-col gap-4 mt-8">
+                    <div className="flex items-center gap-3 mb-6">
+                      <Avatar>
+                        <AvatarFallback className="bg-primary text-primary-foreground">
+                          {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium">{user?.name || 'Usuário'}</p>
+                        <p className="text-sm text-muted-foreground">{user?.email}</p>
+                      </div>
+                    </div>
+                    
+                    {isInstallable && (
+                      <Button variant="outline" className="justify-start gap-2" onClick={handleInstallClick}>
+                        <Download className="h-4 w-4" />
+                        <span>Instalar aplicativo</span>
+                      </Button>
+                    )}
+                    
+                    <Button variant="outline" className="justify-start gap-2" onClick={openSettings}>
+                      <Settings className="h-4 w-4" />
+                      <span>Configurações</span>
+                    </Button>
+                    
+                    <Button variant="outline" className="justify-start gap-2" onClick={handleLogout}>
+                      <LogOut className="h-4 w-4" />
+                      <span>Sair</span>
+                    </Button>
+                  </div>
+                </SheetContent>
+              </Sheet>
             ) : (
-              <DesktopMenu
-                user={user}
-                isInstallable={isInstallable}
-                onInstallClick={handleInstallClick}
-                onOpenSettings={openSettings}
-                onLogout={handleLogout}
-              />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="rounded-full h-10 w-10 p-0">
+                    <Avatar>
+                      <AvatarFallback className="bg-primary text-primary-foreground">
+                        {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {isInstallable && (
+                    <DropdownMenuItem onClick={handleInstallClick} className="cursor-pointer">
+                      <Download className="mr-2 h-4 w-4" />
+                      <span>Instalar aplicativo</span>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem onClick={openSettings} className="cursor-pointer">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Configurações</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Sair</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
           </div>
         </div>
@@ -131,12 +226,33 @@ export const Header = () => {
         <SettingsContainer open={settingsOpen} onOpenChange={setSettingsOpen} />
       </header>
 
-      <InstallPrompt
-        isInstallable={isInstallable}
-        deferredPrompt={deferredPrompt}
-        setIsInstallable={setIsInstallable}
-        setDeferredPrompt={setDeferredPrompt}
-      />
+      {/* Install App Dialog */}
+      <Dialog open={showInstallPrompt} onOpenChange={setShowInstallPrompt}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Instalar Melhor Corte como aplicativo</DialogTitle>
+            <DialogDescription>
+              Instale o aplicativo Melhor Corte em seu dispositivo para uma experiência mais rápida e melhor, mesmo sem internet.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex items-center justify-center py-4">
+            <div className="h-16 w-16 rounded-lg bg-primary flex items-center justify-center">
+              <div className="w-8 h-8 border-2 border-primary-foreground"></div>
+            </div>
+          </div>
+          
+          <DialogFooter className="sm:justify-between flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={dismissInstallPrompt}>
+              Agora não
+            </Button>
+            <Button className="gap-2" onClick={handleInstallClick}>
+              <Download className="h-4 w-4" />
+              Instalar aplicativo
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
