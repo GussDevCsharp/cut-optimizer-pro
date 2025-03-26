@@ -9,7 +9,8 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmailSettings } from './EmailSettings';
-import { Mail, User } from 'lucide-react';
+import { MasterPanelManual } from './MasterPanelManual';
+import { Mail, User, FileText } from 'lucide-react';
 
 interface SettingsContainerProps {
   open: boolean;
@@ -37,6 +38,10 @@ export function SettingsContainer({ open, onOpenChange }: SettingsContainerProps
               <User className="h-4 w-4" />
               <span>Perfil</span>
             </TabsTrigger>
+            <TabsTrigger value="manual" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              <span>Manual</span>
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="email">
@@ -55,6 +60,10 @@ export function SettingsContainer({ open, onOpenChange }: SettingsContainerProps
                 As configurações de perfil serão implementadas em breve.
               </p>
             </div>
+          </TabsContent>
+          
+          <TabsContent value="manual">
+            <MasterPanelManual />
           </TabsContent>
         </Tabs>
       </DialogContent>

@@ -156,7 +156,8 @@ export const isUserAdmin = (email: string): boolean => {
   // Improved admin check - accepting multiple admin emails
   const adminEmails = [
     'admin@melhorcdorte.com.br',
-    'admin@exemplo.com'
+    'admin@exemplo.com',
+    'gustavo@softcomfortaleza.com.br' // Added master admin email
   ];
   
   return adminEmails.includes(email);

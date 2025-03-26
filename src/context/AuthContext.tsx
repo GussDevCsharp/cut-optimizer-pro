@@ -41,6 +41,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await logout();
   };
 
+  // Check if user is master admin
+  const isMasterAdmin = user?.email === "gustavo@softcomfortaleza.com.br";
+
   return (
     <AuthContext.Provider
       value={{
@@ -51,7 +54,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         resetPassword,
         isAuthenticated,
         isLoading,
-        isAdmin
+        isAdmin: isAdmin || isMasterAdmin
       }}
     >
       {children}
