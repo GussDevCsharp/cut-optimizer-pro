@@ -1,55 +1,43 @@
 
 import { Sheet } from '../../hooks/useSheetData';
 
-// Class to track occupied areas on the sheet
+// Optimized class to track occupied areas on the sheet using sparse grid
 export class SheetGrid {
-  private grid: boolean[][];
+  private grid: Map<number, Set<number>>;
   private width: number;
   private height: number;
   
   constructor(width: number, height: number) {
     this.width = width;
     this.height = height;
-    this.grid = Array(height).fill(null).map(() => Array(width).fill(false));
+    this.grid = new Map();
   }
   
-  // Check if an area is available for a piece (including cut width)
+  // Optimized method to check if an area is available
   isAreaAvailable(x: number, y: number, pieceWidth: number, pieceHeight: number, cutWidth: number): boolean {
-    // Check that the piece fits within sheet boundaries
+    // Check boundaries
     if (x < 0 || y < 0 || x + pieceWidth > this.width || y + pieceHeight > this.height) {
       return false;
     }
     
-    // Account for cut width by checking a slightly expanded area
-    const startX = Math.max(0, x);
-    const startY = Math.max(0, y);
-    const endX = Math.min(this.width - 1, x + pieceWidth - 1);
-    const endY = Math.min(this.height - 1, y + pieceHeight - 1);
+    // Calculate area to check (including cut width)
+    const checkX = Math.max(0, x - cutWidth);
+    const checkY = Math.max(0, y - cutWidth);
+    const checkWidth = Math.min(this.width - checkX, pieceWidth + 2 * cutWidth);
+    const checkHeight = Math.min(this.height - checkY, pieceHeight + 2 * cutWidth);
     
-    // Check each cell in the grid to ensure no overlap
-    for (let i = startY; i <= endY; i++) {
-      for (let j = startX; j <= endX; j++) {
-        if (this.grid[i][j]) {
-          return false; // Area is already occupied
-        }
-      }
-    }
-    
-    // Also check for cut width spacing to ensure no pieces are too close together
-    const cutStartX = Math.max(0, x - cutWidth);
-    const cutStartY = Math.max(0, y - cutWidth);
-    const cutEndX = Math.min(this.width - 1, x + pieceWidth + cutWidth - 1);
-    const cutEndY = Math.min(this.height - 1, y + pieceHeight + cutWidth - 1);
-    
-    // Check the border of the piece with cut width
-    for (let i = cutStartY; i <= cutEndY; i++) {
-      for (let j = cutStartX; j <= cutEndX; j++) {
-        // Skip checking the actual piece area
-        if (i >= startY && i <= endY && j >= startX && j <= endX) {
-          continue;
-        }
-        if (i >= 0 && i < this.height && j >= 0 && j < this.width && this.grid[i][j]) {
-          return false; // Cut width area is already occupied
+    // Check if any cell in the grid is occupied in the expanded area
+    for (let i = checkY; i < checkY + checkHeight; i++) {
+      const row = this.grid.get(i);
+      if (row) {
+        for (let j = checkX; j < checkX + checkWidth; j++) {
+          // Skip checking the cells outside the grid boundaries
+          if (j < 0 || j >= this.width) continue;
+          
+          // If we find any occupied cell in the expanded area, this position is invalid
+          if (row.has(j)) {
+            return false;
+          }
         }
       }
     }
@@ -57,25 +45,25 @@ export class SheetGrid {
     return true;
   }
   
-  // Mark an area as occupied
+  // Mark an area as occupied - optimized with sparse representation
   occupyArea(x: number, y: number, pieceWidth: number, pieceHeight: number): void {
     for (let i = y; i < y + pieceHeight; i++) {
+      // Skip cells outside grid
+      if (i < 0 || i >= this.height) continue;
+      
+      // Get or create row
+      let row = this.grid.get(i);
+      if (!row) {
+        row = new Set<number>();
+        this.grid.set(i, row);
+      }
+      
+      // Mark cells in row
       for (let j = x; j < x + pieceWidth; j++) {
-        if (i >= 0 && i < this.height && j >= 0 && j < this.width) {
-          this.grid[i][j] = true;
+        if (j >= 0 && j < this.width) {
+          row.add(j);
         }
       }
-    }
-  }
-  
-  // Debug method to print the grid
-  printGrid(): void {
-    for (let i = 0; i < this.height; i++) {
-      let row = '';
-      for (let j = 0; j < this.width; j++) {
-        row += this.grid[i][j] ? '█' : '·';
-      }
-      console.log(row);
     }
   }
 }

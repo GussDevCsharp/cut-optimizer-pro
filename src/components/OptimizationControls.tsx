@@ -24,78 +24,89 @@ export const OptimizationControls = () => {
   const { saveProject } = useProjectActions();
   const location = useLocation();
   const [isOptimizing, setIsOptimizing] = useState(false);
+  const [optimizationProgress, setOptimizationProgress] = useState(0);
   const workerRef = useRef<Worker | null>(null);
   
   // Get projectId from URL params or location state
   const searchParams = new URLSearchParams(window.location.search);
   const projectId = location.state?.projectId || searchParams.get('projectId');
   
-  // Inicializa o worker
+  // Initialize the worker
   useEffect(() => {
-    // Cria o worker apenas uma vez
-    if (!workerRef.current) {
-      workerRef.current = new Worker(
-        new URL('../workers/optimizationWorker.ts', import.meta.url),
-        { type: 'module' }
-      );
+    // Terminate previous worker if it exists
+    if (workerRef.current) {
+      workerRef.current.terminate();
+      workerRef.current = null;
+    }
+    
+    // Create a new worker
+    workerRef.current = new Worker(
+      new URL('../workers/optimizationWorker.ts', import.meta.url),
+      { type: 'module' }
+    );
+    
+    // Set up listeners
+    workerRef.current.addEventListener('message', (event) => {
+      const { status, progress, success, placedPieces: optimizedPieces, error, message } = event.data;
       
-      // Define os listeners para o worker
-      workerRef.current.addEventListener('message', (event) => {
-        if (event.data.status === 'ready') {
-          console.log('Worker inicializado e pronto');
-        } else if (event.data.success === true) {
-          setPlacedPieces(event.data.placedPieces);
-          setIsOptimizing(false);
+      switch (status) {
+        case 'ready':
+          console.log('Worker initialized and ready');
+          break;
           
-          // Feedback de sucesso
-          const placedCount = event.data.placedPieces.length;
-          const totalCount = pieces.reduce((total, piece) => total + piece.quantity, 0);
+        case 'processing':
+          setOptimizationProgress(progress || 0);
+          break;
           
-          if (placedCount === totalCount) {
+        case 'complete':
+          if (success && optimizedPieces) {
+            setPlacedPieces(optimizedPieces);
+            setIsOptimizing(false);
+            
+            // Success feedback
+            const placedCount = optimizedPieces.length;
+            const totalCount = pieces.reduce((total, piece) => total + piece.quantity, 0);
+            
             toast({
               title: "Otimização concluída com sucesso!",
-              description: `Todas as ${totalCount} peças foram posicionadas na chapa.`,
+              description: `${placedCount} de ${totalCount} peças foram posicionadas na chapa.`,
             });
-          } else {
-            toast({
-              title: "Otimização parcial!",
-              description: `Foram posicionadas ${placedCount} de ${totalCount} peças na chapa.`,
-              variant: "destructive",
-            });
+            
+            // Save project after optimization
+            if (projectName && projectId) {
+              saveProject(projectId, projectName, {
+                sheet,
+                pieces,
+                placedPieces: optimizedPieces
+              }).catch(error => {
+                console.error("Error saving project after optimization:", error);
+              });
+            }
           }
+          break;
           
-          // Salva o projeto após a otimização
-          if (projectName && projectId) {
-            saveProject(projectId, projectName, {
-              sheet,
-              pieces,
-              placedPieces: event.data.placedPieces
-            }).catch(error => {
-              console.error("Error saving project after optimization:", error);
-            });
-          }
-        } else if (event.data.success === false) {
+        case 'error':
           setIsOptimizing(false);
           toast({
             title: "Erro na otimização",
-            description: event.data.error || "Ocorreu um erro ao otimizar o corte.",
+            description: error || "Ocorreu um erro ao otimizar o corte.",
             variant: "destructive",
           });
-        }
-      });
-      
-      workerRef.current.addEventListener('error', (error) => {
-        console.error('Worker error:', error);
-        setIsOptimizing(false);
-        toast({
-          title: "Erro no processamento",
-          description: "Ocorreu um erro ao executar a otimização.",
-          variant: "destructive",
-        });
-      });
-    }
+          break;
+      }
+    });
     
-    // Limpa o worker ao desmontar o componente
+    workerRef.current.addEventListener('error', (error) => {
+      console.error('Worker error:', error);
+      setIsOptimizing(false);
+      toast({
+        title: "Erro no processamento",
+        description: "Ocorreu um erro ao executar a otimização.",
+        variant: "destructive",
+      });
+    });
+    
+    // Clean up worker on unmount
     return () => {
       if (workerRef.current) {
         workerRef.current.terminate();
@@ -129,10 +140,11 @@ export const OptimizationControls = () => {
       return;
     }
     
-    // Mostra o diálogo de carregamento
+    // Show loading dialog and reset progress
     setIsOptimizing(true);
+    setOptimizationProgress(0);
     
-    // Envia os dados para o worker
+    // Send data to worker
     workerRef.current.postMessage({
       pieces,
       sheet,
@@ -147,17 +159,14 @@ export const OptimizationControls = () => {
       description: "Todas as peças foram removidas da visualização.",
     });
     
-    // Salva o projeto com as peças removidas
+    // Save project with cleared pieces
     if (projectName && projectId) {
       try {
-        const projectData = {
+        await saveProject(projectId, projectName, {
           sheet,
           pieces,
           placedPieces: []
-        };
-        
-        await saveProject(projectId, projectName, projectData);
-        console.log("Project saved after clearing");
+        });
       } catch (error) {
         console.error("Error saving project after clearing:", error);
       }
@@ -220,8 +229,8 @@ export const OptimizationControls = () => {
         </div>
       </div>
       
-      {/* Loading dialog */}
-      <OptimizationLoadingDialog isOpen={isOptimizing} />
+      {/* Updated loading dialog with progress */}
+      <OptimizationLoadingDialog isOpen={isOptimizing} progress={optimizationProgress} />
     </>
   );
 };

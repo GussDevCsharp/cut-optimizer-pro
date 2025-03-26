@@ -2,40 +2,30 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, Timer, Clock } from "lucide-react";
+import { Loader2, Timer } from "lucide-react";
 
 interface OptimizationLoadingDialogProps {
   isOpen: boolean;
+  progress?: number;
 }
 
-export const OptimizationLoadingDialog = ({ isOpen }: OptimizationLoadingDialogProps) => {
+export const OptimizationLoadingDialog = ({ isOpen, progress = 0 }: OptimizationLoadingDialogProps) => {
   const [elapsedTime, setElapsedTime] = useState(0);
-  const [progress, setProgress] = useState(0);
-  
-  // Average optimization time in seconds (adjust based on your app's performance)
-  const estimatedTotalTime = 60; // 60 seconds
   
   // Reset timer when dialog opens
   useEffect(() => {
     if (isOpen) {
       setElapsedTime(0);
-      setProgress(0);
     }
   }, [isOpen]);
   
-  // Update timer and progress when dialog is open
+  // Update timer when dialog is open
   useEffect(() => {
     let timerId: NodeJS.Timeout;
     
     if (isOpen) {
       timerId = setInterval(() => {
-        setElapsedTime(prev => {
-          const newTime = prev + 1;
-          // Update progress based on elapsed time relative to estimated time
-          const newProgress = Math.min((newTime / estimatedTotalTime) * 100, 95);
-          setProgress(newProgress);
-          return newTime;
-        });
+        setElapsedTime(prev => prev + 1);
       }, 1000);
     }
     
@@ -51,8 +41,14 @@ export const OptimizationLoadingDialog = ({ isOpen }: OptimizationLoadingDialogP
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
   
-  // Calculate remaining time
-  const remainingTime = Math.max(estimatedTotalTime - elapsedTime, 0);
+  // Calculate estimated remaining time based on progress and elapsed time
+  const calculateRemainingTime = (): string => {
+    if (progress <= 0) return "--:--";
+    
+    const totalEstimatedTime = elapsedTime / (progress / 100);
+    const remainingSeconds = Math.max(0, Math.round(totalEstimatedTime - elapsedTime));
+    return formatTime(remainingSeconds);
+  };
 
   return (
     <Dialog open={isOpen}>
@@ -64,23 +60,19 @@ export const OptimizationLoadingDialog = ({ isOpen }: OptimizationLoadingDialogP
           </div>
           
           <p className="text-center text-muted-foreground">
-            Calculando a melhor posição para suas peças. Isso pode levar alguns segundos...
+            Calculando a melhor posição para suas peças...
           </p>
           
           {/* Progress bar */}
           <Progress value={progress} className="w-full" />
           
-          {/* Timer and estimated time */}
-          <div className="grid grid-cols-2 w-full gap-4">
-            <div className="flex items-center gap-2 text-sm">
-              <Timer className="h-4 w-4 text-muted-foreground" />
-              <span>Tempo decorrido: {formatTime(elapsedTime)}</span>
-            </div>
-            
-            <div className="flex items-center gap-2 text-sm justify-end">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <span>Tempo restante: ~{formatTime(remainingTime)}</span>
-            </div>
+          {/* Progress percentage */}
+          <p className="text-sm font-medium">{Math.round(progress)}%</p>
+          
+          {/* Timer */}
+          <div className="flex items-center gap-2 text-sm">
+            <Timer className="h-4 w-4 text-muted-foreground" />
+            <span>Tempo: {formatTime(elapsedTime)} {progress > 0 && `(Restante: ~${calculateRemainingTime()})`}</span>
           </div>
         </div>
       </DialogContent>
