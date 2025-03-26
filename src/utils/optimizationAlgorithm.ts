@@ -1,6 +1,6 @@
 
 // Re-export the optimization functions from the refactored modules
-import { optimizeCutting } from './optimization/optimizationEngine';
+import { optimizeCutting, OptimizationDirection } from './optimization/optimizationEngine';
 
-// Export the main optimization function
-export { optimizeCutting };
+// Export the main optimization function and type
+export { optimizeCutting, OptimizationDirection };

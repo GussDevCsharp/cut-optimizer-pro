@@ -1,18 +1,31 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Puzzle, Scissors, Sparkles, RectangleHorizontal } from 'lucide-react';
+import { Puzzle, Scissors, Sparkles, RectangleHorizontal, LayoutHorizontal, LayoutVertical } from 'lucide-react';
 import { useSheetData, Piece } from '../hooks/useSheetData';
 import { PieceForm } from './pieces-panel/PieceForm';
 import { ImportPiecesForm } from './pieces-panel/ImportPiecesForm';
-import { optimizeCutting } from '../utils/optimizationAlgorithm';
+import { optimizeCutting, OptimizationDirection } from '../utils/optimizationAlgorithm';
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useProjectActions } from "@/hooks/useProjectActions";
 import { useLocation } from 'react-router-dom';
 import { useState } from "react";
 import OptimizationLoadingDialog from './OptimizationLoadingDialog';
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 export const PiecesAndOptimizationPanel = () => {
-  const { sheet, pieces, placedPieces, setPlacedPieces, projectName, addPiece, updatePiece, removePiece } = useSheetData();
+  const { 
+    sheet, 
+    pieces, 
+    placedPieces, 
+    setPlacedPieces, 
+    projectName, 
+    addPiece, 
+    updatePiece, 
+    removePiece,
+    optimizationDirection,
+    setOptimizationDirection
+  } = useSheetData();
   const { saveProject } = useProjectActions();
   const location = useLocation();
   const [isOptimizing, setIsOptimizing] = useState(false);
@@ -24,6 +37,12 @@ export const PiecesAndOptimizationPanel = () => {
     importedPieces.forEach(piece => {
       addPiece(piece);
     });
+  };
+  
+  const handleDirectionChange = (value: string) => {
+    if (value === 'horizontal' || value === 'vertical') {
+      setOptimizationDirection(value as OptimizationDirection);
+    }
   };
   
   const handleOptimize = async () => {
@@ -39,7 +58,7 @@ export const PiecesAndOptimizationPanel = () => {
     try {
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      const optimizedPieces = optimizeCutting(pieces, sheet);
+      const optimizedPieces = optimizeCutting(pieces, sheet, optimizationDirection);
       setPlacedPieces(optimizedPieces);
       
       const placedCount = optimizedPieces.length;
@@ -120,6 +139,26 @@ export const PiecesAndOptimizationPanel = () => {
           </div>
           
           <PieceForm onAddPiece={addPiece} projectId={projectId} />
+          
+          {/* Direction toggle */}
+          <div className="bg-secondary rounded-md p-3">
+            <p className="text-sm text-muted-foreground mb-2">Direção da otimização:</p>
+            <ToggleGroup 
+              type="single" 
+              value={optimizationDirection} 
+              onValueChange={handleDirectionChange} 
+              className="justify-start"
+            >
+              <ToggleGroupItem value="horizontal" aria-label="Horizontal" className="flex gap-1 items-center">
+                <LayoutHorizontal size={16} />
+                <span className="text-xs sm:text-sm">Horizontal</span>
+              </ToggleGroupItem>
+              <ToggleGroupItem value="vertical" aria-label="Vertical" className="flex gap-1 items-center">
+                <LayoutVertical size={16} />
+                <span className="text-xs sm:text-sm">Vertical</span>
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
           
           <div className="flex gap-2 mt-4">
             <Button 

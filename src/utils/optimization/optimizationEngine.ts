@@ -4,12 +4,16 @@ import { SheetGrid } from './SheetGrid';
 import { generatePastelColor } from './colorUtils';
 import { sortPiecesByArea, findBestPosition } from './positionUtils';
 
+// Layout direction type
+export type OptimizationDirection = 'horizontal' | 'vertical';
+
 // Main optimization function that handles multiple sheets and prioritizes filling existing sheets
 export const optimizeCutting = (
   pieces: Piece[],
-  sheet: Sheet
+  sheet: Sheet,
+  direction: OptimizationDirection = 'horizontal'
 ): PlacedPiece[] => {
-  console.log("Starting optimization with", pieces.length, "piece types");
+  console.log(`Starting optimization with ${pieces.length} piece types in ${direction} direction`);
   
   // Sort pieces by area (largest first)
   const sortedPieces = sortPiecesByArea(pieces);
@@ -37,7 +41,7 @@ export const optimizeCutting = (
     
     // Try to place on existing sheets, starting from the first sheet
     for (let sheetIndex = 0; sheetIndex < sheetGrids.length; sheetIndex++) {
-      const position = findBestPosition(piece, sheetGrids[sheetIndex], sheet);
+      const position = findBestPosition(piece, sheetGrids[sheetIndex], sheet, direction);
       
       if (position) {
         // Place on this sheet
@@ -73,7 +77,7 @@ export const optimizeCutting = (
       console.log("Created new sheet:", newSheetIndex);
       
       // Try to place on the new sheet
-      const newPosition = findBestPosition(piece, newSheetGrid, sheet);
+      const newPosition = findBestPosition(piece, newSheetGrid, sheet, direction);
       
       if (newPosition) {
         const placedPiece: PlacedPiece = {
