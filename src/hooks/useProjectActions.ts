@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { projectService } from "@/services/projectService";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast"; // Use the re-export
 import { useNavigate } from "react-router-dom";
 
 export function useProjectActions() {

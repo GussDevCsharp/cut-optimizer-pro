@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { PlacedPiece } from '../../hooks/useSheetData';
 
@@ -18,6 +17,7 @@ export interface ScrapArea {
   height: number;
   sheetIndex: number;
   area?: number; // Optional area property for sorting
+  score?: number; // Add the missing score property for sorting
 }
 
 export const SheetPiece = ({ piece, scale, isMobile, isScrap = false }: SheetPieceProps) => {

@@ -3,8 +3,6 @@ import React, { createContext, useContext } from "react";
 import { AuthContextType } from "@/types/auth";
 import { useAuthState } from "@/hooks/useAuthState";
 import { loginWithEmail, registerUser, resetPasswordEmail, logout } from "@/services/userService";
-// Import directly from the hooks folder to avoid circular dependencies
-import { useToast } from "@/hooks/use-toast";
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -23,8 +21,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isLoading,
     isAdmin
   } = useAuthState();
-
-  const { toast } = useToast();
 
   const login = async (email: string, password: string) => {
     await loginWithEmail(email, password);

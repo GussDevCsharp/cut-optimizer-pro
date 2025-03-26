@@ -1,15 +1,20 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Puzzle, Scissors } from 'lucide-react';
-import { useSheetData, Piece } from '../hooks/useSheetData';
+import { Puzzle, Scissors, Sparkles } from 'lucide-react';
+import { useSheetData } from '../hooks/useSheetData';
 import { PieceForm } from './pieces-panel/PieceForm';
 import { ImportPiecesForm } from './pieces-panel/ImportPiecesForm';
 import OptimizationControls from './OptimizationControls';
+import { useLocation } from 'react-router-dom';
 
 export const PiecesAndOptimizationPanel = () => {
-  const { addPiece } = useSheetData();
+  const { pieces, addPiece } = useSheetData();
+  const location = useLocation();
+  
+  const searchParams = new URLSearchParams(window.location.search);
+  const projectId = location.state?.projectId || searchParams.get('projectId');
 
-  const handleImportPieces = (importedPieces: Piece[]) => {
+  const handleImportPieces = (importedPieces: any[]) => {
     importedPieces.forEach(piece => {
       addPiece(piece);
     });
@@ -35,9 +40,9 @@ export const PiecesAndOptimizationPanel = () => {
           <ImportPiecesForm onImportPieces={handleImportPieces} />
         </div>
         
-        <PieceForm onAddPiece={addPiece} />
+        <PieceForm onAddPiece={addPiece} projectId={projectId} />
         
-        {/* Componente de controles de otimização */}
+        {/* Optimization Controls are now in a separate component */}
         <OptimizationControls />
       </CardContent>
     </Card>

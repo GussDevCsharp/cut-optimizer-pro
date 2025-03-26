@@ -12,78 +12,126 @@ export const sortPiecesByArea = (pieces: Piece[]): Piece[] => {
   });
 };
 
-// Optimized function to find the best position for a piece
+// Evaluate a position based on how it affects potential scrap areas
+const evaluatePosition = (
+  x: number, 
+  y: number, 
+  pieceWidth: number, 
+  pieceHeight: number, 
+  sheetWidth: number, 
+  sheetHeight: number,
+  sheetGrid: SheetGrid,
+  optimizeForScrap: boolean
+): number => {
+  if (!optimizeForScrap) {
+    // Default evaluation: prefer positions closer to origin
+    return x + y;
+  }
+  
+  // Calculate potential scrap areas if piece is placed here
+  // Right side scrap
+  const rightScrapWidth = sheetWidth - (x + pieceWidth);
+  const rightScrapHeight = pieceHeight;
+  const rightScrapArea = rightScrapWidth > 0 ? rightScrapWidth * rightScrapHeight : 0;
+  
+  // Bottom side scrap
+  const bottomScrapWidth = pieceWidth;
+  const bottomScrapHeight = sheetHeight - (y + pieceHeight);
+  const bottomScrapArea = bottomScrapHeight > 0 ? bottomScrapWidth * bottomScrapHeight : 0;
+  
+  // Corner scrap (largest potential reusable piece)
+  const cornerScrapWidth = sheetWidth - (x + pieceWidth);
+  const cornerScrapHeight = sheetHeight - (y + pieceHeight);
+  const cornerScrapArea = (cornerScrapWidth > 0 && cornerScrapHeight > 0) 
+                          ? cornerScrapWidth * cornerScrapHeight 
+                          : 0;
+  
+  // Calculate a score - higher is better for larger potential scraps
+  // We prioritize the corner scrap as it's most likely to be reusable
+  const scrapScore = cornerScrapArea * 2 + Math.max(rightScrapArea, bottomScrapArea);
+  
+  // Adjust the score based on aspect ratio of the corner scrap
+  // Square-ish scraps are more useful than long thin ones
+  let aspectRatioBonus = 0;
+  if (cornerScrapWidth > 0 && cornerScrapHeight > 0) {
+    const aspectRatio = Math.max(cornerScrapWidth / cornerScrapHeight, cornerScrapHeight / cornerScrapWidth);
+    aspectRatioBonus = aspectRatio < 3 ? 10000 : 0; // Bonus for more square-ish scraps
+  }
+  
+  // Return negative of score because we're minimizing in the algorithm
+  // (lower values are chosen first)
+  return -(scrapScore + aspectRatioBonus);
+};
+
+// Try all possible positions for a piece on a specific sheet grid
 export const findBestPosition = (
   piece: Piece,
   sheetGrid: SheetGrid,
   sheet: Sheet,
-  direction: OptimizationDirection = 'horizontal'
+  direction: OptimizationDirection = 'horizontal',
+  optimizeForScrap: boolean = false
 ): { x: number; y: number; rotated: boolean } | null => {
-  // Try both orientations (if rotation is allowed)
+  // Try both orientations
   const orientations = [
     { width: piece.width, height: piece.height, rotated: false },
-    // Only include rotated orientation if allowed
-    piece.canRotate ? { width: piece.height, height: piece.width, rotated: true } : null
-  ].filter(Boolean);
-
-  // Increment step size for faster scanning (increase for bigger sheets)
-  // This creates a grid-like search pattern instead of checking every pixel
-  const stepSize = Math.min(10, Math.max(1, Math.floor(Math.min(sheet.width, sheet.height) / 200)));
+    { width: piece.height, height: piece.width, rotated: true && piece.canRotate } // Only rotate if allowed
+  ].filter(o => !o.rotated || piece.canRotate); // Filter out rotated option if rotation not allowed
   
-  // For each orientation
+  let bestPosition = null;
+  let bestScore = Number.MAX_SAFE_INTEGER;
+
+  // Try every possible position on the sheet
   for (const orientation of orientations) {
-    if (!orientation) continue;
+    const maxX = sheet.width - orientation.width;
+    const maxY = sheet.height - orientation.height;
     
-    // Use different scanning patterns based on optimization direction
+    // Generate candidate positions based on direction
+    const positions: {x: number, y: number}[] = [];
+    
     if (direction === 'horizontal') {
-      // Scan top-to-bottom, then left-to-right
-      for (let y = 0; y <= sheet.height - orientation.height; y += stepSize) {
-        let foundInRow = false;
-        
-        for (let x = 0; x <= sheet.width - orientation.width; x += stepSize) {
-          // Check if this position works
-          if (sheetGrid.isAreaAvailable(x, y, orientation.width, orientation.height, sheet.cutWidth)) {
-            // Fine-tune position by checking each possible position in the step range
-            for (let fineY = y; fineY < Math.min(y + stepSize, sheet.height - orientation.height + 1); fineY++) {
-              for (let fineX = x; fineX < Math.min(x + stepSize, sheet.width - orientation.width + 1); fineX++) {
-                if (sheetGrid.isAreaAvailable(fineX, fineY, orientation.width, orientation.height, sheet.cutWidth)) {
-                  return { x: fineX, y: fineY, rotated: orientation.rotated };
-                }
-              }
-            }
-            
-            foundInRow = true;
-            break;
-          }
+      // Horizontal optimization - try positions from top to bottom, left to right
+      for (let y = 0; y <= maxY; y++) {
+        for (let x = 0; x <= maxX; x++) {
+          positions.push({x, y});
         }
-        
-        if (foundInRow) break;
       }
     } else {
-      // Vertical optimization - left-to-right, then top-to-bottom
-      for (let x = 0; x <= sheet.width - orientation.width; x += stepSize) {
-        let foundInColumn = false;
-        
-        for (let y = 0; y <= sheet.height - orientation.height; y += stepSize) {
-          if (sheetGrid.isAreaAvailable(x, y, orientation.width, orientation.height, sheet.cutWidth)) {
-            // Fine-tune position
-            for (let fineX = x; fineX < Math.min(x + stepSize, sheet.width - orientation.width + 1); fineX++) {
-              for (let fineY = y; fineY < Math.min(y + stepSize, sheet.height - orientation.height + 1); fineY++) {
-                if (sheetGrid.isAreaAvailable(fineX, fineY, orientation.width, orientation.height, sheet.cutWidth)) {
-                  return { x: fineX, y: fineY, rotated: orientation.rotated };
-                }
-              }
-            }
-            
-            foundInColumn = true;
-            break;
-          }
+      // Vertical optimization - try positions from left to right, top to bottom
+      for (let x = 0; x <= maxX; x++) {
+        for (let y = 0; y <= maxY; y++) {
+          positions.push({x, y});
         }
-        
-        if (foundInColumn) break;
       }
+    }
+
+    for (const pos of positions) {
+      if (sheetGrid.isAreaAvailable(pos.x, pos.y, orientation.width, orientation.height, sheet.cutWidth)) {
+        // We found a valid position - evaluate it
+        const score = evaluatePosition(
+          pos.x, pos.y, 
+          orientation.width, orientation.height, 
+          sheet.width, sheet.height, 
+          sheetGrid,
+          optimizeForScrap
+        );
+        
+        if (score < bestScore) {
+          bestScore = score;
+          bestPosition = { 
+            x: pos.x, 
+            y: pos.y, 
+            rotated: orientation.rotated 
+          };
+        }
+      }
+    }
+    
+    // If we found a good position in the first orientation and aren't optimizing for scraps,
+    // we might want to use it immediately rather than checking the second orientation
+    if (bestPosition && !optimizeForScrap) {
+      break;
     }
   }
 
-  return null;
-}
+  return bestPosition;
+};
