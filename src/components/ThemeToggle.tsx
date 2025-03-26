@@ -10,54 +10,104 @@ import {
   TooltipTrigger 
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { Toggle } from '@/components/ui/toggle';
 
-export function ThemeToggle() {
+interface ThemeToggleProps {
+  variant?: 'default' | 'outline' | 'ghost' | 'icon-only';
+  size?: 'sm' | 'md' | 'lg';
+  showTooltip?: boolean;
+  iconSize?: number;
+  className?: string;
+}
+
+export function ThemeToggle({
+  variant = 'ghost',
+  size = 'md',
+  showTooltip = true,
+  iconSize = 1.2,
+  className,
+}: ThemeToggleProps) {
   const { theme, setTheme } = useTheme();
-
+  const isDark = theme === 'dark';
+  
   const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
+    setTheme(isDark ? 'light' : 'dark');
   };
-
+  
+  // Size mappings for button
+  const sizeClasses = {
+    sm: 'w-8 h-8',
+    md: 'w-9 h-9',
+    lg: 'w-10 h-10',
+  };
+  
+  // Variant mappings
+  const variantClasses = {
+    default: 'bg-secondary hover:bg-secondary/80',
+    outline: 'border border-border hover:bg-accent',
+    ghost: 'hover:bg-accent',
+    'icon-only': 'p-0 hover:bg-transparent',
+  };
+  
+  const buttonContent = (
+    <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
+      {/* Sun icon with enhanced animations */}
+      <Sun 
+        className={cn(
+          "absolute transition-all duration-500",
+          isDark ? "opacity-0 scale-0 rotate-[-90deg] translate-y-4" : "opacity-100 scale-100 rotate-0 translate-y-0",
+          "animate-in"
+        )}
+        size={iconSize * 16}
+      />
+      
+      {/* Moon icon with enhanced animations */}
+      <Moon 
+        className={cn(
+          "absolute transition-all duration-500",
+          isDark ? "opacity-100 scale-100 rotate-0 translate-y-0" : "opacity-0 scale-0 rotate-90 -translate-y-4",
+          "animate-in"
+        )}
+        size={iconSize * 16}
+      />
+    </div>
+  );
+  
+  const toggleButton = (
+    <Button 
+      variant={variant === 'icon-only' ? 'ghost' : variant}
+      size="icon" 
+      onClick={toggleTheme}
+      className={cn(
+        sizeClasses[size],
+        variantClasses[variant],
+        "rounded-full relative overflow-hidden transition-colors duration-300",
+        "focus-visible:ring-1 focus-visible:ring-offset-1",
+        className
+      )}
+      aria-label={`Alternar para tema ${isDark ? 'claro' : 'escuro'}`}
+    >
+      <span className="sr-only">Alternar tema</span>
+      {buttonContent}
+    </Button>
+  );
+  
+  if (!showTooltip) {
+    return toggleButton;
+  }
+  
   return (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={toggleTheme}
-            className={cn(
-              "w-9 h-9 rounded-full relative overflow-hidden transition-colors duration-300",
-              "hover:bg-accent focus-visible:ring-0 focus-visible:ring-offset-0"
-            )}
-            aria-label="Alternar tema"
-          >
-            <span className="sr-only">Alternar tema</span>
-            
-            {/* Sun icon with enhanced animations */}
-            <Sun 
-              className={cn(
-                "absolute h-[1.2rem] w-[1.2rem] transition-all duration-500",
-                "dark:opacity-0 dark:scale-50 dark:rotate-[-40deg] dark:translate-y-2",
-                "opacity-100 scale-100 rotate-0 translate-y-0"
-              )}
-            />
-            
-            {/* Moon icon with enhanced animations */}
-            <Moon 
-              className={cn(
-                "absolute h-[1.2rem] w-[1.2rem] transition-all duration-500",
-                "opacity-0 scale-50 rotate-40 -translate-y-2",
-                "dark:opacity-100 dark:scale-100 dark:rotate-0 dark:translate-y-0"
-              )}
-            />
-          </Button>
+          {toggleButton}
         </TooltipTrigger>
         <TooltipContent 
           side="bottom" 
-          className="font-medium transition-all duration-300"
+          align="center"
+          className="font-medium transition-all duration-300 animate-in fade-in-50 data-[state=closed]:animate-out data-[state=closed]:fade-out-50"
         >
-          <p>Mudar para tema {theme === 'dark' ? 'claro' : 'escuro'}</p>
+          <p>Mudar para tema {isDark ? 'claro' : 'escuro'}</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

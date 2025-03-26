@@ -14,7 +14,7 @@ import { UserMenu } from "@/components/dashboard/UserMenu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProjectsTabContent } from "@/components/dashboard/ProjectsTabContent";
 import { MaterialsTabContent } from "@/components/dashboard/MaterialsTabContent";
-import ThemeToggle from "@/components/ThemeToggle";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -72,10 +72,15 @@ export default function Dashboard() {
             </Button>
             
             {!isMobile && (
-              <>
-                <ThemeToggle />
+              <div className="flex items-center gap-2">
+                <ThemeToggle 
+                  size="sm" 
+                  variant="ghost" 
+                  showTooltip={true}
+                  className="bg-transparent hover:bg-accent/60"
+                />
                 <UserMenu userName={user?.name} onLogout={handleLogout} />
-              </>
+              </div>
             )}
           </div>
         </div>
