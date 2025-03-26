@@ -10,11 +10,11 @@ import { generateUserManual } from "@/utils/userManual";
 import { useToast } from "@/hooks/use-toast";
 
 // Dashboard components
-import { UserMenu } from "@/components/dashboard/UserMenu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProjectsTabContent } from "@/components/dashboard/ProjectsTabContent";
 import { MaterialsTabContent } from "@/components/dashboard/MaterialsTabContent";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { UserDropdownMenu } from "@/components/header/UserDropdownMenu"; // Import UserDropdownMenu
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -79,7 +79,12 @@ export default function Dashboard() {
                   showTooltip={true}
                   className="bg-transparent hover:bg-accent/60"
                 />
-                <UserMenu userName={user?.name} onLogout={handleLogout} />
+                <UserDropdownMenu 
+                  isInstallable={false} // No install option on dashboard
+                  onInstall={() => {}} 
+                  onOpenSettings={() => {}} 
+                  onLogout={handleLogout} 
+                />
               </div>
             )}
           </div>
@@ -115,3 +120,4 @@ export default function Dashboard() {
     </Layout>
   );
 }
+
