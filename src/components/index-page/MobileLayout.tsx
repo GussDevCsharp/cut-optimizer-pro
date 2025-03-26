@@ -6,7 +6,7 @@ import { FileText, Settings, List } from 'lucide-react';
 import SheetPanel from '../SheetPanel';
 import CuttingBoard from '../CuttingBoard';
 import { ProjectNameInput } from '../sheet-panel/ProjectNameInput';
-import PiecesAndOptimizationPanel from '../PiecesAndOptimizationPanel';
+import { PiecesAndOptimizationPanel } from '../pieces-optimization/PiecesAndOptimizationPanel';
 import { useSheetData } from '@/hooks/useSheetData';
 import CollapsiblePiecesList from '../pieces-panel/CollapsiblePiecesList';
 
