@@ -6,13 +6,16 @@ import { useAuth } from "@/context/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { ResetPasswordForm } from "@/components/auth/ResetPasswordForm";
 import { LoginDecoration } from "@/components/auth/LoginDecoration";
 import { EmailVerificationAlert } from "@/components/auth/EmailVerificationAlert";
+import { Button } from "@/components/ui/button";
 
 export default function Login() {
   const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
+  const [redirectDialogOpen, setRedirectDialogOpen] = useState(false);
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -21,6 +24,7 @@ export default function Login() {
   const verifiedParam = searchParams.get('verified');
   const emailParam = searchParams.get('email');
   const resetParam = searchParams.get('reset');
+  const fromFailedLoginParam = searchParams.get('fromFailedLogin');
   
   // Check for verification parameter
   useEffect(() => {
@@ -39,7 +43,11 @@ export default function Login() {
         variant: "default",
       });
     }
-  }, [verifiedParam, emailParam, resetParam, toast]);
+    
+    if (fromFailedLoginParam === 'true') {
+      setRedirectDialogOpen(true);
+    }
+  }, [verifiedParam, emailParam, resetParam, fromFailedLoginParam, toast]);
 
   // Redirect to dashboard if already authenticated
   useEffect(() => {
@@ -47,6 +55,11 @@ export default function Login() {
       navigate("/dashboard");
     }
   }, [isAuthenticated, navigate]);
+
+  const handleRedirectToPurchase = () => {
+    navigate("/home");
+    setRedirectDialogOpen(false);
+  };
 
   // Show loading state
   if (authLoading) {
@@ -84,6 +97,7 @@ export default function Login() {
             <LoginForm 
               defaultEmail={emailParam || ""} 
               onResetPasswordClick={() => setResetPasswordOpen(true)} 
+              onLoginFailure={() => setRedirectDialogOpen(true)}
             />
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
@@ -107,6 +121,33 @@ export default function Login() {
             </DialogDescription>
           </DialogHeader>
           <ResetPasswordForm onCancel={() => setResetPasswordOpen(false)} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Redirect to Purchase Dialog */}
+      <Dialog open={redirectDialogOpen} onOpenChange={setRedirectDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Acesso não encontrado</DialogTitle>
+            <DialogDescription>
+              Você ainda não possui acesso à plataforma. Para começar a usar nossos serviços, é necessário adquirir uma assinatura.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col space-y-4 mt-4">
+            <Alert>
+              <AlertDescription>
+                Ao fazer a compra, você criará automaticamente seu acesso à plataforma com o email e senha informados.
+              </AlertDescription>
+            </Alert>
+            <div className="flex justify-between mt-2">
+              <Button variant="outline" onClick={() => setRedirectDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleRedirectToPurchase}>
+                Ver planos e preços
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

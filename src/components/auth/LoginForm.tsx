@@ -22,9 +22,10 @@ export type LoginFormValues = z.infer<typeof loginSchema>;
 interface LoginFormProps {
   defaultEmail?: string;
   onResetPasswordClick: () => void;
+  onLoginFailure?: () => void;
 }
 
-export function LoginForm({ defaultEmail = "", onResetPasswordClick }: LoginFormProps) {
+export function LoginForm({ defaultEmail = "", onResetPasswordClick, onLoginFailure }: LoginFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const { toast } = useToast();
@@ -44,11 +45,22 @@ export function LoginForm({ defaultEmail = "", onResetPasswordClick }: LoginForm
       await login(data.email, data.password);
       navigate("/dashboard");
     } catch (error: any) {
+      const message = error.message || "Email ou senha incorretos. Tente novamente.";
+      
       toast({
         variant: "destructive",
         title: "Erro ao fazer login",
-        description: error.message || "Email ou senha incorretos. Tente novamente.",
+        description: message,
       });
+      
+      // If the error indicates user not found, redirect to purchase
+      if (message.includes("Email ou senha incorretos") || 
+          message.includes("não encontrado") ||
+          message.includes("Invalid login credentials")) {
+        if (onLoginFailure) {
+          onLoginFailure();
+        }
+      }
     } finally {
       setIsLoading(false);
     }
