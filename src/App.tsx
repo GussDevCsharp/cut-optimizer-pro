@@ -13,6 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import Testing from "./pages/Testing";
 import Home from "./pages/Home";
 import { useEffect } from "react";
+import { ThemeProvider } from "next-themes";
 
 // Protected route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -118,17 +119,19 @@ const AppRoutes = () => {
 // Query client
 const queryClient = new QueryClient();
 
-// App with Auth - This is where we properly organize components with hooks
+// AppWithAuth component including ThemeProvider for Sonner
 const AppWithAuth = () => {
   return (
-    <AuthProvider>
-      <TooltipProvider>
-        <ViewportHeightFix />
-        <Toaster />
-        <Sonner />
-        <AppRoutes />
-      </TooltipProvider>
-    </AuthProvider>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <AuthProvider>
+        <TooltipProvider>
+          <ViewportHeightFix />
+          <Toaster />
+          <Sonner />
+          <AppRoutes />
+        </TooltipProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 };
 
