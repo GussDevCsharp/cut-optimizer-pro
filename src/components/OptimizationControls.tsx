@@ -49,10 +49,11 @@ export const OptimizationControls = () => {
     setOptimizationProgress(0);
     
     try {
-      // Simulate progress increases
+      // Simulate progress increases with fixed increments
       const progressInterval = setInterval(() => {
-        setOptimizationProgress(prev => {
-          const newProgress = prev + 5;
+        setOptimizationProgress((prevProgress) => {
+          // Convert the callback to directly return a number
+          const newProgress = prevProgress + 5;
           return newProgress >= 90 ? 90 : newProgress;
         });
       }, 300);

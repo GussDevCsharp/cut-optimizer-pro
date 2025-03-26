@@ -60,12 +60,12 @@ export const PiecesAndOptimizationPanel = () => {
     setOptimizationProgress(0);
     
     try {
-      // Simulate progress increases
+      // Simulate progress increases with fixed increments
       const progressInterval = setInterval(() => {
-        setOptimizationProgress(prev => {
-          const newProgress = prev + 5;
-          return newProgress >= 90 ? 90 : newProgress;
-        });
+        // Fix: Use a TypeScript-compliant approach to update the state
+        const currentProgress = optimizationProgress;
+        const newProgress = currentProgress + 5;
+        setOptimizationProgress(newProgress >= 90 ? 90 : newProgress);
       }, 300);
       
       await new Promise(resolve => setTimeout(resolve, 100));

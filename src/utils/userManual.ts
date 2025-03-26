@@ -1,6 +1,5 @@
 
 import jsPDF from 'jspdf';
-import { addScreenshotToPage } from './pdf-generator';
 
 /**
  * Creates and downloads a PDF user manual for the platform
