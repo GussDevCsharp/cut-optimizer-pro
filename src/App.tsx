@@ -48,7 +48,7 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// Mobile viewport height fix
+// Mobile viewport height fix - this component must be inside AuthProvider
 const ViewportHeightFix = () => {
   useEffect(() => {
     // Fix for mobile viewport height issues with the vh unit
@@ -74,31 +74,7 @@ const ViewportHeightFix = () => {
   return null;
 };
 
-// Query client
-const queryClient = new QueryClient();
-
-// Main App component that doesn't use any hooks requiring context
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <BrowserRouter>
-      <AppWithAuth />
-    </BrowserRouter>
-  </QueryClientProvider>
-);
-
-// Separate component for authentication to avoid hook order issues
-const AppWithAuth = () => (
-  <AuthProvider>
-    <TooltipProvider>
-      <ViewportHeightFix />
-      <Toaster />
-      <Sonner />
-      <AppRoutes />
-    </TooltipProvider>
-  </AuthProvider>
-);
-
-// Routes component
+// Routes component that uses auth hooks - must be inside AuthProvider
 const AppRoutes = () => {
   return (
     <Routes>
@@ -138,5 +114,31 @@ const AppRoutes = () => {
     </Routes>
   );
 };
+
+// Query client
+const queryClient = new QueryClient();
+
+// App with Auth - This is where we properly organize components with hooks
+const AppWithAuth = () => {
+  return (
+    <AuthProvider>
+      <TooltipProvider>
+        <ViewportHeightFix />
+        <Toaster />
+        <Sonner />
+        <AppRoutes />
+      </TooltipProvider>
+    </AuthProvider>
+  );
+};
+
+// Main App component that doesn't use any hooks requiring context
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <BrowserRouter>
+      <AppWithAuth />
+    </BrowserRouter>
+  </QueryClientProvider>
+);
 
 export default App;
