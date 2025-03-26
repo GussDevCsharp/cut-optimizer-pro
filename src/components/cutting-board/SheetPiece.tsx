@@ -56,35 +56,47 @@ export const SheetPiece = ({ piece, scale, isMobile, isScrap = false }: SheetPie
         zIndex: isScrap ? 5 : 10, // Lower z-index for scrap areas so pieces appear on top
       }}
     >
-      {/* Display width at the bottom of the area */}
-      <div 
-        className="absolute bottom-0.5 w-full text-center font-medium" 
-        style={{ fontSize: `${fontSize}px`, color: textColor }}
-      >
-        {piece.width}
-      </div>
-      
-      {/* Display height on the left side of the area with vertical text */}
-      <div 
-        className="absolute left-0.5 h-full flex items-center font-medium" 
-        style={{ 
-          fontSize: `${fontSize}px`, 
-          color: textColor, 
-          writingMode: 'vertical-rl', 
-          transform: 'rotate(180deg)' 
-        }}
-      >
-        {piece.height}
-      </div>
-      
-      {/* For scrap areas, add a "SOBRA" label in the center */}
-      {isScrap && (
-        <div
-          className="absolute font-medium text-center opacity-60"
-          style={{ fontSize: `${fontSize}px`, color: textColor }}
-        >
-          SOBRA
-        </div>
+      {isScrap ? (
+        <>
+          {/* For scrap areas, display dimensions more prominently */}
+          <div className="flex flex-col items-center justify-center w-full h-full text-center">
+            <div 
+              className="font-medium mb-1" 
+              style={{ fontSize: `${fontSize}px`, color: textColor }}
+            >
+              SOBRA
+            </div>
+            <div 
+              className="font-medium" 
+              style={{ fontSize: `${fontSize * 1.1}px`, color: textColor }}
+            >
+              {piece.width} x {piece.height}
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Display width at the bottom of the area */}
+          <div 
+            className="absolute bottom-0.5 w-full text-center font-medium" 
+            style={{ fontSize: `${fontSize}px`, color: textColor }}
+          >
+            {piece.width}
+          </div>
+          
+          {/* Display height on the left side of the area with vertical text */}
+          <div 
+            className="absolute left-0.5 h-full flex items-center font-medium" 
+            style={{ 
+              fontSize: `${fontSize}px`, 
+              color: textColor, 
+              writingMode: 'vertical-rl', 
+              transform: 'rotate(180deg)' 
+            }}
+          >
+            {piece.height}
+          </div>
+        </>
       )}
     </div>
   );
