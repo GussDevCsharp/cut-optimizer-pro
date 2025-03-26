@@ -1,13 +1,17 @@
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AlertCircle, Wifi, WifiOff } from 'lucide-react';
 import { toast } from "sonner";
 
 export const OfflineIndicator = () => {
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  // Check if window exists to ensure we're in browser environment
+  const isClient = typeof window !== 'undefined';
+  const [isOnline, setIsOnline] = useState(isClient ? navigator.onLine : true);
 
   useEffect(() => {
-    // Função para atualizar o estado online/offline
+    if (!isClient) return;
+    
+    // Function to update the online/offline status
     const updateOnlineStatus = () => {
       const online = navigator.onLine;
       setIsOnline(online);
@@ -26,11 +30,11 @@ export const OfflineIndicator = () => {
       }
     };
 
-    // Registrar os listeners
+    // Register the listeners
     window.addEventListener('online', updateOnlineStatus);
     window.addEventListener('offline', updateOnlineStatus);
 
-    // Verificar o status inicial
+    // Check initial status
     if (!isOnline) {
       toast.error("Você está offline!", {
         description: "Algumas funcionalidades podem estar limitadas",
@@ -39,14 +43,14 @@ export const OfflineIndicator = () => {
       });
     }
 
-    // Limpar os listeners quando o componente for desmontado
+    // Clean up the listeners when the component is unmounted
     return () => {
       window.removeEventListener('online', updateOnlineStatus);
       window.removeEventListener('offline', updateOnlineStatus);
     };
-  }, [isOnline]);
+  }, [isClient, isOnline]);
 
-  // Renderizar um indicador de status apenas quando estiver offline
+  // Only render the indicator when offline
   if (isOnline) return null;
 
   return (
