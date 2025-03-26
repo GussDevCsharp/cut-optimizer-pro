@@ -1,6 +1,5 @@
 
-// This is a re-export file to maintain backward compatibility
-// while avoiding circular dependencies
+// Re-export from hooks to maintain backward compatibility
 import { useToast, toast } from "@/hooks/use-toast";
 
 export { useToast, toast };

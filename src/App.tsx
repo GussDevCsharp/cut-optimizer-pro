@@ -107,8 +107,10 @@ const AppRoutes = () => {
   );
 };
 
+// Create a new QueryClient
 const queryClient = new QueryClient();
 
+// Application Root Component with properly structured providers
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider defaultTheme="light">

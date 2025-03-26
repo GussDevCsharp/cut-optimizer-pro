@@ -1,4 +1,6 @@
 
+"use client";
+
 import { useTheme } from "@/hooks/useTheme";
 import { Toaster as Sonner } from "sonner";
 

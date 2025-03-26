@@ -31,13 +31,14 @@ export function ThemeProvider({
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(defaultTheme);
   
-  // Initialize theme from localStorage
+  // Initialize theme from localStorage safely
   useEffect(() => {
-    const savedTheme = typeof window !== 'undefined' 
-      ? (localStorage.getItem(storageKey) as Theme) || defaultTheme 
-      : defaultTheme;
-      
-    setTheme(savedTheme);
+    if (typeof window === 'undefined') return;
+    
+    const savedTheme = localStorage.getItem(storageKey);
+    if (savedTheme && (savedTheme === 'dark' || savedTheme === 'light')) {
+      setTheme(savedTheme);
+    }
   }, [defaultTheme, storageKey]);
 
   // Apply theme changes to document and localStorage
