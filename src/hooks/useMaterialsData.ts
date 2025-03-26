@@ -1,9 +1,9 @@
 
-import React, { useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { 
   getAllMaterials, 
-  createMaterial,
+  createMaterial, 
   updateMaterial,
   deleteMaterial
 } from "@/services/materialService";
