@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { AuthUser } from '@/types/auth';
 import { formatSupabaseUser, isUserAdmin } from '@/services/userService';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { Session } from '@supabase/supabase-js';
 
 export const useAuthState = () => {
@@ -11,7 +11,6 @@ export const useAuthState = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const { toast } = useToast();
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -67,7 +66,7 @@ export const useAuthState = () => {
     };
     
     initializeAuth();
-  }, [toast]);
+  }, []);
   
   const handleSessionChange = (session: Session) => {
     const supabaseUser = session.user;

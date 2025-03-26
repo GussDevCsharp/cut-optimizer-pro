@@ -168,6 +168,7 @@ function toast({ ...props }: Toast) {
   }
 }
 
+// The issue is likely here - we're moving this to be an actual React function component
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState)
 
