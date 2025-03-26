@@ -1,24 +1,34 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
+import { type ThemeProviderProps } from "next-themes/dist/types";
 
-export const ThemeProviderContext = createContext({});
+type ThemeProviderContextProps = {
+  theme: string | undefined;
+  setTheme: (theme: string) => void;
+};
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
+export const ThemeProviderContext = createContext<ThemeProviderContextProps>({
+  theme: undefined,
+  setTheme: () => null,
+});
+
+export function ThemeProvider({
+  children,
+  ...props
+}: ThemeProviderProps) {
   const [mounted, setMounted] = useState(false);
 
-  // Necessário para evitar problemas de hidratação
   useEffect(() => {
     setMounted(true);
   }, []);
 
   if (!mounted) {
-    // Renderiza um placeholder ou nada até que a montagem esteja concluída
     return <>{children}</>;
   }
 
   return (
-    <NextThemesProvider attribute="class" defaultTheme="system" enableSystem>
+    <NextThemesProvider {...props}>
       {children}
     </NextThemesProvider>
   );
