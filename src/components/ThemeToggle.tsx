@@ -41,11 +41,11 @@ export function ThemeToggle({
     lg: 'w-10 h-10',
   };
   
-  // Variant mappings
+  // Variant mappings with tech color influence
   const variantClasses = {
-    default: 'bg-secondary hover:bg-secondary/80',
-    outline: 'border border-border hover:bg-accent',
-    ghost: 'hover:bg-accent',
+    default: 'bg-tech-blue text-white hover:bg-tech-blue-alt',
+    outline: 'border border-border hover:bg-accent hover:text-accent-foreground',
+    ghost: 'hover:bg-accent hover:text-accent-foreground',
     'icon-only': 'p-0 hover:bg-transparent',
   };
   
@@ -56,7 +56,7 @@ export function ThemeToggle({
         className={cn(
           "absolute transition-all duration-500",
           isDark ? "opacity-0 scale-0 rotate-[-90deg] translate-y-4" : "opacity-100 scale-100 rotate-0 translate-y-0",
-          "animate-in"
+          "animate-in text-tech-orange"
         )}
         size={iconSize * 16}
       />
@@ -66,7 +66,7 @@ export function ThemeToggle({
         className={cn(
           "absolute transition-all duration-500",
           isDark ? "opacity-100 scale-100 rotate-0 translate-y-0" : "opacity-0 scale-0 rotate-90 -translate-y-4",
-          "animate-in"
+          "animate-in text-tech-blue-light"
         )}
         size={iconSize * 16}
       />

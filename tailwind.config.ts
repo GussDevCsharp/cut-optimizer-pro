@@ -65,9 +65,13 @@ export default {
 				tech: {
 					blue: '#005BAA',
 					'blue-alt': '#2A5C8F',
+					'blue-light': '#4A7EB0',
 					orange: '#FF6B35',
 					'orange-alt': '#F96323',
-					gray: '#6D7B8D'
+					'orange-light': '#FFA185',
+					gray: '#6D7B8D',
+					'gray-light': '#9DA8BA',
+					'gray-dark': '#4D5B6D'
 				}
 			},
 			borderRadius: {
