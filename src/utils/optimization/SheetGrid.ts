@@ -57,6 +57,32 @@ export class SheetGrid {
     return true;
   }
   
+  // Get the largest continuous empty area starting from a point
+  getLargestEmptyArea(startX: number, startY: number): {width: number, height: number} {
+    if (startX >= this.width || startY >= this.height || this.grid[startY][startX]) {
+      return {width: 0, height: 0};
+    }
+    
+    // Find max width (how far we can go right)
+    let maxWidth = 0;
+    for (let x = startX; x < this.width && !this.grid[startY][x]; x++) {
+      maxWidth++;
+    }
+    
+    // Find max height (how far we can go down with full width)
+    let maxHeight = 0;
+    outerLoop: for (let y = startY; y < this.height; y++) {
+      for (let x = startX; x < startX + maxWidth; x++) {
+        if (x >= this.width || this.grid[y][x]) {
+          break outerLoop;
+        }
+      }
+      maxHeight++;
+    }
+    
+    return {width: maxWidth, height: maxHeight};
+  }
+  
   // Mark an area as occupied
   occupyArea(x: number, y: number, pieceWidth: number, pieceHeight: number): void {
     for (let i = y; i < y + pieceHeight; i++) {
@@ -66,6 +92,35 @@ export class SheetGrid {
         }
       }
     }
+  }
+  
+  // Get all empty areas larger than a minimum size
+  getEmptyAreas(minWidth: number, minHeight: number): {x: number, y: number, width: number, height: number}[] {
+    const emptyAreas: {x: number, y: number, width: number, height: number}[] = [];
+    const checked = Array(this.height).fill(null).map(() => Array(this.width).fill(false));
+    
+    for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
+        if (!this.grid[y][x] && !checked[y][x]) {
+          const area = this.getLargestEmptyArea(x, y);
+          
+          if (area.width >= minWidth && area.height >= minHeight) {
+            emptyAreas.push({x, y, ...area});
+          }
+          
+          // Mark the checked area
+          for (let i = y; i < y + area.height; i++) {
+            for (let j = x; j < x + area.width; j++) {
+              if (i < this.height && j < this.width) {
+                checked[i][j] = true;
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    return emptyAreas;
   }
   
   // Debug method to print the grid
