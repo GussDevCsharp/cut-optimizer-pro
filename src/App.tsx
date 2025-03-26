@@ -13,6 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import Testing from "./pages/Testing";
 import Home from "./pages/Home";
 import { useEffect } from "react";
+import { ThemeProvider } from "@/hooks/useTheme";
 
 // Protected route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -78,14 +79,22 @@ const ViewportHeightFix = () => {
 const AppRoutes = () => {
   return (
     <Routes>
+      {/* Landing page route - not affected by theme */}
       <Route path="/home" element={<Home />} />
+      <Route path="/" element={<Home />} />
+      
+      {/* Auth pages */}
       <Route path="/login" element={<Login />} />
       <Route path="/cadastro" element={<Register />} />
+      
+      {/* Protected routes with theme support */}
       <Route 
         path="/dashboard" 
         element={
           <ProtectedRoute>
-            <Dashboard />
+            <ThemeProvider>
+              <Dashboard />
+            </ThemeProvider>
           </ProtectedRoute>
         } 
       />
@@ -101,15 +110,14 @@ const AppRoutes = () => {
         path="/testing" 
         element={
           <AdminRoute>
-            <Testing />
+            <ThemeProvider>
+              <Testing />
+            </ThemeProvider>
           </AdminRoute>
         } 
       />
-      <Route 
-        path="/" 
-        element={<Home />} 
-      />
-      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+      
+      {/* Catch-all route */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
