@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Form,
@@ -11,10 +10,9 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Mail, Save } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -36,7 +34,6 @@ export function EmailSettings() {
   const { toast } = useToast();
   const [isTesting, setIsTesting] = useState(false);
   
-  // Initialize form with default values or values from localStorage
   const form = useForm<EmailSettingsFormValues>({
     resolver: zodResolver(emailSettingsSchema),
     defaultValues: {
@@ -52,7 +49,6 @@ export function EmailSettings() {
   });
 
   useEffect(() => {
-    // Load saved settings from localStorage if available
     const savedSettings = localStorage.getItem('emailSettings');
     if (savedSettings) {
       try {
@@ -65,7 +61,6 @@ export function EmailSettings() {
   }, [form]);
 
   const onSubmit = (data: EmailSettingsFormValues) => {
-    // Save settings to localStorage
     localStorage.setItem('emailSettings', JSON.stringify(data));
     
     toast({
@@ -79,8 +74,7 @@ export function EmailSettings() {
     setIsTesting(true);
     
     try {
-      // In a real app, this would send a test email using the configured settings
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
       toast({
         title: "Email de teste enviado",

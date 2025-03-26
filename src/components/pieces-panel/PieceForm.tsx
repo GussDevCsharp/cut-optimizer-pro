@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Piece } from '../../hooks/useSheetData';
 import { useProjectActions } from "@/hooks/useProjectActions";
 import { useSheetData } from "@/hooks/useSheetData";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast"; // Use the re-export
 import { PieceDimensionsInput } from './piece-form/PieceDimensionsInput';
 import { PieceQuantityInput } from './piece-form/PieceQuantityInput';
 import { AddPieceButton } from './piece-form/AddPieceButton';
