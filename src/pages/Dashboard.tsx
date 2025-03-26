@@ -4,7 +4,10 @@ import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { useAuth } from "@/context/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Briefcase, Package } from "lucide-react";
+import { Briefcase, Package, BookOpen } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { generateUserManual } from "@/utils/userManual";
+import { useToast } from "@/hooks/use-toast";
 
 // Dashboard components
 import { UserMenu } from "@/components/dashboard/UserMenu";
@@ -17,10 +20,34 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState("projects");
+  const { toast } = useToast();
 
   const handleLogout = () => {
     logout();
     navigate("/login");
+  };
+
+  const handleDownloadManual = async () => {
+    try {
+      toast({
+        title: "Gerando manual do usuário",
+        description: "Aguarde enquanto geramos o manual em PDF.",
+      });
+      
+      await generateUserManual();
+      
+      toast({
+        title: "Manual gerado com sucesso!",
+        description: "O download do manual deve começar automaticamente.",
+      });
+    } catch (error) {
+      console.error("Error generating user manual:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao gerar manual",
+        description: "Não foi possível gerar o manual do usuário. Tente novamente.",
+      });
+    }
   };
 
   return (
@@ -32,7 +59,19 @@ export default function Dashboard() {
             <p className="text-muted-foreground text-sm">Gerencie seus projetos</p>
           </div>
           
-          {!isMobile && <UserMenu userName={user?.name} onLogout={handleLogout} />}
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="gap-2"
+              onClick={handleDownloadManual}
+            >
+              <BookOpen className="h-4 w-4" />
+              <span className={isMobile ? "hidden" : "inline"}>Manual do Usuário</span>
+            </Button>
+            
+            {!isMobile && <UserMenu userName={user?.name} onLogout={handleLogout} />}
+          </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
