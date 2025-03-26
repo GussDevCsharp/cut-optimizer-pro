@@ -194,16 +194,22 @@ export const getUsersWithSubscriptionInfo = async () => {
     if (error) throw error;
     
     // Transform the data to a more usable format - fixing type errors here
-    return (data || []).map(subscription => ({
-      id: subscription.profiles?.id, // Using optional chaining
-      name: subscription.profiles?.full_name,
-      email: subscription.profiles?.email,
-      isActive: subscription.status === 'active' && new Date(subscription.expiration_date) > new Date(),
-      planType: subscription.plans?.name, // Using optional chaining
-      expirationDate: new Date(subscription.expiration_date),
-      subscriptionId: subscription.id,
-      autoRenew: subscription.auto_renew
-    }));
+    return (data || []).map(subscription => {
+      // Safely access nested properties using type assertions
+      const profileData = subscription.profiles as { id: string, full_name: string, email: string } | null;
+      const planData = subscription.plans as { name: string } | null;
+      
+      return {
+        id: profileData?.id,
+        name: profileData?.full_name,
+        email: profileData?.email,
+        isActive: subscription.status === 'active' && new Date(subscription.expiration_date) > new Date(),
+        planType: planData?.name,
+        expirationDate: new Date(subscription.expiration_date),
+        subscriptionId: subscription.id,
+        autoRenew: subscription.auto_renew
+      };
+    });
   } catch (error) {
     console.error("Error fetching users with subscription info:", error);
     throw error;
