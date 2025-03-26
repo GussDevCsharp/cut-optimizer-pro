@@ -24,7 +24,7 @@ export interface CardData {
 }
 
 // Define MercadoPago on the window object
-export declare global {
+declare global {
   interface Window {
     MercadoPago?: any;
   }

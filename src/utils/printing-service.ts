@@ -1,5 +1,5 @@
 
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { Sheet, PlacedPiece } from '../hooks/useSheetData';
 import { generateCuttingPlanHtml } from './html-generator';
 import { generatePdf } from './pdf-generator';
@@ -11,8 +11,6 @@ export const usePrintingService = (
   sheets: number[],
   projectName: string
 ) => {
-  const { toast } = useToast();
-
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
