@@ -1,12 +1,13 @@
 
 "use client"
 
-import * as React from "react"
+import React from "react"
 
 const MOBILE_BREAKPOINT = 768
 
 export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState<boolean>(false)
+  // Initialize with false as default value to prevent undefined during initial render
+  const [isMobile, setIsMobile] = React.useState(false)
 
   React.useEffect(() => {
     // Function to check if viewport is mobile width
