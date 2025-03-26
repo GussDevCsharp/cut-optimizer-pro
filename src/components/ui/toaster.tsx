@@ -2,6 +2,7 @@
 "use client";
 
 import React from "react";
+// Import directly from the base hook file
 import { useToast } from "@/hooks/use-toast";
 import {
   Toast,

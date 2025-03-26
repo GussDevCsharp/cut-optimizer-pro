@@ -116,8 +116,8 @@ const App = () => (
     <ThemeProvider defaultTheme="light">
       <AuthProvider>
         <TooltipProvider>
-          <ViewportHeightFix />
           <BrowserRouter>
+            <ViewportHeightFix />
             <AppRoutes />
             <Toaster />
             <Sonner />

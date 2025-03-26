@@ -1,4 +1,6 @@
 
+"use client";
+
 import { useEffect, useState } from 'react';
 import { Wifi, WifiOff } from 'lucide-react';
 import { toast } from "sonner";
