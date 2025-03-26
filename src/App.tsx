@@ -119,27 +119,20 @@ const AppRoutes = () => {
 // Query client
 const queryClient = new QueryClient();
 
-// AppWithAuth component including ThemeProvider for Sonner
-const AppWithAuth = () => {
-  return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <AuthProvider>
-        <TooltipProvider>
-          <ViewportHeightFix />
-          <Toaster />
-          <Sonner />
-          <AppRoutes />
-        </TooltipProvider>
-      </AuthProvider>
-    </ThemeProvider>
-  );
-};
-
-// Main App component that doesn't use any hooks requiring context
+// Main App component 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <BrowserRouter>
-      <AppWithAuth />
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <AuthProvider>
+          <TooltipProvider>
+            <ViewportHeightFix />
+            <Toaster />
+            <Sonner />
+            <AppRoutes />
+          </TooltipProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
   </QueryClientProvider>
 );
