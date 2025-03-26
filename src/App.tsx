@@ -106,51 +106,6 @@ const ViewportHeightFix = () => {
   return null;
 };
 
-// Application Routes component with React Router
-const AppRoutes = () => {
-  return (
-    <BrowserRouter>
-      <ViewportHeightFix />
-      <Routes>
-        <Route path="/home" element={<Home />} />
-        <Route path="/" element={<Home />} />
-        
-        <Route path="/login" element={<Login />} />
-        <Route path="/cadastro" element={<Register />} />
-        
-        <Route 
-          path="/dashboard" 
-          element={
-            <ProtectedRoute>
-              <DashboardWithTabs />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/app" 
-          element={
-            <ProtectedRoute>
-              <Index />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/testing" 
-          element={
-            <AdminRoute>
-              <Testing />
-            </AdminRoute>
-          } 
-        />
-        
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-      <Toaster />
-      <Sonner />
-    </BrowserRouter>
-  );
-};
-
 // Create a new QueryClient
 const queryClient = new QueryClient();
 
@@ -160,7 +115,45 @@ const App = () => (
     <ThemeProvider defaultTheme="light">
       <AuthProvider>
         <TooltipProvider>
-          <AppRoutes />
+          <BrowserRouter>
+            <ViewportHeightFix />
+            <Routes>
+              <Route path="/home" element={<Home />} />
+              <Route path="/" element={<Home />} />
+              
+              <Route path="/login" element={<Login />} />
+              <Route path="/cadastro" element={<Register />} />
+              
+              <Route 
+                path="/dashboard" 
+                element={
+                  <ProtectedRoute>
+                    <DashboardWithTabs />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/app" 
+                element={
+                  <ProtectedRoute>
+                    <Index />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/testing" 
+                element={
+                  <AdminRoute>
+                    <Testing />
+                  </AdminRoute>
+                } 
+              />
+              
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <Toaster />
+            <Sonner />
+          </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>
     </ThemeProvider>
