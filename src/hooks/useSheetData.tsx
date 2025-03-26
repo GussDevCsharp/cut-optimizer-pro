@@ -89,17 +89,19 @@ export const SheetProvider = ({ children }: { children: ReactNode }) => {
   const [grainDirection, setGrainDirection] = useState<'width' | 'height'>('width');
 
   const addPiece = (piece: Piece) => {
-    setPieces([...pieces, piece]);
+    setPieces(prevPieces => [...prevPieces, piece]);
   };
 
   const updatePiece = (id: string, updatedPiece: Partial<Piece>) => {
-    setPieces(pieces.map(piece => 
-      piece.id === id ? { ...piece, ...updatedPiece } : piece
-    ));
+    setPieces(prevPieces => 
+      prevPieces.map(piece => 
+        piece.id === id ? { ...piece, ...updatedPiece } : piece
+      )
+    );
   };
 
   const removePiece = (id: string) => {
-    setPieces(pieces.filter(piece => piece.id !== id));
+    setPieces(prevPieces => prevPieces.filter(piece => piece.id !== id));
   };
 
   const startOptimization = (callbacks?: OptimizationCallbacks) => {

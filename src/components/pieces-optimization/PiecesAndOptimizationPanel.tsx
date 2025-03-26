@@ -22,11 +22,11 @@ export const PiecesAndOptimizationPanel: React.FC<PiecesAndOptimizationPanelProp
   const { toast } = useToast();
 
   const handleAddPiece = (piece) => {
-    setPieces(prevPieces => [...prevPieces, piece]);
+    setPieces([...pieces, piece]);
   };
 
   const handleImportPieces = (importedPieces) => {
-    setPieces(prevPieces => [...prevPieces, ...importedPieces]);
+    setPieces([...pieces, ...importedPieces]);
   };
 
   const handleSavePieces = async () => {

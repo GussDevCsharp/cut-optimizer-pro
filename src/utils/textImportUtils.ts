@@ -57,7 +57,8 @@ export const processTextContent = (content: string): {
           height,
           quantity: 1, // Each piece now has quantity 1
           canRotate: true,
-          color: getRandomColor()
+          color: getRandomColor(),
+          name: `Peça ${i+1}-${q+1}`
         });
       }
     } else {

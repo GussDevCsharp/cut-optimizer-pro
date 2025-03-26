@@ -19,6 +19,7 @@ export const PieceForm = ({ onAddPiece, projectId }: PieceFormProps) => {
     height: 100,
     quantity: 1,
     canRotate: true,
+    name: 'Nova Peça',
   });
   const { saveProject, isSaving } = useProjectActions();
   const { projectName, sheet, pieces, placedPieces } = useSheetData();
@@ -79,6 +80,7 @@ export const PieceForm = ({ onAddPiece, projectId }: PieceFormProps) => {
       height: 100,
       quantity: 1,
       canRotate: true,
+      name: 'Nova Peça',
     });
   };
 
