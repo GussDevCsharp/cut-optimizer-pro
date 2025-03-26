@@ -193,13 +193,13 @@ export const getUsersWithSubscriptionInfo = async () => {
       
     if (error) throw error;
     
-    // Transform the data to a more usable format
+    // Transform the data to a more usable format - fixing type errors here
     return (data || []).map(subscription => ({
-      id: subscription.profiles.id,
-      name: subscription.profiles.full_name,
-      email: subscription.profiles.email,
+      id: subscription.profiles?.id, // Using optional chaining
+      name: subscription.profiles?.full_name,
+      email: subscription.profiles?.email,
       isActive: subscription.status === 'active' && new Date(subscription.expiration_date) > new Date(),
-      planType: subscription.plans.name,
+      planType: subscription.plans?.name, // Using optional chaining
       expirationDate: new Date(subscription.expiration_date),
       subscriptionId: subscription.id,
       autoRenew: subscription.auto_renew
