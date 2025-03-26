@@ -17,4 +17,5 @@ export interface AuthContextType {
   isLoading: boolean;
   isAdmin: boolean;
   isMasterAdmin?: boolean;
+  hasMasterAccess?: boolean; // Added explicit property for full data access
 }

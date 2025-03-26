@@ -9,6 +9,9 @@ import { loginWithEmail, registerUser, resetPasswordEmail, logout } from "@/serv
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+// Master admin email - centralized constant
+export const MASTER_ADMIN_EMAIL = "gustavo@softcomfortaleza.com.br";
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -42,7 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Check if user is master admin
-  const isMasterAdmin = user?.email === "gustavo@softcomfortaleza.com.br";
+  const isMasterAdmin = user?.email === MASTER_ADMIN_EMAIL;
 
   return (
     <AuthContext.Provider
@@ -55,7 +58,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAuthenticated,
         isLoading,
         isAdmin: isAdmin || isMasterAdmin,
-        isMasterAdmin
+        isMasterAdmin,
+        hasMasterAccess: isMasterAdmin // Added explicit full access flag
       }}
     >
       {children}

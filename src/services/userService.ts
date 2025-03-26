@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { AuthError, Session, User } from "@supabase/supabase-js";
 import { AuthUser } from "@/types/auth";
+import { MASTER_ADMIN_EMAIL } from "@/context/AuthContext";
 
 /**
  * Converte um usuário do Supabase para o formato AuthUser
@@ -12,6 +13,11 @@ export const formatSupabaseUser = (supabaseUser: User): AuthUser => {
     name: supabaseUser?.user_metadata?.name || supabaseUser.email?.split('@')[0] || '',
     email: supabaseUser.email || '',
   };
+};
+
+// Check if user has full data access privileges
+export const hasFullDataAccess = (email: string): boolean => {
+  return email === MASTER_ADMIN_EMAIL;
 };
 
 /**
@@ -157,7 +163,7 @@ export const isUserAdmin = (email: string): boolean => {
   const adminEmails = [
     'admin@melhorcdorte.com.br',
     'admin@exemplo.com',
-    'gustavo@softcomfortaleza.com.br' // Added master admin email
+    MASTER_ADMIN_EMAIL // Using the centralized constant
   ];
   
   return adminEmails.includes(email);

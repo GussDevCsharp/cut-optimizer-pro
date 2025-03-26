@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmailSettings } from './EmailSettings';
 import { MasterPanelManual } from './MasterPanelManual';
 import { UserManagementPanel } from './UserManagementPanel';
-import { Mail, User, FileText, Users } from 'lucide-react';
+import { Mail, User, FileText, Users, Database } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 interface SettingsContainerProps {
@@ -20,10 +20,7 @@ interface SettingsContainerProps {
 }
 
 export function SettingsContainer({ open, onOpenChange }: SettingsContainerProps) {
-  const { user } = useAuth();
-  
-  // Check if user is master admin
-  const isMasterAdmin = user?.email === "gustavo@softcomfortaleza.com.br";
+  const { user, isMasterAdmin } = useAuth();
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -32,6 +29,11 @@ export function SettingsContainer({ open, onOpenChange }: SettingsContainerProps
           <DialogTitle>Configurações</DialogTitle>
           <DialogDescription>
             Gerencie suas configurações de usuário e da aplicação.
+            {isMasterAdmin && (
+              <span className="ml-2 text-primary">
+                (Acesso completo ao sistema)
+              </span>
+            )}
           </DialogDescription>
         </DialogHeader>
         
