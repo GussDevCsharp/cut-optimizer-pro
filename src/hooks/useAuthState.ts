@@ -1,8 +1,9 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { AuthUser } from '@/types/auth';
 import { formatSupabaseUser, isUserAdmin } from '@/services/userService';
-import { useToast } from './use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { Session } from '@supabase/supabase-js';
 
 export const useAuthState = () => {
