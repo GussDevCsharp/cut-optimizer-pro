@@ -167,7 +167,7 @@ export const PiecesAndOptimizationPanel = () => {
           
           {/* Direction toggle */}
           <div className="bg-secondary rounded-md p-3">
-            <p className="text-sm text-muted-foreground mb-2">Direção da otimização:</p>
+            <p className="text-sm text-foreground font-medium mb-2">Direção da otimização:</p>
             <ToggleGroup 
               type="single" 
               value={optimizationDirection} 
@@ -208,11 +208,11 @@ export const PiecesAndOptimizationPanel = () => {
           
           <div className="bg-secondary rounded-md p-3 text-sm">
             <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Total de peças:</span>
+              <span className="text-foreground font-medium">Total de peças:</span>
               <span className="font-medium">{totalPieces}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Tipos de peças:</span>
+              <span className="text-foreground font-medium">Tipos de peças:</span>
               <span className="font-medium">{pieces.length}</span>
             </div>
           </div>
