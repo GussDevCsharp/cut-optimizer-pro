@@ -5,12 +5,17 @@ import { ThemeProvider as NextThemesProvider, useTheme as useNextTheme } from "n
 // Define the Attribute type that next-themes expects
 type Attribute = "class" | "data-theme" | "data-mode";
 
+// Define the ValueObject type that next-themes expects for the value prop
+interface ValueObject {
+  [themeName: string]: string;
+}
+
 type ThemeProviderProps = {
   children: React.ReactNode;
   defaultTheme?: string;
   storageKey?: string;
   attribute?: Attribute | Attribute[];
-  value?: object;
+  value?: ValueObject;
   enableSystem?: boolean;
   disableTransitionOnChange?: boolean;
   forcedTheme?: string;
