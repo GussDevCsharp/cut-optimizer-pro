@@ -10,7 +10,9 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmailSettings } from './EmailSettings';
 import { MasterPanelManual } from './MasterPanelManual';
-import { Mail, User, FileText } from 'lucide-react';
+import { UserManagementPanel } from './UserManagementPanel';
+import { Mail, User, FileText, Users } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 interface SettingsContainerProps {
   open: boolean;
@@ -18,6 +20,11 @@ interface SettingsContainerProps {
 }
 
 export function SettingsContainer({ open, onOpenChange }: SettingsContainerProps) {
+  const { user } = useAuth();
+  
+  // Check if user is master admin
+  const isMasterAdmin = user?.email === "gustavo@softcomfortaleza.com.br";
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[725px] max-h-[90vh] overflow-y-auto">
@@ -38,6 +45,12 @@ export function SettingsContainer({ open, onOpenChange }: SettingsContainerProps
               <User className="h-4 w-4" />
               <span>Perfil</span>
             </TabsTrigger>
+            {isMasterAdmin && (
+              <TabsTrigger value="users" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                <span>Usuários</span>
+              </TabsTrigger>
+            )}
             <TabsTrigger value="manual" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
               <span>Manual</span>
@@ -61,6 +74,12 @@ export function SettingsContainer({ open, onOpenChange }: SettingsContainerProps
               </p>
             </div>
           </TabsContent>
+          
+          {isMasterAdmin && (
+            <TabsContent value="users">
+              <UserManagementPanel />
+            </TabsContent>
+          )}
           
           <TabsContent value="manual">
             <MasterPanelManual />

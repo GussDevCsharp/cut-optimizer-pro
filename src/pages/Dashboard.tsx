@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { useAuth } from "@/context/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Briefcase, Package, BookOpen } from "lucide-react";
+import { Briefcase, Package, BookOpen, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { generateUserManual } from "@/utils/userManual";
 import { useToast } from "@/hooks/use-toast";
@@ -14,13 +14,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProjectsTabContent } from "@/components/dashboard/ProjectsTabContent";
 import { MaterialsTabContent } from "@/components/dashboard/MaterialsTabContent";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { UserDropdownMenu } from "@/components/header/UserDropdownMenu"; // Import UserDropdownMenu
+import { UserDropdownMenu } from "@/components/header/UserDropdownMenu";
+import { SettingsContainer } from "@/components/settings/SettingsContainer";
 
 export default function Dashboard() {
-  const { user, logout } = useAuth();
+  const { user, logout, isMasterAdmin } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState("projects");
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const { toast } = useToast();
 
   const handleLogout = () => {
@@ -56,11 +58,26 @@ export default function Dashboard() {
       <div className={`${isMobile ? 'px-2 py-2' : 'container mx-auto p-4'}`}>
         <div className="flex justify-between items-center mb-6 md:mb-8">
           <div>
-            <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>Bem-vindo, {user?.name || "Usuário"}</h1>
+            <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>
+              Bem-vindo, {user?.name || "Usuário"}
+              {isMasterAdmin && <span className="ml-2 text-sm text-primary">(Admin Master)</span>}
+            </h1>
             <p className="text-muted-foreground text-sm">Gerencie seus projetos</p>
           </div>
           
           <div className="flex items-center gap-2">
+            {isMasterAdmin && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="gap-2"
+                onClick={() => setSettingsOpen(true)}
+              >
+                <Settings className="h-4 w-4" />
+                <span className={isMobile ? "hidden" : "inline"}>Configurações</span>
+              </Button>
+            )}
+            
             <Button 
               variant="outline" 
               size="sm" 
@@ -82,7 +99,7 @@ export default function Dashboard() {
                 <UserDropdownMenu 
                   isInstallable={false} // No install option on dashboard
                   onInstall={() => {}} 
-                  onOpenSettings={() => {}} 
+                  onOpenSettings={() => setSettingsOpen(true)} 
                   onLogout={handleLogout} 
                 />
               </div>
@@ -116,8 +133,13 @@ export default function Dashboard() {
             />
           </TabsContent>
         </Tabs>
+        
+        {/* Settings Modal */}
+        <SettingsContainer 
+          open={settingsOpen} 
+          onOpenChange={setSettingsOpen} 
+        />
       </div>
     </Layout>
   );
 }
-

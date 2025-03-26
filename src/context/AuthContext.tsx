@@ -54,7 +54,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         resetPassword,
         isAuthenticated,
         isLoading,
-        isAdmin: isAdmin || isMasterAdmin
+        isAdmin: isAdmin || isMasterAdmin,
+        isMasterAdmin
       }}
     >
       {children}
