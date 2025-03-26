@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Loader2, Search, UserCheck, UserX } from 'lucide-react';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
-import { getAllUsers } from '@/services/userService';
+import { getAllUsers } from '@/services/userManagementService';
 import { useAuth } from '@/context/AuthContext';
 
 export function UserManagementPanel() {

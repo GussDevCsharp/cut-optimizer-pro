@@ -2,7 +2,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { AuthUser } from '@/types/auth';
-import { formatSupabaseUser, isUserAdmin } from '@/services/userService';
+import { formatSupabaseUser } from '@/services/authService';
+import { isUserAdmin } from '@/services/userManagementService';
 import { Session } from '@supabase/supabase-js';
 
 export const useAuthState = () => {
