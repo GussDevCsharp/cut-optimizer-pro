@@ -3,10 +3,23 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import PricingPlans from "@/components/home/PricingPlans";
+import { RegisterForm, RegisterFormValues } from "@/components/auth/RegisterForm";
+import { useToast } from "@/hooks/use-toast";
+import CheckoutModal from "@/components/checkout/CheckoutModal";
+import { PaymentStatus } from "@/components/checkout/CheckoutModal";
 
 export default function Register() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, register } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [formData, setFormData] = useState<RegisterFormValues | null>(null);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<{
+    id: string;
+    name: string;
+    description: string;
+    price: number;
+  } | null>(null);
 
   // Redirect to dashboard if already authenticated
   useEffect(() => {
@@ -31,6 +44,49 @@ export default function Register() {
   if (isAuthenticated) {
     return null;
   }
+
+  const handleFormSubmit = async (data: RegisterFormValues) => {
+    setFormData(data);
+    // Show checkout modal
+    setCheckoutOpen(true);
+  };
+
+  const handlePlanSelect = (plan: {
+    id: string;
+    name: string;
+    description: string;
+    price: number;
+  }) => {
+    setSelectedPlan(plan);
+  };
+
+  const handlePaymentComplete = async (status: PaymentStatus, paymentId?: string) => {
+    console.log('Payment completed with status:', status, 'and ID:', paymentId);
+    
+    if (status === 'approved' && formData) {
+      try {
+        // Register user with the provided credentials
+        await register(formData.name, formData.email, formData.password);
+        
+        toast({
+          title: "Conta criada com sucesso!",
+          description: "Seu acesso à plataforma foi ativado.",
+        });
+        
+        // Redirect to dashboard after successful payment and registration
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 3000);
+      } catch (error: any) {
+        toast({
+          variant: "destructive",
+          title: "Erro ao criar conta",
+          description: error.message || "Não foi possível criar sua conta. Entre em contato com o suporte.",
+        });
+        console.error("Erro ao registrar usuário após pagamento:", error);
+      }
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -62,9 +118,35 @@ export default function Register() {
             </p>
           </div>
 
-          <PricingPlans />
+          <PricingPlans onPlanSelect={handlePlanSelect} />
+
+          {selectedPlan && (
+            <div className="mt-8 max-w-md mx-auto">
+              <div className="bg-card rounded-lg p-6 shadow-sm border">
+                <h2 className="text-xl font-semibold mb-4">Crie sua conta</h2>
+                <p className="text-muted-foreground mb-6">
+                  Complete seu cadastro para continuar com a compra do plano {selectedPlan.name}
+                </p>
+                <RegisterForm onSubmit={handleFormSubmit} isLoading={false} />
+              </div>
+            </div>
+          )}
         </div>
       </main>
+
+      {formData && selectedPlan && (
+        <CheckoutModal
+          isOpen={checkoutOpen}
+          onOpenChange={setCheckoutOpen}
+          product={{
+            id: selectedPlan.id,
+            name: selectedPlan.name,
+            description: selectedPlan.description,
+            price: selectedPlan.price
+          }}
+          onPaymentComplete={handlePaymentComplete}
+        />
+      )}
 
       <footer className="border-t py-6 md:py-0">
         <div className="container flex flex-col md:h-16 items-center justify-between gap-4 md:flex-row">
