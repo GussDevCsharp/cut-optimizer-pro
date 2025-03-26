@@ -10,7 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -66,6 +66,7 @@ export default function Register() {
         title: "Erro ao fazer cadastro",
         description: error.message || "Houve um problema ao criar sua conta. Tente novamente.",
       });
+      console.error("Erro durante o registro:", error);
     } finally {
       setIsLoading(false);
     }

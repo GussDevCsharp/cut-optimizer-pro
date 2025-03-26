@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { AuthUser } from '@/types/auth';
 import { formatSupabaseUser, isUserAdmin } from '@/services/userService';
-import { toast } from '@/hooks/use-toast';
 import { Session } from '@supabase/supabase-js';
 
 export const useAuthState = () => {
@@ -32,28 +31,6 @@ export const useAuthState = () => {
             setUser(null);
             setIsAuthenticated(false);
             setIsAdmin(false);
-          }
-          
-          if (event === 'SIGNED_IN') {
-            toast({
-              title: "Login realizado com sucesso",
-              description: "Bem-vindo de volta!",
-            });
-          } else if (event === 'SIGNED_OUT') {
-            toast({
-              title: "Logout realizado",
-              description: "Você foi desconectado com sucesso.",
-            });
-          } else if (event === 'USER_UPDATED') {
-            toast({
-              title: "Perfil atualizado",
-              description: "Suas informações foram atualizadas.",
-            });
-          } else if (event === 'PASSWORD_RECOVERY') {
-            toast({
-              title: "Recuperação de senha",
-              description: "Use o link enviado ao seu email para redefinir sua senha.",
-            });
           }
         }
       );

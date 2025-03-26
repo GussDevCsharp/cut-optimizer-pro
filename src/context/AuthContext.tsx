@@ -3,7 +3,9 @@ import React, { createContext, useContext } from "react";
 import { AuthContextType } from "@/types/auth";
 import { useAuthState } from "@/hooks/useAuthState";
 import { loginWithEmail, registerUser, resetPasswordEmail, logout } from "@/services/userService";
-import { toast } from "@/hooks/use-toast";
+
+// Removemos a importação do toast, pois ela estava causando dependência circular
+// import { toast } from "@/hooks/use-toast";
 
 const AuthContext = createContext<AuthContextType | null>(null);
 

@@ -53,7 +53,9 @@ export const loginWithEmail = async (email: string, password: string) => {
  */
 export const registerUser = async (name: string, email: string, password: string) => {
   try {
-    const { error } = await supabase.auth.signUp({
+    console.log("Iniciando registro de usuário:", { name, email });
+    
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -64,11 +66,19 @@ export const registerUser = async (name: string, email: string, password: string
       },
     });
     
+    console.log("Resposta do registro:", { data, error });
+    
     if (error) {
       console.error("Registration error:", error.message);
       throw error;
     }
     
+    // Verificar se o usuário foi criado com sucesso
+    if (!data || !data.user) {
+      throw new Error("Falha ao criar usuário. Tente novamente mais tarde.");
+    }
+    
+    return data;
   } catch (error: any) {
     console.error("Registration error:", error);
     
