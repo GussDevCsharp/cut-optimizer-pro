@@ -2,18 +2,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Material } from "@/types/material";
 
-interface Database {
-  public: {
-    Tables: {
-      products: {
-        Row: Material;
-        Insert: Omit<Material, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Omit<Material, 'id'>>;
-      };
-    };
-  };
-}
-
 // Get all materials for a user
 export async function getAllMaterials(userId: string): Promise<Material[]> {
   const { data, error } = await supabase
@@ -27,14 +15,14 @@ export async function getAllMaterials(userId: string): Promise<Material[]> {
     throw error;
   }
   
-  return data;
+  return data as Material[];
 }
 
 // Create a new material
 export async function createMaterial(materialData: Omit<Material, 'id' | 'created_at' | 'updated_at'>): Promise<Material> {
   const { data, error } = await supabase
     .from('products')
-    .insert(materialData)
+    .insert(materialData as any)
     .select()
     .single();
   
@@ -43,7 +31,7 @@ export async function createMaterial(materialData: Omit<Material, 'id' | 'create
     throw error;
   }
   
-  return data;
+  return data as Material;
 }
 
 // Update an existing material
@@ -52,7 +40,7 @@ export async function updateMaterial(materialData: Material): Promise<Material> 
   
   const { data, error } = await supabase
     .from('products')
-    .update(updates)
+    .update(updates as any)
     .eq('id', id)
     .select()
     .single();
@@ -62,7 +50,7 @@ export async function updateMaterial(materialData: Material): Promise<Material> 
     throw error;
   }
   
-  return data;
+  return data as Material;
 }
 
 // Delete a material
