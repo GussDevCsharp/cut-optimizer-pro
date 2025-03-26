@@ -1,184 +1,127 @@
-
+import React, { useState, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
-import { Sparkles, RectangleHorizontal, AlignHorizontalJustifyStart, AlignVerticalJustifyStart } from 'lucide-react';
-import { useSheetData } from '../hooks/useSheetData';
-import { optimizeCutting, OptimizationDirection } from '../utils/optimizationAlgorithm';
-import { toast } from "sonner";
-import { useProjectActions } from "@/hooks/useProjectActions";
-import { useLocation } from 'react-router-dom';
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Progress } from "@/components/ui/progress";
+import { useToast } from "@/hooks/use-toast";
+import { useSheetData } from '@/hooks/useSheetData';
+import { useDebounce } from '@/hooks/use-debounce';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 
-export const OptimizationControls = () => {
-  const { 
-    sheet, 
-    pieces, 
-    placedPieces, 
-    setPlacedPieces, 
-    projectName, 
-    optimizationDirection,
-    setOptimizationDirection,
-    setIsOptimizing,
-    setOptimizationProgress
+interface OptimizationControlsProps {
+  className?: string;
+}
+
+export const OptimizationControls: React.FC<OptimizationControlsProps> = ({ className }) => {
+  const {
+    startOptimization,
+    stopOptimization,
+    isOptimizing,
+    optimizationProgress,
+    setOptimizationTimeLimit,
+    optimizationTimeLimit,
   } = useSheetData();
-  const { saveProject } = useProjectActions();
-  const location = useLocation();
-  
-  // Get projectId from URL params or location state
-  const searchParams = new URLSearchParams(window.location.search);
-  const projectId = location.state?.projectId || searchParams.get('projectId');
-  
-  const handleDirectionChange = (value: string) => {
-    if (value === 'horizontal' || value === 'vertical') {
-      setOptimizationDirection(value as OptimizationDirection);
+  const { toast } = useToast();
+  const [inputTimeLimit, setInputTimeLimit] = useState(optimizationTimeLimit.toString());
+  const debouncedTimeLimit = useDebounce(inputTimeLimit, 500);
+
+  // Update the time limit when the debounced value changes
+  React.useEffect(() => {
+    const newTimeLimit = parseInt(debouncedTimeLimit, 10);
+    if (!isNaN(newTimeLimit) && newTimeLimit !== optimizationTimeLimit) {
+      setOptimizationTimeLimit(newTimeLimit);
     }
-  };
-  
-  const handleOptimize = async () => {
-    if (pieces.length === 0) {
-      toast.error("Adicione peças antes de otimizar", {
-        description: "Você precisa adicionar pelo menos uma peça para otimizar o corte."
+  }, [debouncedTimeLimit, setOptimizationTimeLimit, optimizationTimeLimit]);
+
+  const handleTimeLimitChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    
+    // Allow only numbers
+    if (/^\d*$/.test(value)) {
+      setInputTimeLimit(value);
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Por favor, insira apenas números.",
       });
-      return;
-    }
-    
-    // Show loading indicator
-    setIsOptimizing(true);
-    setOptimizationProgress(0);
-    
-    try {
-      // Simulate progress increases
-      const progressInterval = setInterval(() => {
-        setOptimizationProgress(prev => {
-          const newProgress = prev + 5;
-          return newProgress >= 90 ? 90 : newProgress;
-        });
-      }, 300);
-      
-      // Slight delay to ensure UI updates
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      const optimizedPieces = optimizeCutting(pieces, sheet, optimizationDirection);
-      setPlacedPieces(optimizedPieces);
-      
-      // Complete the progress
-      clearInterval(progressInterval);
-      setOptimizationProgress(100);
-      
-      // Show toast with result
-      const placedCount = optimizedPieces.length;
-      const totalCount = pieces.reduce((total, piece) => total + piece.quantity, 0);
-      
-      if (placedCount === totalCount) {
-        toast.success("Otimização concluída com sucesso!", {
-          description: `Todas as ${totalCount} peças foram posicionadas na chapa.`
-        });
-      } else {
-        toast.warning("Otimização parcial!", {
-          description: `Foram posicionadas ${placedCount} de ${totalCount} peças na chapa.`
-        });
-      }
-      
-      // Save the project with optimized pieces
-      if (projectName && projectId) {
-        try {
-          const projectData = {
-            sheet,
-            pieces,
-            placedPieces: optimizedPieces
-          };
-          
-          await saveProject(projectId, projectName, projectData);
-          console.log("Project saved after optimization");
-        } catch (error) {
-          console.error("Error saving project after optimization:", error);
-        }
-      }
-    } finally {
-      // Hide loading indicator after a brief delay to show completion
-      setTimeout(() => {
-        setIsOptimizing(false);
-        setOptimizationProgress(0);
-      }, 500);
-    }
-  };
-  
-  const handleClear = async () => {
-    setPlacedPieces([]);
-    toast.info("Visualização limpa", {
-      description: "Todas as peças foram removidas da visualização."
-    });
-    
-    // Save the project with cleared placed pieces
-    if (projectName && projectId) {
-      try {
-        const projectData = {
-          sheet,
-          pieces,
-          placedPieces: []
-        };
-        
-        await saveProject(projectId, projectName, projectData);
-        console.log("Project saved after clearing");
-      } catch (error) {
-        console.error("Error saving project after clearing:", error);
-      }
     }
   };
 
-  const totalPieces = pieces.reduce((total, piece) => total + piece.quantity, 0);
-  
+  const onStartOptimization = useCallback(async () => {
+    try {
+      toast({
+        title: "Otimização",
+        description: "Otimização iniciada. Isso pode levar alguns minutos...",
+      });
+      
+      startOptimization({
+        onProgressUpdate: (iteration: number, totalIterations: number) => {
+          setOptimizationProgress(0); // Initialize to 0 at the start of optimization
+          const newProgress = Math.min((iteration / totalIterations) * 100, 95);
+          setOptimizationProgress(newProgress);
+        },
+        onFinish: () => {
+          toast({
+            title: "Otimização Concluída",
+            description: "Otimização concluída com sucesso!",
+          });
+        },
+      });
+    } catch (error: any) {
+      console.error("Optimization failed:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro na Otimização",
+        description: "Otimização falhou. Por favor, tente novamente.",
+      });
+    }
+  }, [startOptimization, toast, setOptimizationProgress]);
+
+  const onStopOptimization = useCallback(async () => {
+    try {
+      await stopOptimization();
+      toast({
+        title: "Otimização",
+        description: "Otimização interrompida pelo usuário.",
+      });
+    } catch (error: any) {
+      console.error("Failed to stop optimization:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Falha ao interromper a otimização.",
+      });
+    }
+  }, [stopOptimization, toast]);
+
   return (
-    <div className="flex flex-col gap-4">
-      {/* Direction toggle */}
-      <div className="bg-secondary rounded-md p-3">
-        <p className="text-sm text-muted-foreground mb-2">Direção da otimização:</p>
-        <ToggleGroup 
-          type="single" 
-          value={optimizationDirection} 
-          onValueChange={handleDirectionChange} 
-          className="justify-start"
-        >
-          <ToggleGroupItem value="horizontal" aria-label="Horizontal" className="flex gap-1 items-center">
-            <AlignHorizontalJustifyStart size={16} />
-            <span className="text-xs sm:text-sm">Horizontal</span>
-          </ToggleGroupItem>
-          <ToggleGroupItem value="vertical" aria-label="Vertical" className="flex gap-1 items-center">
-            <AlignVerticalJustifyStart size={16} />
-            <span className="text-xs sm:text-sm">Vertical</span>
-          </ToggleGroupItem>
-        </ToggleGroup>
+    <div className={cn("flex flex-col gap-4 p-4 border rounded-md", className)}>
+      <div className="flex items-center justify-between">
+        <Label htmlFor="time-limit">Tempo Limite (segundos)</Label>
+        <Input
+          type="number"
+          id="time-limit"
+          placeholder="Tempo Limite"
+          value={inputTimeLimit}
+          onChange={handleTimeLimitChange}
+          className="w-32 text-right"
+          min="1"
+        />
       </div>
-    
-      <Button 
-        className="w-full gap-2" 
-        onClick={handleOptimize}
-        disabled={pieces.length === 0}
-      >
-        <Sparkles size={16} />
-        Otimizar Corte
-      </Button>
       
-      <Button 
-        variant="outline" 
-        className="w-full gap-2" 
-        onClick={handleClear}
-      >
-        <RectangleHorizontal size={16} />
-        Limpar Visualização
-      </Button>
-      
-      <div className="bg-secondary rounded-md p-3 text-sm">
-        <div className="flex justify-between items-center">
-          <span className="text-muted-foreground">Total de peças:</span>
-          <span className="font-medium">{totalPieces}</span>
-        </div>
-        <div className="flex justify-between items-center">
-          <span className="text-muted-foreground">Tipos de peças:</span>
-          <span className="font-medium">{pieces.length}</span>
-        </div>
-      </div>
+      {isOptimizing ? (
+        <>
+          <Progress value={optimizationProgress} />
+          <Button variant="destructive" onClick={onStopOptimization} disabled={!isOptimizing}>
+            Parar Otimização
+          </Button>
+        </>
+      ) : (
+        <Button onClick={onStartOptimization} disabled={isOptimizing}>
+          Otimizar
+        </Button>
+      )}
     </div>
   );
 };
-
-export default OptimizationControls;
