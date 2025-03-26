@@ -10,7 +10,6 @@ import {
   TooltipTrigger 
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { Toggle } from '@/components/ui/toggle';
 
 interface ThemeToggleProps {
   variant?: 'default' | 'outline' | 'ghost' | 'icon-only';
@@ -96,6 +95,7 @@ export function ThemeToggle({
     return toggleButton;
   }
   
+  // Make sure the TooltipProvider is properly wrapped around Tooltip component
   return (
     <TooltipProvider>
       <Tooltip>

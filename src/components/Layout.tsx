@@ -6,6 +6,7 @@ import { useIsMobile } from '../hooks/use-mobile';
 import OfflineIndicator from './OfflineIndicator';
 import TopLoadingBar from './ui/top-loading-bar';
 import { ThemeProvider } from '@/hooks/useTheme';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 const LayoutContent = ({ children }: PropsWithChildren) => {
   const isMobile = useIsMobile();
@@ -37,9 +38,11 @@ const LayoutContent = ({ children }: PropsWithChildren) => {
 export const Layout = ({ children }: PropsWithChildren) => {
   return (
     <ThemeProvider>
-      <SheetProvider>
-        <LayoutContent>{children}</LayoutContent>
-      </SheetProvider>
+      <TooltipProvider>
+        <SheetProvider>
+          <LayoutContent>{children}</LayoutContent>
+        </SheetProvider>
+      </TooltipProvider>
     </ThemeProvider>
   );
 };
