@@ -3,4 +3,6 @@
 import { optimizeCutting, OptimizationDirection } from './optimization/optimizationEngine';
 
 // Export the main optimization function and type
-export { optimizeCutting, OptimizationDirection };
+export { optimizeCutting };
+export type { OptimizationDirection };
+
