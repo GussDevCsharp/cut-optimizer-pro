@@ -2,6 +2,18 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Material } from "@/types/material";
 
+interface Database {
+  public: {
+    Tables: {
+      products: {
+        Row: Material;
+        Insert: Omit<Material, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<Material, 'id'>>;
+      };
+    };
+  };
+}
+
 // Get all materials for a user
 export async function getAllMaterials(userId: string): Promise<Material[]> {
   const { data, error } = await supabase
