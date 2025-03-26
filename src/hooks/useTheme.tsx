@@ -37,7 +37,7 @@ export function ThemeProvider({
     
     const savedTheme = localStorage.getItem(storageKey);
     if (savedTheme && (savedTheme === 'dark' || savedTheme === 'light')) {
-      setTheme(savedTheme);
+      setTheme(savedTheme as Theme);
     }
   }, [defaultTheme, storageKey]);
 
