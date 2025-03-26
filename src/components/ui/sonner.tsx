@@ -1,16 +1,18 @@
 
-import { useTheme } from "next-themes"
-import { Toaster as Sonner } from "sonner"
+import { useTheme } from "@/hooks/useTheme";
+import { Toaster as Sonner } from "sonner";
 
-type ToasterProps = React.ComponentProps<typeof Sonner>
+type ToasterProps = React.ComponentProps<typeof Sonner>;
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  // Use system as fallback if no theme is available
-  const { theme = "system" } = useTheme()
+  const { theme } = useTheme();
+  
+  // Safely handle theme
+  const currentTheme = theme || "light";
 
   return (
     <Sonner
-      theme={theme as ToasterProps["theme"]}
+      theme={currentTheme as ToasterProps["theme"]}
       className="toaster group"
       toastOptions={{
         classNames: {
@@ -25,7 +27,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
       }}
       {...props}
     />
-  )
-}
+  );
+};
 
-export { Toaster }
+export { Toaster };

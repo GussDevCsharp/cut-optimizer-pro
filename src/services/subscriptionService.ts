@@ -193,11 +193,20 @@ export const getUsersWithSubscriptionInfo = async () => {
       
     if (error) throw error;
     
-    // Transform the data to a more usable format - fixing type errors here
+    // Transform the data to a more usable format
     return (data || []).map(subscription => {
-      // Safely access nested properties using type assertions
-      const profileData = subscription.profiles as { id: string, full_name: string, email: string } | null;
-      const planData = subscription.plans as { name: string } | null;
+      // Correctly access the nested objects - they're not arrays but single objects
+      const profileData = subscription.profiles as unknown as { 
+        id: string; 
+        full_name: string; 
+        email: string; 
+        created_at: string;
+      } | null;
+      
+      const planData = subscription.plans as unknown as { 
+        name: string; 
+        price: number;
+      } | null;
       
       return {
         id: profileData?.id,

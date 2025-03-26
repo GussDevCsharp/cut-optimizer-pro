@@ -1,4 +1,6 @@
 
+"use client";
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
 type Theme = 'dark' | 'light';
@@ -27,12 +29,18 @@ export function ThemeProvider({
   storageKey = 'melhor-corte-ui-theme',
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(
-    () => (typeof window !== 'undefined' ? 
-           (localStorage.getItem(storageKey) as Theme) || defaultTheme : 
-           defaultTheme)
-  );
+  const [theme, setTheme] = useState<Theme>(defaultTheme);
+  
+  // Initialize theme from localStorage
+  useEffect(() => {
+    const savedTheme = typeof window !== 'undefined' 
+      ? (localStorage.getItem(storageKey) as Theme) || defaultTheme 
+      : defaultTheme;
+      
+    setTheme(savedTheme);
+  }, [defaultTheme, storageKey]);
 
+  // Apply theme changes to document and localStorage
   useEffect(() => {
     if (typeof window === 'undefined') return;
     

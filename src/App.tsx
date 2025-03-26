@@ -115,10 +115,10 @@ const App = () => (
       <AuthProvider>
         <TooltipProvider>
           <ViewportHeightFix />
-          <Toaster />
-          <Sonner />
           <BrowserRouter>
             <AppRoutes />
+            <Toaster />
+            <Sonner />
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>
