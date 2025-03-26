@@ -2,12 +2,9 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Material } from "@/types/material";
 
-// Type cast to avoid TS errors
-const typedSupabase = supabase as any;
-
 // Get all materials for a user
 export async function getAllMaterials(userId: string): Promise<Material[]> {
-  const { data, error } = await typedSupabase
+  const { data, error } = await supabase
     .from('products')
     .select('*')
     .eq('user_id', userId)
@@ -23,7 +20,7 @@ export async function getAllMaterials(userId: string): Promise<Material[]> {
 
 // Create a new material
 export async function createMaterial(materialData: Omit<Material, 'id' | 'created_at' | 'updated_at'>): Promise<Material> {
-  const { data, error } = await typedSupabase
+  const { data, error } = await supabase
     .from('products')
     .insert(materialData)
     .select()
@@ -41,7 +38,7 @@ export async function createMaterial(materialData: Omit<Material, 'id' | 'create
 export async function updateMaterial(materialData: Material): Promise<Material> {
   const { id, ...updates } = materialData;
   
-  const { data, error } = await typedSupabase
+  const { data, error } = await supabase
     .from('products')
     .update(updates)
     .eq('id', id)
@@ -58,7 +55,7 @@ export async function updateMaterial(materialData: Material): Promise<Material> 
 
 // Delete a material
 export async function deleteMaterial(id: string): Promise<void> {
-  const { error } = await typedSupabase
+  const { error } = await supabase
     .from('products')
     .delete()
     .eq('id', id);
