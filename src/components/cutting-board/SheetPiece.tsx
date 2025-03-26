@@ -35,6 +35,9 @@ export const SheetPiece = ({ piece, scale, isMobile, isScrap = false }: SheetPie
   const border = isScrap ? '1px dashed rgba(0,100,0,0.3)' : '1px solid rgba(0,0,0,0.2)';
   const textColor = isScrap ? 'rgba(0,80,0,0.7)' : 'rgba(0,0,0,0.7)';
   
+  // Determine if the scrap piece is wider than it is tall
+  const isWider = piece.width >= piece.height;
+  
   return (
     <div
       style={{
@@ -59,10 +62,13 @@ export const SheetPiece = ({ piece, scale, isMobile, isScrap = false }: SheetPie
     >
       {isScrap ? (
         <div 
-          className="font-medium" 
+          className="font-medium flex items-center justify-center w-full h-full" 
           style={{ 
             fontSize: `${fontSize * 1.1}px`, 
             color: textColor,
+            // If wider than tall, display horizontally; otherwise, vertically
+            writingMode: isWider ? 'horizontal-tb' : 'vertical-rl',
+            transform: isWider ? 'none' : 'rotate(180deg)',
             textAlign: 'center'
           }}
         >
