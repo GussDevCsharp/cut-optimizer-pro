@@ -6,8 +6,6 @@ import { optimizeCutting, OptimizationDirection } from '../utils/optimizationAlg
 import { toast } from "sonner";
 import { useProjectActions } from "@/hooks/useProjectActions";
 import { useLocation } from 'react-router-dom';
-import { useState } from "react";
-import OptimizationLoadingDialog from './OptimizationLoadingDialog';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 export const OptimizationControls = () => {
@@ -18,11 +16,12 @@ export const OptimizationControls = () => {
     setPlacedPieces, 
     projectName, 
     optimizationDirection,
-    setOptimizationDirection
+    setOptimizationDirection,
+    setIsOptimizing,
+    setOptimizationProgress
   } = useSheetData();
   const { saveProject } = useProjectActions();
   const location = useLocation();
-  const [isOptimizing, setIsOptimizing] = useState(false);
   
   // Get projectId from URL params or location state
   const searchParams = new URLSearchParams(window.location.search);
@@ -42,15 +41,28 @@ export const OptimizationControls = () => {
       return;
     }
     
-    // Show loading dialog
+    // Show loading indicator
     setIsOptimizing(true);
+    setOptimizationProgress(0);
     
     try {
-      // Slight delay to ensure the loading dialog is shown
+      // Simulate progress increases
+      const progressInterval = setInterval(() => {
+        setOptimizationProgress(prev => {
+          const newProgress = prev + 5;
+          return newProgress >= 90 ? 90 : newProgress;
+        });
+      }, 300);
+      
+      // Slight delay to ensure UI updates
       await new Promise(resolve => setTimeout(resolve, 100));
       
       const optimizedPieces = optimizeCutting(pieces, sheet, optimizationDirection);
       setPlacedPieces(optimizedPieces);
+      
+      // Complete the progress
+      clearInterval(progressInterval);
+      setOptimizationProgress(100);
       
       // Show toast with result
       const placedCount = optimizedPieces.length;
@@ -82,8 +94,11 @@ export const OptimizationControls = () => {
         }
       }
     } finally {
-      // Hide loading dialog
-      setIsOptimizing(false);
+      // Hide loading indicator after a brief delay to show completion
+      setTimeout(() => {
+        setIsOptimizing(false);
+        setOptimizationProgress(0);
+      }, 500);
     }
   };
   
@@ -113,61 +128,56 @@ export const OptimizationControls = () => {
   const totalPieces = pieces.reduce((total, piece) => total + piece.quantity, 0);
   
   return (
-    <>
-      <div className="flex flex-col gap-4">
-        {/* Direction toggle */}
-        <div className="bg-secondary rounded-md p-3">
-          <p className="text-sm text-muted-foreground mb-2">Direção da otimização:</p>
-          <ToggleGroup 
-            type="single" 
-            value={optimizationDirection} 
-            onValueChange={handleDirectionChange} 
-            className="justify-start"
-          >
-            <ToggleGroupItem value="horizontal" aria-label="Horizontal" className="flex gap-1 items-center">
-              <AlignHorizontalJustifyStart size={16} />
-              <span className="text-xs sm:text-sm">Horizontal</span>
-            </ToggleGroupItem>
-            <ToggleGroupItem value="vertical" aria-label="Vertical" className="flex gap-1 items-center">
-              <AlignVerticalJustifyStart size={16} />
-              <span className="text-xs sm:text-sm">Vertical</span>
-            </ToggleGroupItem>
-          </ToggleGroup>
-        </div>
+    <div className="flex flex-col gap-4">
+      {/* Direction toggle */}
+      <div className="bg-secondary rounded-md p-3">
+        <p className="text-sm text-muted-foreground mb-2">Direção da otimização:</p>
+        <ToggleGroup 
+          type="single" 
+          value={optimizationDirection} 
+          onValueChange={handleDirectionChange} 
+          className="justify-start"
+        >
+          <ToggleGroupItem value="horizontal" aria-label="Horizontal" className="flex gap-1 items-center">
+            <AlignHorizontalJustifyStart size={16} />
+            <span className="text-xs sm:text-sm">Horizontal</span>
+          </ToggleGroupItem>
+          <ToggleGroupItem value="vertical" aria-label="Vertical" className="flex gap-1 items-center">
+            <AlignVerticalJustifyStart size={16} />
+            <span className="text-xs sm:text-sm">Vertical</span>
+          </ToggleGroupItem>
+        </ToggleGroup>
+      </div>
+    
+      <Button 
+        className="w-full gap-2" 
+        onClick={handleOptimize}
+        disabled={pieces.length === 0}
+      >
+        <Sparkles size={16} />
+        Otimizar Corte
+      </Button>
       
-        <Button 
-          className="w-full gap-2" 
-          onClick={handleOptimize}
-          disabled={pieces.length === 0}
-        >
-          <Sparkles size={16} />
-          Otimizar Corte
-        </Button>
-        
-        <Button 
-          variant="outline" 
-          className="w-full gap-2" 
-          onClick={handleClear}
-        >
-          <RectangleHorizontal size={16} />
-          Limpar Visualização
-        </Button>
-        
-        <div className="bg-secondary rounded-md p-3 text-sm">
-          <div className="flex justify-between items-center">
-            <span className="text-muted-foreground">Total de peças:</span>
-            <span className="font-medium">{totalPieces}</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-muted-foreground">Tipos de peças:</span>
-            <span className="font-medium">{pieces.length}</span>
-          </div>
+      <Button 
+        variant="outline" 
+        className="w-full gap-2" 
+        onClick={handleClear}
+      >
+        <RectangleHorizontal size={16} />
+        Limpar Visualização
+      </Button>
+      
+      <div className="bg-secondary rounded-md p-3 text-sm">
+        <div className="flex justify-between items-center">
+          <span className="text-muted-foreground">Total de peças:</span>
+          <span className="font-medium">{totalPieces}</span>
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="text-muted-foreground">Tipos de peças:</span>
+          <span className="font-medium">{pieces.length}</span>
         </div>
       </div>
-      
-      {/* Loading dialog */}
-      <OptimizationLoadingDialog isOpen={isOptimizing} />
-    </>
+    </div>
   );
 };
 

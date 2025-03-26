@@ -1,4 +1,3 @@
-
 import { useState, createContext, useContext, ReactNode } from 'react';
 import { OptimizationDirection } from '../utils/optimization/optimizationEngine';
 
@@ -48,6 +47,10 @@ interface SheetContextType {
   setCurrentSheetIndex: (index: number) => void; // Add setter for current sheet index
   optimizationDirection: OptimizationDirection; // Add optimization direction
   setOptimizationDirection: (direction: OptimizationDirection) => void; // Add setter for optimization direction
+  isOptimizing: boolean;
+  optimizationProgress: number;
+  setIsOptimizing: (value: boolean) => void;
+  setOptimizationProgress: (value: number) => void;
 }
 
 const SheetContext = createContext<SheetContextType | undefined>(undefined);
@@ -64,6 +67,8 @@ export const SheetProvider = ({ children }: { children: ReactNode }) => {
   const [placedPieces, setPlacedPieces] = useState<PlacedPiece[]>([]);
   const [currentSheetIndex, setCurrentSheetIndex] = useState<number>(0);
   const [optimizationDirection, setOptimizationDirection] = useState<OptimizationDirection>('horizontal');
+  const [isOptimizing, setIsOptimizing] = useState(false);
+  const [optimizationProgress, setOptimizationProgress] = useState(0);
 
   const addPiece = (piece: Piece) => {
     setPieces([...pieces, piece]);
@@ -119,6 +124,10 @@ export const SheetProvider = ({ children }: { children: ReactNode }) => {
         setCurrentSheetIndex,
         optimizationDirection,
         setOptimizationDirection,
+        isOptimizing,
+        optimizationProgress,
+        setIsOptimizing,
+        setOptimizationProgress,
       }}
     >
       {children}

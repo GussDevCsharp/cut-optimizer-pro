@@ -9,8 +9,6 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useProjectActions } from "@/hooks/useProjectActions";
 import { useLocation } from 'react-router-dom';
-import { useState } from "react";
-import OptimizationLoadingDialog from './OptimizationLoadingDialog';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 export const PiecesAndOptimizationPanel = () => {
@@ -24,11 +22,12 @@ export const PiecesAndOptimizationPanel = () => {
     updatePiece, 
     removePiece,
     optimizationDirection,
-    setOptimizationDirection
+    setOptimizationDirection,
+    setIsOptimizing,
+    setOptimizationProgress
   } = useSheetData();
   const { saveProject } = useProjectActions();
   const location = useLocation();
-  const [isOptimizing, setIsOptimizing] = useState(false);
   
   const searchParams = new URLSearchParams(window.location.search);
   const projectId = location.state?.projectId || searchParams.get('projectId');
@@ -53,13 +52,27 @@ export const PiecesAndOptimizationPanel = () => {
       return;
     }
     
+    // Show loading indicator
     setIsOptimizing(true);
+    setOptimizationProgress(0);
     
     try {
+      // Simulate progress increases
+      const progressInterval = setInterval(() => {
+        setOptimizationProgress(prev => {
+          const newProgress = prev + 5;
+          return newProgress >= 90 ? 90 : newProgress;
+        });
+      }, 300);
+      
       await new Promise(resolve => setTimeout(resolve, 100));
       
       const optimizedPieces = optimizeCutting(pieces, sheet, optimizationDirection);
       setPlacedPieces(optimizedPieces);
+      
+      // Complete the progress
+      clearInterval(progressInterval);
+      setOptimizationProgress(100);
       
       const placedCount = optimizedPieces.length;
       const totalCount = pieces.reduce((total, piece) => total + piece.quantity, 0);
@@ -89,7 +102,11 @@ export const PiecesAndOptimizationPanel = () => {
         }
       }
     } finally {
-      setIsOptimizing(false);
+      // Hide loading indicator after a brief delay
+      setTimeout(() => {
+        setIsOptimizing(false);
+        setOptimizationProgress(0);
+      }, 500);
     }
   };
   
@@ -118,83 +135,79 @@ export const PiecesAndOptimizationPanel = () => {
   const totalPieces = pieces.reduce((total, piece) => total + piece.quantity, 0);
 
   return (
-    <>
-      <Card className="w-full shadow-subtle border animate-fade-in">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <div className="flex items-center space-x-2">
-              <Puzzle size={18} />
-              <Scissors size={18} />
-              <span>Peças e Otimização</span>
-            </div>
-          </CardTitle>
-          <CardDescription>
-            Adicione peças e otimize o corte de chapas
-          </CardDescription>
-        </CardHeader>
-        
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <ImportPiecesForm onImportPieces={handleImportPieces} />
+    <Card className="w-full shadow-subtle border animate-fade-in">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg flex items-center gap-2">
+          <div className="flex items-center space-x-2">
+            <Puzzle size={18} />
+            <Scissors size={18} />
+            <span>Peças e Otimização</span>
           </div>
-          
-          <PieceForm onAddPiece={addPiece} projectId={projectId} />
-          
-          {/* Direction toggle */}
-          <div className="bg-secondary rounded-md p-3">
-            <p className="text-sm text-muted-foreground mb-2">Direção da otimização:</p>
-            <ToggleGroup 
-              type="single" 
-              value={optimizationDirection} 
-              onValueChange={handleDirectionChange} 
-              className="justify-start"
-            >
-              <ToggleGroupItem value="horizontal" aria-label="Horizontal" className="flex gap-1 items-center">
-                <AlignHorizontalJustifyStart size={16} />
-                <span className="text-xs sm:text-sm">Horizontal</span>
-              </ToggleGroupItem>
-              <ToggleGroupItem value="vertical" aria-label="Vertical" className="flex gap-1 items-center">
-                <AlignVerticalJustifyStart size={16} />
-                <span className="text-xs sm:text-sm">Vertical</span>
-              </ToggleGroupItem>
-            </ToggleGroup>
-          </div>
-          
-          <div className="flex gap-2 mt-4">
-            <Button 
-              className="flex-1 gap-2" 
-              onClick={handleOptimize}
-              disabled={pieces.length === 0}
-            >
-              <Sparkles size={16} />
-              Otimizar Corte
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              className="flex-1 gap-2" 
-              onClick={handleClear}
-            >
-              <RectangleHorizontal size={16} />
-              Limpar
-            </Button>
-          </div>
-          
-          <div className="bg-secondary rounded-md p-3 text-sm">
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Total de peças:</span>
-              <span className="font-medium">{totalPieces}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Tipos de peças:</span>
-              <span className="font-medium">{pieces.length}</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+        </CardTitle>
+        <CardDescription>
+          Adicione peças e otimize o corte de chapas
+        </CardDescription>
+      </CardHeader>
       
-      <OptimizationLoadingDialog isOpen={isOptimizing} />
-    </>
+      <CardContent className="space-y-4">
+        <div className="flex items-center justify-between">
+          <ImportPiecesForm onImportPieces={handleImportPieces} />
+        </div>
+        
+        <PieceForm onAddPiece={addPiece} projectId={projectId} />
+        
+        {/* Direction toggle */}
+        <div className="bg-secondary rounded-md p-3">
+          <p className="text-sm text-muted-foreground mb-2">Direção da otimização:</p>
+          <ToggleGroup 
+            type="single" 
+            value={optimizationDirection} 
+            onValueChange={handleDirectionChange} 
+            className="justify-start"
+          >
+            <ToggleGroupItem value="horizontal" aria-label="Horizontal" className="flex gap-1 items-center">
+              <AlignHorizontalJustifyStart size={16} />
+              <span className="text-xs sm:text-sm">Horizontal</span>
+            </ToggleGroupItem>
+            <ToggleGroupItem value="vertical" aria-label="Vertical" className="flex gap-1 items-center">
+              <AlignVerticalJustifyStart size={16} />
+              <span className="text-xs sm:text-sm">Vertical</span>
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
+        
+        <div className="flex gap-2 mt-4">
+          <Button 
+            className="flex-1 gap-2" 
+            onClick={handleOptimize}
+            disabled={pieces.length === 0}
+          >
+            <Sparkles size={16} />
+            Otimizar Corte
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            className="flex-1 gap-2" 
+            onClick={handleClear}
+          >
+            <RectangleHorizontal size={16} />
+            Limpar
+          </Button>
+        </div>
+        
+        <div className="bg-secondary rounded-md p-3 text-sm">
+          <div className="flex justify-between items-center">
+            <span className="text-muted-foreground">Total de peças:</span>
+            <span className="font-medium">{totalPieces}</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-muted-foreground">Tipos de peças:</span>
+            <span className="font-medium">{pieces.length}</span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
