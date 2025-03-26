@@ -5,4 +5,3 @@ import { optimizeCutting, OptimizationDirection } from './optimization/optimizat
 // Export the main optimization function and type
 export { optimizeCutting };
 export type { OptimizationDirection };
-

@@ -9,6 +9,7 @@ export const OptimizationControls = () => {
   const {
     isOptimizing,
     optimizationProgress,
+    progressMessage,
     optimizationDirection,
     handleDirectionChange,
     handleOptimize,
@@ -41,6 +42,7 @@ export const OptimizationControls = () => {
       <OptimizationLoadingDialog 
         isOpen={isOptimizing} 
         progress={optimizationProgress} 
+        message={progressMessage}
       />
     </>
   );

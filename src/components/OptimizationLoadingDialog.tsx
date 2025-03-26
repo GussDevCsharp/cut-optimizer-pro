@@ -7,9 +7,14 @@ import { Loader2, Timer } from "lucide-react";
 interface OptimizationLoadingDialogProps {
   isOpen: boolean;
   progress?: number;
+  message?: string;
 }
 
-export const OptimizationLoadingDialog = ({ isOpen, progress = 0 }: OptimizationLoadingDialogProps) => {
+export const OptimizationLoadingDialog = ({ 
+  isOpen, 
+  progress = 0, 
+  message = "Calculando a melhor posição para suas peças..."
+}: OptimizationLoadingDialogProps) => {
   const [elapsedTime, setElapsedTime] = useState(0);
   
   // Reset timer when dialog opens
@@ -60,7 +65,7 @@ export const OptimizationLoadingDialog = ({ isOpen, progress = 0 }: Optimization
           </div>
           
           <p className="text-center text-muted-foreground">
-            Calculando a melhor posição para suas peças...
+            {message}
           </p>
           
           {/* Progress bar */}

@@ -20,6 +20,7 @@ export const useOptimization = () => {
   const location = useLocation();
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [optimizationProgress, setOptimizationProgress] = useState(0);
+  const [progressMessage, setProgressMessage] = useState('');
   const workerRef = useRef<Worker | null>(null);
   
   // Get projectId from URL params or location state
@@ -42,7 +43,7 @@ export const useOptimization = () => {
     
     // Set up listeners
     workerRef.current.addEventListener('message', (event) => {
-      const { status, progress, success, placedPieces: optimizedPieces, error } = event.data;
+      const { status, progress, success, placedPieces: optimizedPieces, error, message } = event.data;
       
       switch (status) {
         case 'ready':
@@ -51,6 +52,7 @@ export const useOptimization = () => {
           
         case 'processing':
           setOptimizationProgress(progress || 0);
+          if (message) setProgressMessage(message);
           break;
           
         case 'complete':
@@ -138,6 +140,7 @@ export const useOptimization = () => {
     // Show loading dialog and reset progress
     setIsOptimizing(true);
     setOptimizationProgress(0);
+    setProgressMessage('Iniciando...');
     
     // Send data to worker
     workerRef.current.postMessage({
@@ -171,6 +174,7 @@ export const useOptimization = () => {
   return {
     isOptimizing,
     optimizationProgress,
+    progressMessage,
     optimizationDirection,
     handleDirectionChange,
     handleOptimize,
