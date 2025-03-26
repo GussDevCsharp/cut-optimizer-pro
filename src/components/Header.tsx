@@ -135,7 +135,7 @@ export const Header = () => {
                 variant="outline" 
                 size="sm" 
                 onClick={handleBackToDashboard}
-                className="bg-tech-blue text-white hover:bg-tech-blue/90 border-tech-blue mr-1"
+                className="bg-lilac text-white hover:bg-lilac/90 border-lilac mr-1"
               >
                 <ChevronLeft className="h-4 w-4 mr-1" />
                 Dashboard

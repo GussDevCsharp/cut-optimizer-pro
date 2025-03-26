@@ -7,7 +7,7 @@ import type {
 } from "@/components/ui/toast";
 
 const TOAST_LIMIT = 1;
-const TOAST_REMOVE_DELAY = 5000; // Reduced from the excessive 1000000
+const TOAST_REMOVE_DELAY = 1000000;
 
 type ToasterToast = ToastProps & {
   id: string;
@@ -180,7 +180,7 @@ export function useToast() {
         listeners.splice(index, 1);
       }
     };
-  }, [setState]);
+  }, [state]);
 
   return {
     ...state,

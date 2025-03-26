@@ -1,8 +1,6 @@
 
 // This is a re-export file to maintain backward compatibility
-// Use this for component imports only
-// Do not import actual implementation here to avoid circular dependencies
-import { type ToastActionElement, type ToastProps } from "@/components/ui/toast";
+// while avoiding circular dependencies
+import { useToast, toast } from "@/hooks/use-toast";
 
-export type { ToastActionElement, ToastProps };
-export { toast, useToast } from "@/hooks/use-toast";
+export { useToast, toast };

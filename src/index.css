@@ -1,70 +1,86 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* Light theme - based on tech color palette */
-    --background: 210 33% 98%;
-    --foreground: 210 29% 25%;
+    --background: 260 30% 98%;
+    --foreground: 224 71% 4%;
+
     --card: 0 0% 100%;
-    --card-foreground: 210 29% 25%;
+    --card-foreground: 224 71% 4%;
+
     --popover: 0 0% 100%;
-    --popover-foreground: 210 29% 25%;
-    --primary: 208 100% 33%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 217 12% 49%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 217 12% 95%;
-    --muted-foreground: 217 12% 49%;
-    --accent: 17 100% 60%;
-    --accent-foreground: 0 0% 100%;
+    --popover-foreground: 224 71% 4%;
+
+    --primary: 255 65% 75%;
+    --primary-foreground: 255 10% 10%;
+
+    --secondary: 260 20% 96%;
+    --secondary-foreground: 224 71% 4%;
+
+    --muted: 260 20% 96%;
+    --muted-foreground: 260 10% 50%;
+
+    --accent: 255 65% 93%;
+    --accent-foreground: 255 65% 30%;
+
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 217 12% 83%;
-    --input: 217 12% 83%;
-    --ring: 208 100% 33%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 260 20% 90%;
+    --input: 260 20% 90%;
+    --ring: 255 65% 75%;
+
     --radius: 0.5rem;
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 210 29% 25%;
-    --sidebar-primary: 208 100% 33%;
+
+    --sidebar-background: 260 30% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 255 65% 75%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 17 100% 90%;
-    --sidebar-accent-foreground: 17 100% 40%;
-    --sidebar-border: 217 12% 83%;
-    --sidebar-ring: 208 100% 33%;
+    --sidebar-accent: 255 65% 93%;
+    --sidebar-accent-foreground: 255 65% 30%;
+    --sidebar-border: 260 20% 90%;
+    --sidebar-ring: 255 65% 75%;
   }
 
   .dark {
-    /* Dark theme - based on tech color palette */
-    --background: 210 35% 10%;
-    --foreground: 0 0% 98%;
-    --card: 210 35% 12%;
-    --card-foreground: 0 0% 98%;
-    --popover: 210 35% 12%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 208 70% 45%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 217 12% 25%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 217 12% 20%;
-    --muted-foreground: 217 12% 70%;
-    --accent: 17 90% 55%;
-    --accent-foreground: 0 0% 100%;
+    --background: 224 71% 4%;
+    --foreground: 260 30% 96%;
+
+    --card: 224 71% 6%;
+    --card-foreground: 260 30% 96%;
+
+    --popover: 224 71% 6%;
+    --popover-foreground: 260 30% 96%;
+
+    --primary: 255 65% 75%;
+    --primary-foreground: 255 10% 10%;
+
+    --secondary: 224 71% 10%;
+    --secondary-foreground: 260 30% 96%;
+
+    --muted: 224 71% 10%;
+    --muted-foreground: 260 10% 60%;
+
+    --accent: 255 65% 30%;
+    --accent-foreground: 255 65% 85%;
+
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 217 12% 25%;
-    --input: 217 12% 25%;
-    --ring: 208 70% 45%;
-    --sidebar-background: 210 35% 15%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 208 70% 45%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 17 90% 40%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 217 12% 25%;
-    --sidebar-ring: 208 70% 45%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 224 71% 15%;
+    --input: 224 71% 15%;
+    --ring: 255 65% 75%;
+    
+    --sidebar-background: 224 71% 6%;
+    --sidebar-foreground: 260 30% 96%;
+    --sidebar-primary: 255 65% 75%;
+    --sidebar-primary-foreground: 255 10% 10%;
+    --sidebar-accent: 255 65% 30%;
+    --sidebar-accent-foreground: 255 65% 85%;
+    --sidebar-border: 224 71% 15%;
+    --sidebar-ring: 255 65% 75%;
   }
 }
 
@@ -76,12 +92,15 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "ss01" on, "ss02" on, "cv01" on, "cv03" on;
+    /* Prevent content from being hidden under the virtual keyboard on mobile */
     height: 100%;
     overflow-x: hidden;
   }
 
+  /* Adjust viewport on iOS devices */
   @supports (-webkit-touch-callout: none) {
     body {
+      /* iOS 15+ */
       min-height: -webkit-fill-available;
     }
   }
@@ -90,6 +109,7 @@
     @apply font-medium tracking-tight;
   }
 
+  /* Custom scrollbar */
   ::-webkit-scrollbar {
     @apply w-1.5 h-1.5;
   }
@@ -102,6 +122,7 @@
     @apply bg-muted-foreground/40 rounded-full hover:bg-muted-foreground/60 transition-colors;
   }
 
+  /* Fix for iOS input zoom */
   @media screen and (max-width: 768px) {
     input, select, textarea {
       font-size: 16px !important;
@@ -131,25 +152,28 @@
     @apply w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
   }
 
+  /* Mobile specific styles */
   .mobile-card {
     @apply p-3 shadow-sm rounded-lg;
   }
-
+  
   .mobile-text {
     @apply text-sm;
   }
-
+  
   .mobile-heading {
     @apply text-base font-semibold;
   }
 }
 
+/* Meta Viewport Fix for iOS */
 @supports (-webkit-touch-callout: none) {
   .min-h-screen {
     min-height: -webkit-fill-available;
   }
 }
 
+/* Remove App.css styling to prevent conflicts */
 #root {
   max-width: 100%;
   margin: 0;
