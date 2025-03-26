@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useSheetData } from '@/hooks/useSheetData';
-import { Piece } from '@/types/types';
+import { Piece } from '@/hooks/useSheetData';
 import { OptimizationControls } from './OptimizationControls';
 import { generateId } from '@/lib/utils';
 import { Trash2, Upload, Download, Plus, Edit, Copy, Save, X } from 'lucide-react';
@@ -48,8 +48,8 @@ export const PiecesAndOptimizationPanel = ({ sheetId }: PiecesAndOptimizationPan
   const [isTableVisible, setIsTableVisible] = useState(true);
   const [isOptimized, setIsOptimized] = useState(false);
   const [isOptimizing, setIsOptimizing] = useState(false);
-  const [optimizationProgress, setOptimizationProgress] = useState(0);
-	const [isSaving, setIsSaving] = useState(false);
+  const [optimizationProgress, setOptimizationProgress] = useState<number>(0);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
   const { updateSheetData } = useSheetData();
   const isMobile = useIsMobile();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -71,7 +71,6 @@ export const PiecesAndOptimizationPanel = ({ sheetId }: PiecesAndOptimizationPan
   }, [sheetId]);
 
   useEffect(() => {
-    // Save to local storage whenever pieces, kerf, or grainDirection change
     const sheetData = { pieces, kerf, grainDirection };
     localStorage.setItem(`sheetData-${sheetId}`, JSON.stringify(sheetData));
   }, [pieces, kerf, grainDirection, sheetId]);
@@ -256,15 +255,11 @@ export const PiecesAndOptimizationPanel = ({ sheetId }: PiecesAndOptimizationPan
   const startOptimization = async () => {
     setIsOptimized(false);
     setIsOptimizing(true);
-    setOptimizationProgress(0); // Initialize to 0 at the start of optimization
+    setOptimizationProgress(0);
 
-    // Simulate optimization process
     const totalIterations = 100;
     for (let iteration = 1; iteration <= totalIterations; iteration++) {
-      // Simulate some work
       await new Promise(resolve => setTimeout(resolve, 50));
-
-      // Calculate progress
       const newProgress = Math.min((iteration / totalIterations) * 100, 95);
       setOptimizationProgress(newProgress);
     }
@@ -274,32 +269,31 @@ export const PiecesAndOptimizationPanel = ({ sheetId }: PiecesAndOptimizationPan
     setOptimizationProgress(100);
   };
 
-	const handleSavePieces = async () => {
-		setIsSaving(true);
-		try {
-			await updateSheetData(sheetId, { pieces, kerf, grainDirection });
-			toast({
-				title: "Sucesso!",
-				description: "Peças salvas com sucesso.",
-			});
-		} catch (error) {
-			console.error("Error saving pieces:", error);
-			toast({
-				title: "Erro",
-				description: "Falha ao salvar as peças. Tente novamente.",
-				variant: "destructive",
-			});
-		} finally {
-			setIsSaving(false);
-		}
-	};
+  const handleSavePieces = async () => {
+    setIsSaving(true);
+    try {
+      await updateSheetData(sheetId, { pieces, kerf, grainDirection });
+      toast({
+        title: "Sucesso!",
+        description: "Peças salvas com sucesso.",
+      });
+    } catch (error) {
+      console.error("Error saving pieces:", error);
+      toast({
+        title: "Erro",
+        description: "Falha ao salvar as peças. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const totalArea = calculateTotalArea(pieces);
 
   return (
     <div>
       <div className="md:flex md:gap-4">
-        {/* Input Section */}
         <div className="mb-4 md:w-1/2">
           <h2 className="text-lg font-semibold mb-2">Adicionar Peça</h2>
           <div className="grid grid-cols-1 gap-4">
@@ -358,7 +352,6 @@ export const PiecesAndOptimizationPanel = ({ sheetId }: PiecesAndOptimizationPan
           </div>
         </div>
 
-        {/* Settings Section */}
         <div className="mb-4 md:w-1/2">
           <h2 className="text-lg font-semibold mb-2">Configurações</h2>
           <div className="grid grid-cols-1 gap-4">
@@ -387,7 +380,6 @@ export const PiecesAndOptimizationPanel = ({ sheetId }: PiecesAndOptimizationPan
         </div>
       </div>
 
-      {/* Import Section */}
       <div className="mb-4">
         <h2 className="text-lg font-semibold mb-2">Importar Peças</h2>
         <div {...getRootProps()} className="border-2 border-dashed rounded-md p-4 cursor-pointer">
@@ -415,18 +407,11 @@ export const PiecesAndOptimizationPanel = ({ sheetId }: PiecesAndOptimizationPan
         </Button>
       </div>
 
-      {/* Optimization Section */}
       <div className="mb-4">
         <h2 className="text-lg font-semibold mb-2">Otimização</h2>
-        <OptimizationControls
-          isOptimized={isOptimized}
-          isOptimizing={isOptimizing}
-          optimizationProgress={optimizationProgress}
-          onStartOptimization={startOptimization}
-        />
+        <OptimizationControls className="mb-4" />
       </div>
 
-      {/* Pieces Table Section */}
       <div className="mb-4">
         <div className="flex justify-between items-center mb-2">
           <h2 className="text-lg font-semibold">Lista de Peças ({pieces.length})</h2>
@@ -480,20 +465,18 @@ export const PiecesAndOptimizationPanel = ({ sheetId }: PiecesAndOptimizationPan
         )}
       </div>
 
-			<div className="flex justify-between items-center">
-				<CSVDownloader data={pieces} filename={`pieces-${new Date().toISOString()}.csv`} />
-				<Button 
-					variant="outline" 
-					isLoading={isSaving}
-					onClick={handleSavePieces}
-					disabled={isSaving}
-				>
-					{isSaving ? 'Salvando...' : 'Salvar Peças'}
-					<Save className="h-4 w-4 ml-2" />
-				</Button>
-			</div>
+      <div className="flex justify-between items-center">
+        <CSVDownloader data={pieces} filename={`pieces-${new Date().toISOString()}.csv`} />
+        <Button 
+          variant="outline" 
+          onClick={handleSavePieces}
+          disabled={isSaving}
+        >
+          {isSaving ? 'Salvando...' : 'Salvar Peças'}
+          <Save className="h-4 w-4 ml-2" />
+        </Button>
+      </div>
 
-      {/* Import CSV Dialog */}
       <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -509,7 +492,6 @@ export const PiecesAndOptimizationPanel = ({ sheetId }: PiecesAndOptimizationPan
         </DialogContent>
       </Dialog>
 
-      {/* Duplicate Piece Confirmation Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>

@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -18,8 +19,9 @@ export const OptimizationControls: React.FC<OptimizationControlsProps> = ({ clas
     stopOptimization,
     isOptimizing,
     optimizationProgress,
-    setOptimizationTimeLimit,
+    setOptimizationProgress,
     optimizationTimeLimit,
+    setOptimizationTimeLimit,
   } = useSheetData();
   const { toast } = useToast();
   const [inputTimeLimit, setInputTimeLimit] = useState(optimizationTimeLimit.toString());

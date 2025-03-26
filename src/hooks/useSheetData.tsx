@@ -1,3 +1,4 @@
+
 import { useState, createContext, useContext, ReactNode } from 'react';
 import { OptimizationDirection } from '../utils/optimization/optimizationEngine';
 
@@ -9,6 +10,7 @@ export interface Piece {
   canRotate: boolean;
   color?: string;
   materialId?: string;
+  name: string; // Adding name property as it's used in the code
 }
 
 export interface PlacedPiece extends Piece {
@@ -23,6 +25,11 @@ export interface Sheet {
   height: number;
   cutWidth: number;
   materialId?: string; // Add materialId to track the selected material
+}
+
+interface OptimizationCallbacks {
+  onProgressUpdate?: (iteration: number, totalIterations: number) => void;
+  onFinish?: () => void;
 }
 
 interface SheetContextType {
@@ -51,6 +58,11 @@ interface SheetContextType {
   optimizationProgress: number;
   setIsOptimizing: (value: boolean) => void;
   setOptimizationProgress: (value: number) => void;
+  startOptimization: (callbacks?: OptimizationCallbacks) => void;
+  stopOptimization: () => Promise<void>;
+  optimizationTimeLimit: number;
+  setOptimizationTimeLimit: (limit: number) => void;
+  updateSheetData: (sheetId: string, data: any) => Promise<void>;
 }
 
 const SheetContext = createContext<SheetContextType | undefined>(undefined);
@@ -69,6 +81,7 @@ export const SheetProvider = ({ children }: { children: ReactNode }) => {
   const [optimizationDirection, setOptimizationDirection] = useState<OptimizationDirection>('horizontal');
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [optimizationProgress, setOptimizationProgress] = useState(0);
+  const [optimizationTimeLimit, setOptimizationTimeLimit] = useState(120); // 2 minutes default
 
   const addPiece = (piece: Piece) => {
     setPieces([...pieces, piece]);
@@ -82,6 +95,48 @@ export const SheetProvider = ({ children }: { children: ReactNode }) => {
 
   const removePiece = (id: string) => {
     setPieces(pieces.filter(piece => piece.id !== id));
+  };
+
+  // New optimization methods
+  const startOptimization = (callbacks?: OptimizationCallbacks) => {
+    setIsOptimizing(true);
+    setOptimizationProgress(0);
+    
+    // Simulate optimization process 
+    // In a real app, this would call the actual optimization algorithm
+    const totalIterations = 100;
+    let currentIteration = 0;
+    
+    const optimizationInterval = setInterval(() => {
+      currentIteration++;
+      
+      if (callbacks?.onProgressUpdate) {
+        callbacks.onProgressUpdate(currentIteration, totalIterations);
+      }
+      
+      if (currentIteration >= totalIterations || !isOptimizing) {
+        clearInterval(optimizationInterval);
+        setIsOptimizing(false);
+        setOptimizationProgress(100);
+        
+        if (callbacks?.onFinish) {
+          callbacks.onFinish();
+        }
+      }
+    }, optimizationTimeLimit * 10); // Adjust timing based on timeout
+  };
+
+  const stopOptimization = async (): Promise<void> => {
+    setIsOptimizing(false);
+    return Promise.resolve();
+  };
+
+  // Method to update sheet data in database or localStorage
+  const updateSheetData = async (sheetId: string, data: any): Promise<void> => {
+    // Here you would typically save to a backend
+    // For now, just save to localStorage
+    localStorage.setItem(`sheetData-${sheetId}`, JSON.stringify(data));
+    return Promise.resolve();
   };
 
   // Calculate the number of sheets used
@@ -128,6 +183,11 @@ export const SheetProvider = ({ children }: { children: ReactNode }) => {
         optimizationProgress,
         setIsOptimizing,
         setOptimizationProgress,
+        startOptimization,
+        stopOptimization,
+        optimizationTimeLimit,
+        setOptimizationTimeLimit,
+        updateSheetData,
       }}
     >
       {children}
