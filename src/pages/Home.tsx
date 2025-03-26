@@ -5,7 +5,7 @@ import { Features } from "@/components/home/Features";
 import { Benefits } from "@/components/home/Benefits";
 import { DemoSection } from "@/components/home/DemoSection";
 import { PricingPlans } from "@/components/home/PricingPlans";
-import { CTASection } from "@/components/home/CTASection";
+import CTASection from "@/components/home/CTASection";
 import { HomeFooter } from "@/components/home/HomeFooter";
 import { HomeHeader } from "@/components/home/HomeHeader";
 

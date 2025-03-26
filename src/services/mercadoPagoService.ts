@@ -1,5 +1,4 @@
-
-import { ProductInfo } from '@/components/checkout/CheckoutModal';
+import { ProductInfo, PaymentStatus } from '@/components/checkout/CheckoutModal';
 
 // This would be your public key from Mercado Pago
 // In production, you would likely store this in an environment variable
@@ -94,7 +93,7 @@ export const processCardPayment = async (
   product: ProductInfo,
   cardData: CardData,
   customer: CustomerData
-) => {
+): Promise<{ status: PaymentStatus; paymentId?: string }> => {
   // In a real implementation, this would tokenize the card and send to your backend
   console.log('Processing card payment:', { product, cardData, customer });
   

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +25,11 @@ interface CardPaymentProps {
   product: ProductInfo;
   onProcessing: (isProcessing: boolean) => void;
   onComplete: (status: PaymentStatus, paymentId?: string) => void;
+}
+
+interface PaymentResponse {
+  status: PaymentStatus;
+  paymentId?: string;
 }
 
 const CardPayment: React.FC<CardPaymentProps> = ({ product, onProcessing, onComplete }) => {
@@ -132,10 +136,10 @@ const CardPayment: React.FC<CardPaymentProps> = ({ product, onProcessing, onComp
         identificationNumber: cpf.replace(/\D/g, '')
       };
       
-      // Call the service to process the card payment
-      const response = await processCardPayment(product, cardData, customerData);
+      // Call the service to process the card payment and explicitly type the response
+      const response = await processCardPayment(product, cardData, customerData) as PaymentResponse;
       
-      onComplete(response.status as PaymentStatus, response.paymentId);
+      onComplete(response.status, response.paymentId);
     } catch (error) {
       console.error('Error processing card payment:', error);
       onComplete('error');
