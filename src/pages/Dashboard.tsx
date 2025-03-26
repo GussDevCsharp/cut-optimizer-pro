@@ -14,6 +14,7 @@ import { UserMenu } from "@/components/dashboard/UserMenu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProjectsTabContent } from "@/components/dashboard/ProjectsTabContent";
 import { MaterialsTabContent } from "@/components/dashboard/MaterialsTabContent";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -70,7 +71,12 @@ export default function Dashboard() {
               <span className={isMobile ? "hidden" : "inline"}>Manual do Usuário</span>
             </Button>
             
-            {!isMobile && <UserMenu userName={user?.name} onLogout={handleLogout} />}
+            {!isMobile && (
+              <>
+                <ThemeToggle />
+                <UserMenu userName={user?.name} onLogout={handleLogout} />
+              </>
+            )}
           </div>
         </div>
 

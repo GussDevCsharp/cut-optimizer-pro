@@ -5,7 +5,6 @@ import { SheetProvider, useSheetData } from '../hooks/useSheetData';
 import { useIsMobile } from '../hooks/use-mobile';
 import OfflineIndicator from './OfflineIndicator';
 import TopLoadingBar from './ui/top-loading-bar';
-import ThemeToggle from './ThemeToggle';
 import { ThemeProvider } from '@/hooks/useTheme';
 
 const LayoutContent = ({ children }: PropsWithChildren) => {
@@ -26,11 +25,8 @@ const LayoutContent = ({ children }: PropsWithChildren) => {
         </div>
       </main>
       <footer className="py-4 text-center text-sm text-muted-foreground">
-        <div className="container mx-auto flex justify-between items-center">
-          <div>
-            Melhor Corte © {new Date().getFullYear()} - Otimizador de corte profissional
-          </div>
-          <ThemeToggle />
+        <div className="container mx-auto">
+          Melhor Corte © {new Date().getFullYear()} - Otimizador de corte profissional
         </div>
       </footer>
       <OfflineIndicator />
