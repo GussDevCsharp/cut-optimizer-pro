@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { AlertCircle, Wifi, WifiOff } from 'lucide-react';
+import { Wifi, WifiOff } from 'lucide-react';
 import { toast } from "sonner";
 
 export const OfflineIndicator = () => {

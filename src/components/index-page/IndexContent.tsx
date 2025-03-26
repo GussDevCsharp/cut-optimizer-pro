@@ -4,7 +4,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import DesktopLayout from './DesktopLayout';
 import MobileLayout from './MobileLayout';
 import ProjectLoader from './ProjectLoader';
-import { Toaster } from '../ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
 export const IndexContent = () => {
@@ -15,7 +14,6 @@ export const IndexContent = () => {
       <ProjectLoader>
         {!isMobile ? <DesktopLayout /> : <MobileLayout />}
       </ProjectLoader>
-      <Toaster />
     </TooltipProvider>
   );
 };

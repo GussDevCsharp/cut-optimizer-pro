@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -30,39 +29,31 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isAdmin, isLoading } = useAuth();
   
-  // Show nothing while checking auth status
   if (isLoading) {
     return null;
   }
   
-  // Redirect to login if not authenticated
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
   
-  // Redirect to dashboard if authenticated but not admin
   if (!isAdmin) {
     return <Navigate to="/dashboard" replace />;
   }
   
-  // User is authenticated and is an admin
   return <>{children}</>;
 };
 
 // Mobile viewport height fix
 const ViewportHeightFix = () => {
   useEffect(() => {
-    // Fix for mobile viewport height issues with the vh unit
     const setViewportHeight = () => {
-      // Set the value of --vh to the actual viewport height
       const vh = window.innerHeight * 0.01;
       document.documentElement.style.setProperty('--vh', `${vh}px`);
     };
 
-    // Set the initial value
     setViewportHeight();
 
-    // Update on resize and orientation change
     window.addEventListener('resize', setViewportHeight);
     window.addEventListener('orientationchange', setViewportHeight);
 
@@ -79,22 +70,17 @@ const ViewportHeightFix = () => {
 const AppRoutes = () => {
   return (
     <Routes>
-      {/* Landing page route - not affected by theme */}
       <Route path="/home" element={<Home />} />
       <Route path="/" element={<Home />} />
       
-      {/* Auth pages */}
       <Route path="/login" element={<Login />} />
       <Route path="/cadastro" element={<Register />} />
       
-      {/* Protected routes with theme support */}
       <Route 
         path="/dashboard" 
         element={
           <ProtectedRoute>
-            <ThemeProvider>
-              <Dashboard />
-            </ThemeProvider>
+            <Dashboard />
           </ProtectedRoute>
         } 
       />
@@ -110,14 +96,11 @@ const AppRoutes = () => {
         path="/testing" 
         element={
           <AdminRoute>
-            <ThemeProvider>
-              <Testing />
-            </ThemeProvider>
+            <Testing />
           </AdminRoute>
         } 
       />
       
-      {/* Catch-all route */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
@@ -127,16 +110,18 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <ViewportHeightFix />
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AppRoutes />
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <ViewportHeightFix />
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AppRoutes />
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
