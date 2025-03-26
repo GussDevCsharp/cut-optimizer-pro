@@ -50,12 +50,13 @@ export const OptimizationControls = () => {
     
     try {
       // Simulate progress increases with fixed increments
+      let currentProgress = 0;
       const progressInterval = setInterval(() => {
-        setOptimizationProgress((prevProgress) => {
-          // Convert the callback to directly return a number
-          const newProgress = prevProgress + 5;
-          return newProgress >= 90 ? 90 : newProgress;
-        });
+        currentProgress += 5;
+        if (currentProgress >= 90) {
+          currentProgress = 90;
+        }
+        setOptimizationProgress(currentProgress);
       }, 300);
       
       // Slight delay to ensure UI updates
