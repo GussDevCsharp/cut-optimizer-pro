@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { AuthUser } from '@/types/auth';
 import { formatSupabaseUser, isUserAdmin } from '@/services/userService';
+// Import directly from the hooks folder to avoid circular dependencies
 import { useToast } from '@/hooks/use-toast';
 import { Session } from '@supabase/supabase-js';
 

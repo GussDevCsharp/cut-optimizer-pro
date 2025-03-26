@@ -10,10 +10,10 @@ import { AddPieceButton } from './piece-form/AddPieceButton';
 
 interface PieceFormProps {
   onAddPiece: (piece: Piece) => void;
-  projectId: string | null;
+  projectId?: string | null;  // Make projectId optional
 }
 
-export const PieceForm = ({ onAddPiece, projectId }: PieceFormProps) => {
+export const PieceForm = ({ onAddPiece, projectId = null }: PieceFormProps) => {
   const [newPiece, setNewPiece] = useState<Omit<Piece, 'id'>>({
     width: 100,
     height: 100,
