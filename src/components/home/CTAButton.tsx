@@ -1,13 +1,8 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigate } from 'react-router-dom';
+import UserRegistrationDialog from './UserRegistrationDialog';
+import CTAButtonLogic from './CTAButtonLogic';
 import UserRegistrationCheckout from '../checkout/UserRegistrationCheckout';
 
 interface CTAButtonProps {
@@ -22,19 +17,6 @@ interface CTAButtonProps {
   showCheckout?: boolean;
 }
 
-// Schema for validating user registration data
-const userSchema = z.object({
-  name: z.string().min(2, { message: "Nome deve ter pelo menos 2 caracteres" }),
-  email: z.string().email({ message: "Email inválido" }),
-  password: z.string().min(6, { message: "Senha deve ter pelo menos 6 caracteres" }),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "As senhas não conferem",
-  path: ["confirmPassword"],
-});
-
-type UserFormValues = z.infer<typeof userSchema>;
-
 const CTAButton: React.FC<CTAButtonProps> = ({ 
   productId,
   productName,
@@ -46,55 +28,21 @@ const CTAButton: React.FC<CTAButtonProps> = ({
   className,
   showCheckout = true
 }) => {
-  const [userDialogOpen, setUserDialogOpen] = useState(false);
-  const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [userCredentials, setUserCredentials] = useState<{
-    name: string; 
-    email: string; 
-    password: string;
-  } | null>(null);
-  const navigate = useNavigate();
-  
-  const form = useForm<UserFormValues>({
-    resolver: zodResolver(userSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-    },
+  const { 
+    handleButtonClick, 
+    userDialogOpen, 
+    setUserDialogOpen,
+    checkoutOpen,
+    setCheckoutOpen,
+    userCredentials,
+    handlePaymentComplete,
+    form,
+    onSubmit
+  } = CTAButtonLogic({ 
+    productId, 
+    showCheckout 
   });
 
-  const onSubmit = (data: UserFormValues) => {
-    // Only extract the needed fields for userCredentials
-    setUserCredentials({
-      name: data.name,
-      email: data.email,
-      password: data.password
-    });
-    setUserDialogOpen(false);
-    setCheckoutOpen(true);
-  };
-
-  const handleButtonClick = () => {
-    if (!showCheckout) {
-      navigate('/cadastro');
-    } else {
-      setUserDialogOpen(true);
-    }
-  };
-
-  const handlePaymentComplete = (status: string, paymentId?: string) => {
-    console.log('Payment completed with status:', status, 'and ID:', paymentId);
-    
-    if (status === 'approved') {
-      // Redirect to dashboard after successful payment and registration
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 3000);
-    }
-  };
-  
   return (
     <>
       <Button
@@ -106,89 +54,13 @@ const CTAButton: React.FC<CTAButtonProps> = ({
         {buttonText}
       </Button>
       
-      {/* User data collection dialog */}
-      <Dialog open={userDialogOpen} onOpenChange={setUserDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Crie sua conta</DialogTitle>
-            <DialogDescription>
-              Registre-se para completar sua compra e acessar a plataforma.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nome</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Seu Nome" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input placeholder="seu@email.com" type="email" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Senha</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="******" 
-                        type="password" 
-                        showPasswordToggle={true}
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="confirmPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Confirme a senha</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="******" 
-                        type="password" 
-                        showPasswordToggle={true}
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <DialogFooter>
-                <Button type="submit">Continuar para pagamento</Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+      <UserRegistrationDialog 
+        userDialogOpen={userDialogOpen}
+        setUserDialogOpen={setUserDialogOpen}
+        form={form}
+        onSubmit={onSubmit}
+      />
       
-      {/* Checkout dialog */}
       {userCredentials && (
         <UserRegistrationCheckout 
           isOpen={checkoutOpen}
