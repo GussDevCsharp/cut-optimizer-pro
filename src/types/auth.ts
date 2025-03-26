@@ -1,6 +1,4 @@
 
-import { User } from "@supabase/supabase-js";
-
 export interface AuthUser {
   id: string;
   name: string;
@@ -16,6 +14,8 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   isAdmin: boolean;
-  isMasterAdmin?: boolean;
-  hasMasterAccess?: boolean; // Added explicit property for full data access
+  isMasterAdmin: boolean;
+  hasMasterAccess: boolean;
+  hasActiveSubscription?: boolean;
+  subscriptionExpiryDate?: Date | null;
 }
