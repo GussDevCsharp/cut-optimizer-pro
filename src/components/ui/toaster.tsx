@@ -2,8 +2,6 @@
 "use client";
 
 import React from "react";
-// Import directly from the base hook file
-import { useToast } from "@/hooks/use-toast";
 import {
   Toast,
   ToastClose,
@@ -12,6 +10,7 @@ import {
   ToastTitle,
   ToastViewport,
 } from "@/components/ui/toast";
+import { useToast } from "@/hooks/use-toast";
 
 export function Toaster() {
   const { toasts } = useToast();

@@ -48,7 +48,11 @@ const CTAButton: React.FC<CTAButtonProps> = ({
 }) => {
   const [userDialogOpen, setUserDialogOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [userCredentials, setUserCredentials] = useState<UserFormValues | null>(null);
+  const [userCredentials, setUserCredentials] = useState<{
+    name: string; 
+    email: string; 
+    password: string;
+  } | null>(null);
   const navigate = useNavigate();
   
   const form = useForm<UserFormValues>({
@@ -62,7 +66,12 @@ const CTAButton: React.FC<CTAButtonProps> = ({
   });
 
   const onSubmit = (data: UserFormValues) => {
-    setUserCredentials(data);
+    // Only extract the needed fields for userCredentials
+    setUserCredentials({
+      name: data.name,
+      email: data.email,
+      password: data.password
+    });
     setUserDialogOpen(false);
     setCheckoutOpen(true);
   };

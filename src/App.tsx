@@ -109,7 +109,8 @@ const ViewportHeightFix = () => {
 // Application Routes component with React Router
 const AppRoutes = () => {
   return (
-    <>
+    <BrowserRouter>
+      <ViewportHeightFix />
       <Routes>
         <Route path="/home" element={<Home />} />
         <Route path="/" element={<Home />} />
@@ -146,7 +147,7 @@ const AppRoutes = () => {
       </Routes>
       <Toaster />
       <Sonner />
-    </>
+    </BrowserRouter>
   );
 };
 
@@ -159,10 +160,7 @@ const App = () => (
     <ThemeProvider defaultTheme="light">
       <AuthProvider>
         <TooltipProvider>
-          <BrowserRouter>
-            <ViewportHeightFix />
-            <AppRoutes />
-          </BrowserRouter>
+          <AppRoutes />
         </TooltipProvider>
       </AuthProvider>
     </ThemeProvider>
