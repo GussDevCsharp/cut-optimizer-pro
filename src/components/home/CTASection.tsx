@@ -1,44 +1,46 @@
 
-import React from "react";
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import React from 'react';
+import CTAButton from './CTAButton';
 
-export const CTASection = () => {
+const CTASection: React.FC = () => {
   return (
-    <section className="py-16 md:py-24 bg-primary/10">
-      <div className="container px-4 md:px-6">
-        <div className="flex flex-col items-center text-center space-y-4 md:space-y-8">
-          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-            Pronto para transformar seu negócio?
-          </h2>
-          <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
-            Junte-se a centenas de profissionais que estão economizando tempo, 
-            material e aumentando seus lucros com o Melhor Corte.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 mt-4">
-            <Link to="/cadastro">
-              <Button size="lg" className="px-8">
-                Começar Agora
-                <ArrowRight className="ml-1 h-4 w-4" />
-              </Button>
-            </Link>
-            <Button variant="outline" size="lg">
-              Agendar Demonstração
-            </Button>
-          </div>
-          <div className="pt-4 flex items-center gap-2 text-sm text-muted-foreground">
-            <CheckCircle2 className="h-4 w-4 text-primary" />
-            <span>7 dias de teste grátis</span>
-            <span className="mx-2">•</span>
-            <CheckCircle2 className="h-4 w-4 text-primary" />
-            <span>Sem cartão de crédito</span>
-            <span className="mx-2">•</span>
-            <CheckCircle2 className="h-4 w-4 text-primary" />
-            <span>Cancele quando quiser</span>
-          </div>
+    <section className="bg-gradient-to-r from-blue-600 to-indigo-700 py-16">
+      <div className="container mx-auto px-4 text-center">
+        <h2 className="text-3xl font-bold text-white mb-6">
+          Comece Agora Mesmo
+        </h2>
+        <p className="text-white text-lg mb-8 max-w-2xl mx-auto">
+          Experimente nossa solução completa e transforme a forma como você gerencia seus projetos.
+        </p>
+        
+        <div className="flex flex-col sm:flex-row justify-center gap-4">
+          <CTAButton 
+            productId="premium-monthly"
+            productName="Plano Premium Mensal"
+            productDescription="Acesso completo a todas as funcionalidades por 1 mês"
+            productPrice={49.90}
+            buttonText="Assinar agora"
+            buttonVariant="default"
+            className="bg-white text-blue-600 hover:bg-gray-100 hover:text-blue-700"
+          />
+          
+          <CTAButton 
+            productId="premium-yearly"
+            productName="Plano Premium Anual"
+            productDescription="Acesso completo a todas as funcionalidades por 12 meses (2 meses grátis)"
+            productPrice={499.00}
+            buttonText="Economize com o plano anual"
+            buttonVariant="outline"
+            className="border-white text-white hover:bg-white/10"
+          />
         </div>
+        
+        <p className="text-white/80 text-sm mt-6">
+          7 dias de garantia. Cancele quando quiser.
+        </p>
       </div>
     </section>
   );
 };
+
+export default CTASection;
