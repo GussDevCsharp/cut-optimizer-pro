@@ -1,7 +1,18 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { ThemeProvider as NextThemesProvider } from "next-themes";
-import { type ThemeProviderProps } from "next-themes/dist/types";
+import { ThemeProvider as NextThemesProvider, useTheme as useNextTheme } from "next-themes";
+
+type ThemeProviderProps = {
+  children: React.ReactNode;
+  defaultTheme?: string;
+  storageKey?: string;
+  attribute?: string;
+  value?: object;
+  enableSystem?: boolean;
+  disableTransitionOnChange?: boolean;
+  forcedTheme?: string;
+  enableColorScheme?: boolean;
+};
 
 type ThemeProviderContextProps = {
   theme: string | undefined;
