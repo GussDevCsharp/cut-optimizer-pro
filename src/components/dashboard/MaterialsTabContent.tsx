@@ -17,7 +17,14 @@ interface MaterialsTabContentProps {
 export function MaterialsTabContent({ userId, isActiveTab }: MaterialsTabContentProps) {
   const isMobile = useIsMobile();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { materials, isLoading, loadMaterials, createMaterial, deleteMaterial, updateMaterial } = useMaterialsData(userId);
+  const { 
+    materials, 
+    isLoading, 
+    loadMaterials, 
+    createMaterial, 
+    deleteMaterial, 
+    updateMaterial 
+  } = useMaterialsData(userId);
   const [selectedMaterial, setSelectedMaterial] = useState<any>(null);
 
   // Load materials when this tab becomes active

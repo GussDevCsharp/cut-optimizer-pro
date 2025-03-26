@@ -3,9 +3,9 @@ import React, { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { 
   getAllMaterials, 
-  createMaterial as createMaterialService, 
-  updateMaterial as updateMaterialService,
-  deleteMaterial as deleteMaterialService
+  createMaterial,
+  updateMaterial,
+  deleteMaterial
 } from "@/services/materialService";
 import type { Material } from "@/types/material";
 
@@ -28,11 +28,11 @@ export function useMaterialsData(userId: string | undefined) {
     }
   }, [userId]);
 
-  const createMaterial = async (materialData: Omit<Material, 'id' | 'created_at' | 'updated_at'>) => {
+  const createMaterialItem = async (materialData: Omit<Material, 'id' | 'created_at' | 'updated_at'>) => {
     if (!userId) return null;
     
     try {
-      const newMaterial = await createMaterialService({
+      const newMaterial = await createMaterial({
         ...materialData,
         user_id: userId,
       });
@@ -45,9 +45,9 @@ export function useMaterialsData(userId: string | undefined) {
     }
   };
 
-  const updateMaterial = async (materialData: Material) => {
+  const updateMaterialItem = async (materialData: Material) => {
     try {
-      const updated = await updateMaterialService(materialData);
+      const updated = await updateMaterial(materialData);
       setMaterials(prev => 
         prev.map(material => 
           material.id === updated.id ? updated : material
@@ -60,9 +60,9 @@ export function useMaterialsData(userId: string | undefined) {
     }
   };
 
-  const deleteMaterial = async (id: string) => {
+  const deleteMaterialItem = async (id: string) => {
     try {
-      await deleteMaterialService(id);
+      await deleteMaterial(id);
       setMaterials(prev => prev.filter(material => material.id !== id));
       return true;
     } catch (error) {
@@ -75,8 +75,8 @@ export function useMaterialsData(userId: string | undefined) {
     materials,
     isLoading,
     loadMaterials,
-    createMaterial,
-    updateMaterial,
-    deleteMaterial
+    createMaterial: createMaterialItem,
+    updateMaterial: updateMaterialItem,
+    deleteMaterial: deleteMaterialItem
   };
 }
