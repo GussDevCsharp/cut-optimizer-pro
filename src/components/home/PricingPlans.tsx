@@ -1,8 +1,7 @@
 
 import React from "react";
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { CheckCircle2 } from "lucide-react";
+import CheckoutButton from "../checkout/CheckoutButton";
 
 export const PricingPlans = () => {
   return (
@@ -18,22 +17,22 @@ export const PricingPlans = () => {
         </div>
         
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          {/* Starter Plan */}
+          {/* Basic Plan */}
           <div className="flex flex-col p-6 bg-card rounded-lg shadow-sm border border-border relative overflow-hidden">
             <div className="text-center mb-6">
-              <h3 className="text-xl font-bold">Iniciante</h3>
+              <h3 className="text-xl font-bold">Básico</h3>
               <div className="mt-3">
-                <span className="text-3xl font-bold">R$59</span>
+                <span className="text-3xl font-bold">R$29,90</span>
                 <span className="text-muted-foreground">/mês</span>
               </div>
               <p className="text-sm text-muted-foreground mt-1">
-                Perfeito para pequenas marcenarias
+                Para profissionais individuais
               </p>
             </div>
             <ul className="space-y-3 mb-6 flex-1">
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
-                <span className="text-sm">Até 20 projetos por mês</span>
+                <span className="text-sm">1 projeto simultâneo</span>
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
@@ -48,11 +47,15 @@ export const PricingPlans = () => {
                 <span className="text-sm">1 usuário</span>
               </li>
             </ul>
-            <Link to="/cadastro" className="w-full">
-              <Button className="w-full" variant="outline">
-                Começar Teste Grátis
-              </Button>
-            </Link>
+            <CheckoutButton 
+              productId="basic-monthly"
+              productName="Plano Básico Mensal"
+              productDescription="Acesso a 1 projeto simultâneo"
+              productPrice={29.90}
+              buttonText="Assinar agora"
+              buttonVariant="outline"
+              className="w-full"
+            />
             <p className="text-xs text-center text-muted-foreground mt-3">
               7 dias grátis, sem compromisso
             </p>
@@ -68,17 +71,17 @@ export const PricingPlans = () => {
             <div className="text-center mb-6">
               <h3 className="text-xl font-bold">Profissional</h3>
               <div className="mt-3">
-                <span className="text-3xl font-bold">R$99</span>
+                <span className="text-3xl font-bold">R$49,90</span>
                 <span className="text-muted-foreground">/mês</span>
               </div>
               <p className="text-sm text-muted-foreground mt-1">
-                Ideal para marcenarias em crescimento
+                Ideal para pequenas marcenarias
               </p>
             </div>
             <ul className="space-y-3 mb-6 flex-1">
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
-                <span className="text-sm">Projetos ilimitados</span>
+                <span className="text-sm">Até 3 projetos simultâneos</span>
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
@@ -101,22 +104,26 @@ export const PricingPlans = () => {
                 <span className="text-sm">Suporte prioritário</span>
               </li>
             </ul>
-            <Link to="/cadastro" className="w-full">
-              <Button className="w-full">
-                Começar Teste Grátis
-              </Button>
-            </Link>
+            <CheckoutButton 
+              productId="pro-monthly"
+              productName="Plano Profissional Mensal"
+              productDescription="Acesso a até 3 projetos simultâneos"
+              productPrice={49.90}
+              buttonText="Assinar agora"
+              buttonVariant="default"
+              className="w-full"
+            />
             <p className="text-xs text-center text-muted-foreground mt-3">
               7 dias grátis, sem compromisso
             </p>
           </div>
           
-          {/* Enterprise Plan */}
+          {/* Business Plan */}
           <div className="flex flex-col p-6 bg-card rounded-lg shadow-sm border border-border relative overflow-hidden">
             <div className="text-center mb-6">
               <h3 className="text-xl font-bold">Empresarial</h3>
               <div className="mt-3">
-                <span className="text-3xl font-bold">R$199</span>
+                <span className="text-3xl font-bold">R$129,00</span>
                 <span className="text-muted-foreground">/mês</span>
               </div>
               <p className="text-sm text-muted-foreground mt-1">
@@ -126,11 +133,15 @@ export const PricingPlans = () => {
             <ul className="space-y-3 mb-6 flex-1">
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
+                <span className="text-sm">Até 6 projetos simultâneos</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
                 <span className="text-sm">Tudo do plano Profissional</span>
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
-                <span className="text-sm">10 usuários</span>
+                <span className="text-sm">6 usuários</span>
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
@@ -140,14 +151,22 @@ export const PricingPlans = () => {
                 <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
                 <span className="text-sm">Treinamento personalizado</span>
               </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
+                <span className="text-sm">API para integração</span>
+              </li>
             </ul>
-            <Link to="/cadastro" className="w-full">
-              <Button className="w-full" variant="outline">
-                Falar com Consultor
-              </Button>
-            </Link>
+            <CheckoutButton 
+              productId="business-monthly"
+              productName="Plano Empresarial Mensal"
+              productDescription="Acesso a até 6 projetos simultâneos"
+              productPrice={129.00}
+              buttonText="Assinar agora"
+              buttonVariant="outline"
+              className="w-full"
+            />
             <p className="text-xs text-center text-muted-foreground mt-3">
-              Demonstração personalizada
+              7 dias grátis, sem compromisso
             </p>
           </div>
         </div>
