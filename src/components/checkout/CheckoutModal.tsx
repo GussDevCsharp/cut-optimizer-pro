@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { initMercadoPago } from "@/services/mercadoPagoService";
+import { initMercadoPago } from "@/services/mercadoPago";
 import PixPayment from "./payment-methods/PixPayment";
 import CardPayment from "./payment-methods/CardPayment";
 import BoletoPayment from "./payment-methods/BoletoPayment";

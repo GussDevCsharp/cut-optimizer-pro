@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +19,7 @@ import {
   processCardPayment,
   CustomerData,
   CardData
-} from "@/services/mercadoPagoService";
+} from "@/services/mercadoPago";
 import { ProductInfo, PaymentStatus } from "../CheckoutModal";
 
 interface CardPaymentProps {
