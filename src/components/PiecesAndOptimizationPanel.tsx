@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Puzzle, Scissors, Sparkles, RectangleHorizontal, LayoutHorizontal, LayoutVertical } from 'lucide-react';
+import { Puzzle, Scissors, Sparkles, RectangleHorizontal, AlignHorizontalJustifyStart, AlignVerticalJustifyStart } from 'lucide-react';
 import { useSheetData, Piece } from '../hooks/useSheetData';
 import { PieceForm } from './pieces-panel/PieceForm';
 import { ImportPiecesForm } from './pieces-panel/ImportPiecesForm';
@@ -150,11 +150,11 @@ export const PiecesAndOptimizationPanel = () => {
               className="justify-start"
             >
               <ToggleGroupItem value="horizontal" aria-label="Horizontal" className="flex gap-1 items-center">
-                <LayoutHorizontal size={16} />
+                <AlignHorizontalJustifyStart size={16} />
                 <span className="text-xs sm:text-sm">Horizontal</span>
               </ToggleGroupItem>
               <ToggleGroupItem value="vertical" aria-label="Vertical" className="flex gap-1 items-center">
-                <LayoutVertical size={16} />
+                <AlignVerticalJustifyStart size={16} />
                 <span className="text-xs sm:text-sm">Vertical</span>
               </ToggleGroupItem>
             </ToggleGroup>

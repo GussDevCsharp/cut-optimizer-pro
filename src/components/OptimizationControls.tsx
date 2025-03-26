@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Sparkles, RectangleHorizontal, LayoutHorizontal, LayoutVertical } from 'lucide-react';
+import { Sparkles, RectangleHorizontal, AlignHorizontalJustifyStart, AlignVerticalJustifyStart } from 'lucide-react';
 import { useSheetData } from '../hooks/useSheetData';
 import { optimizeCutting, OptimizationDirection } from '../utils/optimizationAlgorithm';
 import { toast } from "sonner";
@@ -125,11 +125,11 @@ export const OptimizationControls = () => {
             className="justify-start"
           >
             <ToggleGroupItem value="horizontal" aria-label="Horizontal" className="flex gap-1 items-center">
-              <LayoutHorizontal size={16} />
+              <AlignHorizontalJustifyStart size={16} />
               <span className="text-xs sm:text-sm">Horizontal</span>
             </ToggleGroupItem>
             <ToggleGroupItem value="vertical" aria-label="Vertical" className="flex gap-1 items-center">
-              <LayoutVertical size={16} />
+              <AlignVerticalJustifyStart size={16} />
               <span className="text-xs sm:text-sm">Vertical</span>
             </ToggleGroupItem>
           </ToggleGroup>
