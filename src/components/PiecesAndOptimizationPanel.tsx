@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useProjectActions } from "@/hooks/useProjectActions";
 import { useLocation } from 'react-router-dom';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { LoadingOverlay } from './cutting-board/LoadingOverlay';
 
 export const PiecesAndOptimizationPanel = () => {
   const { 
@@ -23,6 +24,8 @@ export const PiecesAndOptimizationPanel = () => {
     removePiece,
     optimizationDirection,
     setOptimizationDirection,
+    isOptimizing,
+    optimizationProgress,
     setIsOptimizing,
     setOptimizationProgress
   } = useSheetData();
@@ -135,79 +138,87 @@ export const PiecesAndOptimizationPanel = () => {
   const totalPieces = pieces.reduce((total, piece) => total + piece.quantity, 0);
 
   return (
-    <Card className="w-full shadow-subtle border animate-fade-in">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <div className="flex items-center space-x-2">
-            <Puzzle size={18} />
-            <Scissors size={18} />
-            <span>Peças e Otimização</span>
-          </div>
-        </CardTitle>
-        <CardDescription>
-          Adicione peças e otimize o corte de chapas
-        </CardDescription>
-      </CardHeader>
+    <>
+      <LoadingOverlay 
+        isVisible={isOptimizing} 
+        progress={optimizationProgress}
+      />
       
-      <CardContent className="space-y-4">
-        <div className="flex items-center justify-between">
-          <ImportPiecesForm onImportPieces={handleImportPieces} />
-        </div>
+      <Card className="w-full shadow-subtle border animate-fade-in">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <div className="flex items-center space-x-2">
+              <Puzzle size={18} />
+              <Scissors size={18} />
+              <span>Peças e Otimização</span>
+            </div>
+          </CardTitle>
+          <CardDescription>
+            Adicione peças e otimize o corte de chapas
+          </CardDescription>
+        </CardHeader>
         
-        <PieceForm onAddPiece={addPiece} projectId={projectId} />
-        
-        {/* Direction toggle */}
-        <div className="bg-secondary rounded-md p-3">
-          <p className="text-sm text-muted-foreground mb-2">Direção da otimização:</p>
-          <ToggleGroup 
-            type="single" 
-            value={optimizationDirection} 
-            onValueChange={handleDirectionChange} 
-            className="justify-start"
-          >
-            <ToggleGroupItem value="horizontal" aria-label="Horizontal" className="flex gap-1 items-center">
-              <AlignHorizontalJustifyStart size={16} />
-              <span className="text-xs sm:text-sm">Horizontal</span>
-            </ToggleGroupItem>
-            <ToggleGroupItem value="vertical" aria-label="Vertical" className="flex gap-1 items-center">
-              <AlignVerticalJustifyStart size={16} />
-              <span className="text-xs sm:text-sm">Vertical</span>
-            </ToggleGroupItem>
-          </ToggleGroup>
-        </div>
-        
-        <div className="flex gap-2 mt-4">
-          <Button 
-            className="flex-1 gap-2" 
-            onClick={handleOptimize}
-            disabled={pieces.length === 0}
-          >
-            <Sparkles size={16} />
-            Otimizar Corte
-          </Button>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <ImportPiecesForm onImportPieces={handleImportPieces} />
+          </div>
           
-          <Button 
-            variant="outline" 
-            className="flex-1 gap-2" 
-            onClick={handleClear}
-          >
-            <RectangleHorizontal size={16} />
-            Limpar
-          </Button>
-        </div>
-        
-        <div className="bg-secondary rounded-md p-3 text-sm">
-          <div className="flex justify-between items-center">
-            <span className="text-muted-foreground">Total de peças:</span>
-            <span className="font-medium">{totalPieces}</span>
+          <PieceForm onAddPiece={addPiece} projectId={projectId} />
+          
+          {/* Direction toggle */}
+          <div className="bg-secondary rounded-md p-3">
+            <p className="text-sm text-muted-foreground mb-2">Direção da otimização:</p>
+            <ToggleGroup 
+              type="single" 
+              value={optimizationDirection} 
+              onValueChange={handleDirectionChange} 
+              className="justify-start"
+            >
+              <ToggleGroupItem value="horizontal" aria-label="Horizontal" className="flex gap-1 items-center">
+                <AlignHorizontalJustifyStart size={16} />
+                <span className="text-xs sm:text-sm">Horizontal</span>
+              </ToggleGroupItem>
+              <ToggleGroupItem value="vertical" aria-label="Vertical" className="flex gap-1 items-center">
+                <AlignVerticalJustifyStart size={16} />
+                <span className="text-xs sm:text-sm">Vertical</span>
+              </ToggleGroupItem>
+            </ToggleGroup>
           </div>
-          <div className="flex justify-between items-center">
-            <span className="text-muted-foreground">Tipos de peças:</span>
-            <span className="font-medium">{pieces.length}</span>
+          
+          <div className="flex gap-2 mt-4">
+            <Button 
+              className="flex-1 gap-2" 
+              onClick={handleOptimize}
+              disabled={pieces.length === 0 || isOptimizing}
+            >
+              <Sparkles size={16} />
+              Otimizar Corte
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              className="flex-1 gap-2" 
+              onClick={handleClear}
+              disabled={isOptimizing}
+            >
+              <RectangleHorizontal size={16} />
+              Limpar
+            </Button>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+          
+          <div className="bg-secondary rounded-md p-3 text-sm">
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Total de peças:</span>
+              <span className="font-medium">{totalPieces}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Tipos de peças:</span>
+              <span className="font-medium">{pieces.length}</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </>
   );
 };
 

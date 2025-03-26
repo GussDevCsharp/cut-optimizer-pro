@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useProjectActions } from "@/hooks/useProjectActions";
 import { useLocation } from 'react-router-dom';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { LoadingOverlay } from './cutting-board/LoadingOverlay';
 
 export const OptimizationControls = () => {
   const { 
@@ -17,6 +18,8 @@ export const OptimizationControls = () => {
     projectName, 
     optimizationDirection,
     setOptimizationDirection,
+    isOptimizing,
+    optimizationProgress,
     setIsOptimizing,
     setOptimizationProgress
   } = useSheetData();
@@ -128,56 +131,64 @@ export const OptimizationControls = () => {
   const totalPieces = pieces.reduce((total, piece) => total + piece.quantity, 0);
   
   return (
-    <div className="flex flex-col gap-4">
-      {/* Direction toggle */}
-      <div className="bg-secondary rounded-md p-3">
-        <p className="text-sm text-muted-foreground mb-2">Direção da otimização:</p>
-        <ToggleGroup 
-          type="single" 
-          value={optimizationDirection} 
-          onValueChange={handleDirectionChange} 
-          className="justify-start"
+    <>
+      <LoadingOverlay 
+        isVisible={isOptimizing} 
+        progress={optimizationProgress}
+      />
+      
+      <div className="flex flex-col gap-4">
+        {/* Direction toggle */}
+        <div className="bg-secondary rounded-md p-3">
+          <p className="text-sm text-muted-foreground mb-2">Direção da otimização:</p>
+          <ToggleGroup 
+            type="single" 
+            value={optimizationDirection} 
+            onValueChange={handleDirectionChange} 
+            className="justify-start"
+          >
+            <ToggleGroupItem value="horizontal" aria-label="Horizontal" className="flex gap-1 items-center">
+              <AlignHorizontalJustifyStart size={16} />
+              <span className="text-xs sm:text-sm">Horizontal</span>
+            </ToggleGroupItem>
+            <ToggleGroupItem value="vertical" aria-label="Vertical" className="flex gap-1 items-center">
+              <AlignVerticalJustifyStart size={16} />
+              <span className="text-xs sm:text-sm">Vertical</span>
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
+      
+        <Button 
+          className="w-full gap-2" 
+          onClick={handleOptimize}
+          disabled={pieces.length === 0 || isOptimizing}
         >
-          <ToggleGroupItem value="horizontal" aria-label="Horizontal" className="flex gap-1 items-center">
-            <AlignHorizontalJustifyStart size={16} />
-            <span className="text-xs sm:text-sm">Horizontal</span>
-          </ToggleGroupItem>
-          <ToggleGroupItem value="vertical" aria-label="Vertical" className="flex gap-1 items-center">
-            <AlignVerticalJustifyStart size={16} />
-            <span className="text-xs sm:text-sm">Vertical</span>
-          </ToggleGroupItem>
-        </ToggleGroup>
-      </div>
-    
-      <Button 
-        className="w-full gap-2" 
-        onClick={handleOptimize}
-        disabled={pieces.length === 0}
-      >
-        <Sparkles size={16} />
-        Otimizar Corte
-      </Button>
-      
-      <Button 
-        variant="outline" 
-        className="w-full gap-2" 
-        onClick={handleClear}
-      >
-        <RectangleHorizontal size={16} />
-        Limpar Visualização
-      </Button>
-      
-      <div className="bg-secondary rounded-md p-3 text-sm">
-        <div className="flex justify-between items-center">
-          <span className="text-muted-foreground">Total de peças:</span>
-          <span className="font-medium">{totalPieces}</span>
-        </div>
-        <div className="flex justify-between items-center">
-          <span className="text-muted-foreground">Tipos de peças:</span>
-          <span className="font-medium">{pieces.length}</span>
+          <Sparkles size={16} />
+          Otimizar Corte
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          className="w-full gap-2" 
+          onClick={handleClear}
+          disabled={isOptimizing}
+        >
+          <RectangleHorizontal size={16} />
+          Limpar Visualização
+        </Button>
+        
+        <div className="bg-secondary rounded-md p-3 text-sm">
+          <div className="flex justify-between items-center">
+            <span className="text-muted-foreground">Total de peças:</span>
+            <span className="font-medium">{totalPieces}</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-muted-foreground">Tipos de peças:</span>
+            <span className="font-medium">{pieces.length}</span>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
