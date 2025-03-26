@@ -58,23 +58,16 @@ export const SheetPiece = ({ piece, scale, isMobile, isScrap = false }: SheetPie
       }}
     >
       {isScrap ? (
-        <>
-          {/* For scrap areas, display dimensions more prominently */}
-          <div className="flex flex-col items-center justify-center w-full h-full text-center">
-            <div 
-              className="font-medium mb-1" 
-              style={{ fontSize: `${fontSize}px`, color: textColor }}
-            >
-              APROVEITÁVEL
-            </div>
-            <div 
-              className="font-medium" 
-              style={{ fontSize: `${fontSize * 1.1}px`, color: textColor }}
-            >
-              {piece.width} x {piece.height}
-            </div>
-          </div>
-        </>
+        <div 
+          className="font-medium" 
+          style={{ 
+            fontSize: `${fontSize * 1.1}px`, 
+            color: textColor,
+            textAlign: 'center'
+          }}
+        >
+          {piece.width} x {piece.height}
+        </div>
       ) : (
         <>
           {/* Display width at the bottom of the area */}
