@@ -1,18 +1,11 @@
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/context/AuthContext";
-import { RegisterForm, RegisterFormValues } from "@/components/auth/RegisterForm";
-import { RegisterSuccess } from "@/components/auth/RegisterSuccess";
+import PricingPlans from "@/components/home/PricingPlans";
 
 export default function Register() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [registrationSuccess, setRegistrationSuccess] = useState(false);
-  const [userEmail, setUserEmail] = useState("");
-  const { register, isAuthenticated, isLoading: authLoading } = useAuth();
-  const { toast } = useToast();
+  const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
 
   // Redirect to dashboard if already authenticated
@@ -21,32 +14,9 @@ export default function Register() {
       navigate("/dashboard");
     }
   }, [isAuthenticated, navigate]);
-
-  async function onSubmit(data: RegisterFormValues) {
-    setIsLoading(true);
-    try {
-      await register(data.name, data.email, data.password);
-      setUserEmail(data.email);
-      setRegistrationSuccess(true);
-      toast({
-        title: "Link de confirmação enviado!",
-        description: `Enviamos um email para ${data.email} com link de confirmação.`,
-      });
-      // Don't navigate automatically - wait for confirmation
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Erro ao fazer cadastro",
-        description: error.message || "Houve um problema ao criar sua conta. Tente novamente.",
-      });
-      console.error("Erro durante o registro:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }
   
   // Show loading state
-  if (authLoading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-pulse flex flex-col items-center">
@@ -63,30 +33,46 @@ export default function Register() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Criar uma conta</CardTitle>
-          <CardDescription className="text-center">
-            Preencha os campos abaixo para se cadastrar
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {registrationSuccess ? (
-            <RegisterSuccess email={userEmail} />
-          ) : (
-            <RegisterForm onSubmit={onSubmit} isLoading={isLoading} />
-          )}
-        </CardContent>
-        <CardFooter className="flex flex-col space-y-4">
-          <div className="text-center text-sm">
-            Já tem uma conta?{" "}
-            <Link to="/login" className="text-primary hover:underline">
-              Entre aqui
+    <div className="flex flex-col min-h-screen bg-background">
+      <header className="border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-14 max-w-screen-2xl items-center">
+          <div className="mr-4 flex">
+            <Link to="/" className="flex items-center space-x-2">
+              <span className="font-bold text-lg">CutOptimizer</span>
             </Link>
           </div>
-        </CardFooter>
-      </Card>
+          <div className="flex-1"></div>
+          <div className="flex items-center">
+            <Link
+              to="/login"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground mr-4"
+            >
+              Já tenho uma conta
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      <main className="flex-1">
+        <div className="container py-8">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold tracking-tight">Escolha seu plano</h1>
+            <p className="text-muted-foreground mt-2">
+              Selecione o plano ideal para o seu negócio e comece a otimizar seus projetos hoje mesmo.
+            </p>
+          </div>
+
+          <PricingPlans />
+        </div>
+      </main>
+
+      <footer className="border-t py-6 md:py-0">
+        <div className="container flex flex-col md:h-16 items-center justify-between gap-4 md:flex-row">
+          <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
+            © {new Date().getFullYear()} CutOptimizer. Todos os direitos reservados.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }
