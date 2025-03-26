@@ -45,7 +45,7 @@ export const downloadExampleProjectFile = () => {
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  URL.revoObjectURL(url);
+  URL.revokeObjectURL(url);
 };
 
 /**

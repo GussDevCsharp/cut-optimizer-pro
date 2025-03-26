@@ -74,7 +74,31 @@ const ViewportHeightFix = () => {
   return null;
 };
 
-// Main App component
+// Query client
+const queryClient = new QueryClient();
+
+// Main App component that doesn't use any hooks requiring context
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <BrowserRouter>
+      <AppWithAuth />
+    </BrowserRouter>
+  </QueryClientProvider>
+);
+
+// Separate component for authentication to avoid hook order issues
+const AppWithAuth = () => (
+  <AuthProvider>
+    <TooltipProvider>
+      <ViewportHeightFix />
+      <Toaster />
+      <Sonner />
+      <AppRoutes />
+    </TooltipProvider>
+  </AuthProvider>
+);
+
+// Routes component
 const AppRoutes = () => {
   return (
     <Routes>
@@ -114,22 +138,5 @@ const AppRoutes = () => {
     </Routes>
   );
 };
-
-const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <ViewportHeightFix />
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AppRoutes />
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
-  </QueryClientProvider>
-);
 
 export default App;
