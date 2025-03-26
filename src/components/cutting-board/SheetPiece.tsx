@@ -17,6 +17,7 @@ export interface ScrapArea {
   width: number;
   height: number;
   sheetIndex: number;
+  area?: number; // Optional area property for sorting
 }
 
 export const SheetPiece = ({ piece, scale, isMobile, isScrap = false }: SheetPieceProps) => {
@@ -30,9 +31,9 @@ export const SheetPiece = ({ piece, scale, isMobile, isScrap = false }: SheetPie
   const rotation = !isScrap && 'rotated' in piece && piece.rotated ? '90deg' : '0deg';
   
   // Different styling for scrap areas
-  const backgroundColor = isScrap ? 'rgba(240, 240, 240, 0.7)' : ('color' in piece ? piece.color : '#D6BCFA');
-  const border = isScrap ? '1px dashed rgba(0,0,0,0.3)' : '1px solid rgba(0,0,0,0.2)';
-  const textColor = isScrap ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.7)';
+  const backgroundColor = isScrap ? 'rgba(230, 240, 230, 0.7)' : ('color' in piece ? piece.color : '#D6BCFA');
+  const border = isScrap ? '1px dashed rgba(0,100,0,0.3)' : '1px solid rgba(0,0,0,0.2)';
+  const textColor = isScrap ? 'rgba(0,80,0,0.7)' : 'rgba(0,0,0,0.7)';
   
   return (
     <div
@@ -64,7 +65,7 @@ export const SheetPiece = ({ piece, scale, isMobile, isScrap = false }: SheetPie
               className="font-medium mb-1" 
               style={{ fontSize: `${fontSize}px`, color: textColor }}
             >
-              SOBRA
+              APROVEITÁVEL
             </div>
             <div 
               className="font-medium" 
