@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -8,7 +7,7 @@ import {
   CarouselItem,
 } from "@/components/ui/carousel";
 import { Sheet, PlacedPiece } from '../../hooks/useSheetData';
-import { SheetPiece } from './SheetPiece';
+import { SheetPiece, ScrapArea } from './SheetPiece';
 import { SheetThumbnails } from './SheetThumbnails';
 
 interface SheetCarouselProps {
@@ -30,6 +29,7 @@ export const SheetCarousel = ({
 }: SheetCarouselProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [displayPieces, setDisplayPieces] = useState<PlacedPiece[]>([]);
+  const [scrapAreas, setScrapAreas] = useState<ScrapArea[]>([]);
   
   // Calculate container dimensions based on screen size
   const containerWidth = isMobile ? window.innerWidth - 40 : 800;  
@@ -62,10 +62,121 @@ export const SheetCarousel = ({
     if (placedPieces && placedPieces.length > 0) {
       const filteredPieces = placedPieces.filter(p => p.sheetIndex === currentSheetIndex);
       setDisplayPieces(filteredPieces);
+      
+      // Calculate scrap areas based on placed pieces
+      calculateScrapAreas(filteredPieces);
     } else {
       setDisplayPieces([]);
+      // If no pieces, the whole sheet is a scrap area
+      setScrapAreas([{
+        id: 'full-sheet-scrap',
+        x: 0,
+        y: 0,
+        width: sheet.width,
+        height: sheet.height,
+        sheetIndex: currentSheetIndex
+      }]);
     }
-  }, [placedPieces, currentSheetIndex]);
+  }, [placedPieces, currentSheetIndex, sheet]);
+
+  // Function to calculate scrap areas on the current sheet
+  const calculateScrapAreas = (pieces: PlacedPiece[]) => {
+    if (pieces.length === 0) {
+      // If no pieces, the whole sheet is a scrap area
+      setScrapAreas([{
+        id: 'full-sheet-scrap',
+        x: 0,
+        y: 0,
+        width: sheet.width,
+        height: sheet.height,
+        sheetIndex: currentSheetIndex
+      }]);
+      return;
+    }
+
+    // Create a grid to track occupied areas (1mm resolution)
+    const resolution = 1;
+    const gridWidth = Math.ceil(sheet.width / resolution);
+    const gridHeight = Math.ceil(sheet.height / resolution);
+    const grid = Array(gridHeight).fill(0).map(() => Array(gridWidth).fill(false));
+
+    // Mark all pieces on the grid
+    pieces.forEach(piece => {
+      const startX = Math.floor(piece.x / resolution);
+      const startY = Math.floor(piece.y / resolution);
+      const endX = Math.min(Math.ceil((piece.x + piece.width) / resolution), gridWidth);
+      const endY = Math.min(Math.ceil((piece.y + piece.height) / resolution), gridHeight);
+
+      for (let y = startY; y < endY; y++) {
+        for (let x = startX; x < endX; x++) {
+          if (y >= 0 && y < gridHeight && x >= 0 && x < gridWidth) {
+            grid[y][x] = true;
+          }
+        }
+      }
+    });
+
+    // Find contiguous empty areas (simple algorithm)
+    const identified = Array(gridHeight).fill(0).map(() => Array(gridWidth).fill(false));
+    const scrapAreas: ScrapArea[] = [];
+    let scrapId = 0;
+
+    for (let y = 0; y < gridHeight; y++) {
+      for (let x = 0; x < gridWidth; x++) {
+        if (!grid[y][x] && !identified[y][x]) {
+          // Found an empty cell, expand to find the full empty rectangle
+          let maxX = x;
+          while (maxX < gridWidth && !grid[y][maxX]) {
+            maxX++;
+          }
+          
+          let maxY = y;
+          let isRectangular = true;
+          
+          // Check if the area extends downward as a rectangle
+          while (isRectangular && maxY < gridHeight) {
+            for (let checkX = x; checkX < maxX; checkX++) {
+              if (grid[maxY][checkX]) {
+                isRectangular = false;
+                break;
+              }
+            }
+            if (isRectangular) maxY++;
+          }
+          
+          // Mark the identified area
+          for (let markY = y; markY < maxY; markY++) {
+            for (let markX = x; markX < maxX; markX++) {
+              identified[markY][markX] = true;
+            }
+          }
+          
+          // Only add areas that are larger than the cut width
+          const areaWidth = (maxX - x) * resolution;
+          const areaHeight = (maxY - y) * resolution;
+          
+          if (areaWidth > sheet.cutWidth * 2 && areaHeight > sheet.cutWidth * 2) {
+            scrapAreas.push({
+              id: `scrap-${scrapId++}`,
+              x: x * resolution,
+              y: y * resolution,
+              width: areaWidth,
+              height: areaHeight,
+              sheetIndex: currentSheetIndex
+            });
+          }
+        }
+      }
+    }
+
+    // Simplify by keeping only the largest scrap areas (avoid showing too many tiny areas)
+    const MAX_SCRAP_AREAS = 10;
+    const sortedScrapAreas = scrapAreas
+      .sort((a, b) => (b.width * b.height) - (a.width * a.height))
+      .slice(0, MAX_SCRAP_AREAS);
+    
+    setScrapAreas(sortedScrapAreas);
+  };
 
   // Function to handle sheet change
   const handleSheetChange = (api: any) => {
@@ -103,7 +214,18 @@ export const SheetCarousel = ({
                     backgroundSize: `${isMobile ? '10px 10px' : '20px 20px'}`,
                   }}
                 >
-                  {/* Render pieces only for the current sheet */}
+                  {/* Render scrap areas for the current sheet (rendered first, lower z-index) */}
+                  {sheetIndex === currentSheetIndex && scrapAreas.map((scrapArea) => (
+                    <SheetPiece 
+                      key={scrapArea.id} 
+                      piece={scrapArea} 
+                      scale={scale} 
+                      isMobile={isMobile}
+                      isScrap={true}
+                    />
+                  ))}
+                  
+                  {/* Render pieces for the current sheet (rendered on top of scrap areas) */}
                   {sheetIndex === currentSheetIndex && displayPieces.map((piece, index) => (
                     <SheetPiece 
                       key={`${piece.id}-${index}`} 
