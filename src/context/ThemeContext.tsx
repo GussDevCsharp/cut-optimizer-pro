@@ -2,11 +2,14 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { ThemeProvider as NextThemesProvider, useTheme as useNextTheme } from "next-themes";
 
+// Define the Attribute type that next-themes expects
+type Attribute = "class" | "data-theme" | "data-mode";
+
 type ThemeProviderProps = {
   children: React.ReactNode;
   defaultTheme?: string;
   storageKey?: string;
-  attribute?: string;
+  attribute?: Attribute | Attribute[];
   value?: object;
   enableSystem?: boolean;
   disableTransitionOnChange?: boolean;
