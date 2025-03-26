@@ -6,7 +6,6 @@ import { useSheetData } from '../hooks/useSheetData';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useIsMobile } from '../hooks/use-mobile';
-import { SettingsContainer } from './settings/SettingsContainer';
 import { useToast } from '@/hooks/use-toast';
 import { AppLogo } from './header/AppLogo';
 import { MobileMenu } from './header/MobileMenu';
@@ -20,7 +19,6 @@ export const Header = () => {
   const location = useLocation();
   const { logout } = useAuth();
   const isMobile = useIsMobile();
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const isAppRoute = location.pathname === '/app';
   const { toast } = useToast();
   
@@ -111,7 +109,15 @@ export const Header = () => {
   };
 
   const openSettings = () => {
-    setSettingsOpen(true);
+    if (location.pathname === '/dashboard') {
+      // If we're on the dashboard, navigate to the settings tab
+      // This will be handled by the dashboard component
+      const dashboardEvent = new CustomEvent('navigate-to-settings-tab');
+      window.dispatchEvent(dashboardEvent);
+    } else {
+      // If we're not on dashboard, navigate to dashboard with settings tab
+      navigate('/dashboard?tab=settings');
+    }
   };
 
   const handleBackToDashboard = () => {
@@ -159,8 +165,6 @@ export const Header = () => {
             )}
           </div>
         </div>
-        
-        <SettingsContainer open={settingsOpen} onOpenChange={setSettingsOpen} />
       </header>
 
       <InstallAppDialog

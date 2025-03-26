@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -45,6 +45,45 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+// Dashboard component with tab handling
+const DashboardWithTabs = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Handle the settings tab parameter
+    const searchParams = new URLSearchParams(location.search);
+    const tab = searchParams.get('tab');
+    
+    if (tab) {
+      // Custom event to notify Dashboard component to change tab
+      const event = new CustomEvent('dashboard-set-tab', { 
+        detail: { tab }
+      });
+      window.dispatchEvent(event);
+      
+      // Clean up the URL
+      navigate('/dashboard', { replace: true });
+    }
+    
+    // Listen for navigate to settings tab event
+    const handleNavigateToSettings = () => {
+      const event = new CustomEvent('dashboard-set-tab', { 
+        detail: { tab: 'settings' }
+      });
+      window.dispatchEvent(event);
+    };
+    
+    window.addEventListener('navigate-to-settings-tab', handleNavigateToSettings);
+    
+    return () => {
+      window.removeEventListener('navigate-to-settings-tab', handleNavigateToSettings);
+    };
+  }, [location, navigate]);
+
+  return <Dashboard />;
+};
+
 // Mobile viewport height fix
 const ViewportHeightFix = () => {
   useEffect(() => {
@@ -81,7 +120,7 @@ const AppRoutes = () => {
         path="/dashboard" 
         element={
           <ProtectedRoute>
-            <Dashboard />
+            <DashboardWithTabs />
           </ProtectedRoute>
         } 
       />

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { useAuth } from "@/context/AuthContext";
@@ -15,15 +15,31 @@ import { ProjectsTabContent } from "@/components/dashboard/ProjectsTabContent";
 import { MaterialsTabContent } from "@/components/dashboard/MaterialsTabContent";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { UserDropdownMenu } from "@/components/header/UserDropdownMenu";
-import { SettingsContainer } from "@/components/settings/SettingsContainer";
+import { UserManagementPanel } from "@/components/settings/UserManagementPanel";
+import { EmailSettings } from "@/components/settings/EmailSettings";
+import { MasterPanelManual } from "@/components/settings/MasterPanelManual";
 
 export default function Dashboard() {
   const { user, logout, isMasterAdmin } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState("projects");
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const { toast } = useToast();
+
+  // Listen for tab change events
+  useEffect(() => {
+    const handleSetTab = (event: any) => {
+      if (event.detail && event.detail.tab) {
+        setActiveTab(event.detail.tab);
+      }
+    };
+    
+    window.addEventListener('dashboard-set-tab', handleSetTab);
+    
+    return () => {
+      window.removeEventListener('dashboard-set-tab', handleSetTab);
+    };
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -66,18 +82,6 @@ export default function Dashboard() {
           </div>
           
           <div className="flex items-center gap-2">
-            {isMasterAdmin && (
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="gap-2"
-                onClick={() => setSettingsOpen(true)}
-              >
-                <Settings className="h-4 w-4" />
-                <span className={isMobile ? "hidden" : "inline"}>Configurações</span>
-              </Button>
-            )}
-            
             <Button 
               variant="outline" 
               size="sm" 
@@ -99,7 +103,7 @@ export default function Dashboard() {
                 <UserDropdownMenu 
                   isInstallable={false} // No install option on dashboard
                   onInstall={() => {}} 
-                  onOpenSettings={() => setSettingsOpen(true)} 
+                  onOpenSettings={() => setActiveTab("settings")} 
                   onLogout={handleLogout} 
                 />
               </div>
@@ -108,7 +112,7 @@ export default function Dashboard() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-2 mb-4">
+          <TabsList className={`grid w-full ${isMasterAdmin ? 'grid-cols-4' : 'grid-cols-2'} mb-4`}>
             <TabsTrigger value="projects" className="flex items-center gap-2">
               <Briefcase className="h-4 w-4" />
               <span>Projetos</span>
@@ -116,6 +120,16 @@ export default function Dashboard() {
             <TabsTrigger value="materials" className="flex items-center gap-2">
               <Package className="h-4 w-4" />
               <span>Materiais</span>
+            </TabsTrigger>
+            {isMasterAdmin && (
+              <TabsTrigger value="settings" className="flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                <span>Configurações</span>
+              </TabsTrigger>
+            )}
+            <TabsTrigger value="manual" className="flex items-center gap-2">
+              <BookOpen className="h-4 w-4" />
+              <span>Manual</span>
             </TabsTrigger>
           </TabsList>
           
@@ -132,13 +146,33 @@ export default function Dashboard() {
               isActiveTab={activeTab === "materials"}
             />
           </TabsContent>
+          
+          {isMasterAdmin && (
+            <TabsContent value="settings" className="space-y-6">
+              <div>
+                <h2 className="text-xl font-semibold mb-4">Configurações do Sistema</h2>
+                <Tabs defaultValue="email" className="w-full">
+                  <TabsList className="mb-4">
+                    <TabsTrigger value="email">Email</TabsTrigger>
+                    <TabsTrigger value="users">Usuários</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="email">
+                    <EmailSettings />
+                  </TabsContent>
+                  
+                  <TabsContent value="users">
+                    <UserManagementPanel />
+                  </TabsContent>
+                </Tabs>
+              </div>
+            </TabsContent>
+          )}
+          
+          <TabsContent value="manual" className="space-y-4">
+            <MasterPanelManual />
+          </TabsContent>
         </Tabs>
-        
-        {/* Settings Modal */}
-        <SettingsContainer 
-          open={settingsOpen} 
-          onOpenChange={setSettingsOpen} 
-        />
       </div>
     </Layout>
   );
