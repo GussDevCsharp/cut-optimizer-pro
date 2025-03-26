@@ -1,5 +1,5 @@
 
-import { useToast } from '@/components/ui/use-toast'; // Use the re-export
+import { useToast } from '@/hooks/use-toast';
 import { Sheet, PlacedPiece } from '../hooks/useSheetData';
 import { generatePdf } from './pdf-generator';
 

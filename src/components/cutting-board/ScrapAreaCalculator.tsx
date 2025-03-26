@@ -49,54 +49,59 @@ export const calculateScrapAreas = (
     }
   });
 
-  // Find contiguous empty areas with maximum usability
+  // Find contiguous empty areas (simple algorithm)
   const identified = Array(gridHeight).fill(0).map(() => Array(gridWidth).fill(false));
   const scrapAreas: ScrapArea[] = [];
   let scrapId = 0;
 
-  // Improved algorithm to find the largest possible usable rectangles
+  // First pass: find all possible scrap areas with maximum dimensions
   for (let y = 0; y < gridHeight; y++) {
     for (let x = 0; x < gridWidth; x++) {
       if (!grid[y][x] && !identified[y][x]) {
-        // Found an empty cell, search for the largest rectangle
-        let width = 0;
-        while (x + width < gridWidth && !grid[y][x + width]) {
-          width++;
+        // Found an empty cell, find the largest rectangle that can be formed from this corner
+        let maxX = x;
+        let maxY = y;
+        
+        // Find max width (how far we can go right)
+        while (maxX < gridWidth && !grid[y][maxX]) {
+          maxX++;
         }
         
-        let height = 0;
-        let isValid = true;
+        // Find initial height (how far we can go down with full width)
+        let currentHeight = 0;
+        let canExtend = true;
         
-        while (isValid && y + height < gridHeight) {
-          for (let i = 0; i < width; i++) {
-            if (grid[y + height][x + i]) {
-              isValid = false;
+        while (canExtend && y + currentHeight < gridHeight) {
+          // Check the entire row at this height
+          for (let checkX = x; checkX < maxX; checkX++) {
+            if (grid[y + currentHeight][checkX]) {
+              canExtend = false;
               break;
             }
           }
-          if (isValid) height++;
-        }
-        
-        // Mark the identified area
-        for (let j = y; j < y + height; j++) {
-          for (let i = x; i < x + width; i++) {
-            identified[j][i] = true;
+          
+          if (canExtend) {
+            currentHeight++;
           }
         }
         
-        // Only add areas that are larger than the cut width and have a usable size
-        const areaWidth = width * resolution;
-        const areaHeight = height * resolution;
-        const cutWidth = 4; // Default cut width
-        const minSize = cutWidth * 4; // Minimum usable size
+        maxY = y + currentHeight;
         
-        if (areaWidth > minSize && areaHeight > minSize) {
-          // Calculate area and aspect ratio for sorting
+        // Mark the identified area
+        for (let markY = y; markY < maxY; markY++) {
+          for (let markX = x; markX < maxX; markX++) {
+            identified[markY][markX] = true;
+          }
+        }
+        
+        // Only add areas that are larger than the cut width (using a minimum size threshold)
+        const areaWidth = (maxX - x) * resolution;
+        const areaHeight = (maxY - y) * resolution;
+        const cutWidth = 4; // Default cut width
+        
+        if (areaWidth > cutWidth * 3 && areaHeight > cutWidth * 3) {
+          // Calculate area to help sorting by size later
           const area = areaWidth * areaHeight;
-          const aspectRatio = Math.min(areaWidth / areaHeight, areaHeight / areaWidth);
-          
-          // Score favors larger areas with better aspect ratios (closer to square)
-          const score = area * (aspectRatio * 0.5 + 0.5);
           
           scrapAreas.push({
             id: `scrap-${scrapId++}`,
@@ -105,18 +110,18 @@ export const calculateScrapAreas = (
             width: areaWidth,
             height: areaHeight,
             sheetIndex: currentSheetIndex,
-            area,
-            score
+            area // Add area for sorting
           } as ScrapArea);
         }
       }
     }
   }
 
-  // Sort by score (highest first) and keep a reasonable number of areas
-  const MAX_SCRAP_AREAS = 20; // Increased to show more potential reusable pieces
+  // Sort by area (largest first) and only keep the largest areas for better usability
+  // Using a higher number than before to show more potential reusable pieces
+  const MAX_SCRAP_AREAS = 15;
   return scrapAreas
-    .sort((a, b) => (b.score || 0) - (a.score || 0))
+    .sort((a, b) => (b.width * b.height) - (a.width * a.height))
     .slice(0, MAX_SCRAP_AREAS);
 };
 
