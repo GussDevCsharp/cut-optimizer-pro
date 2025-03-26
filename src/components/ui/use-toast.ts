@@ -1,7 +1,7 @@
 
 "use client";
 
-// Re-export from hooks to maintain backward compatibility
+// Re-export from hooks directory
 import { useToast, toast } from "@/hooks/use-toast";
 
 export { useToast, toast };
