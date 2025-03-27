@@ -6,7 +6,6 @@ import {
   DialogContent,
   DialogClose
 } from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
 import { initMercadoPago } from "@/services/mercadoPago";
 import { PaymentSelectionPanel } from "./payment-selection";
 import { ProductInfoPanel } from "./product-info";
@@ -45,7 +44,6 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentId, setPaymentId] = useState<string | undefined>(undefined);
   const [mpInitialized, setMpInitialized] = useState(false);
-  const { toast } = useToast();
   const { processPlanPurchase } = usePaymentProcessor();
   const { user } = useAuth();
 
@@ -58,14 +56,12 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
         })
         .catch(error => {
           console.error("Failed to initialize Mercado Pago:", error);
-          toast({
-            variant: "destructive",
-            title: "Erro ao inicializar pagamento",
+          toast.error("Erro ao inicializar pagamento", {
             description: "Por favor, tente novamente mais tarde."
           });
         });
     }
-  }, [isOpen, mpInitialized, toast]);
+  }, [isOpen, mpInitialized]);
 
   // Handle payment completion callback
   const handlePaymentComplete = async (status: PaymentStatus, id?: string) => {
@@ -91,15 +87,12 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
     
     // Show toast notification based on status
     if (status === 'approved') {
-      toast({
-        title: "Pagamento aprovado!",
-        description: "Seu pagamento foi processado com sucesso.",
+      toast.success("Pagamento aprovado!", {
+        description: "Seu pagamento foi processado com sucesso."
       });
     } else if (status === 'rejected' || status === 'error') {
-      toast({
-        variant: "destructive",
-        title: "Falha no pagamento",
-        description: "Houve um problema com seu pagamento. Por favor, tente novamente.",
+      toast.error("Falha no pagamento", {
+        description: "Houve um problema com seu pagamento. Por favor, tente novamente."
       });
     }
   };
