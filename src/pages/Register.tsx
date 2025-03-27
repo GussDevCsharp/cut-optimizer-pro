@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { PricingPlans } from "@/components/home/PricingPlans";
+import PricingPlans from "@/components/home/PricingPlans";  // Changed back to default import
 import { RegisterForm, RegisterFormValues } from "@/components/auth/RegisterForm";
 import { toast } from "sonner";
 import CheckoutModal from "@/components/checkout/CheckoutModal";
