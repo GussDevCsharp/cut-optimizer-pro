@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -56,7 +55,7 @@ const PlanCard: React.FC<{
   );
 };
 
-const PricingPlans = ({ onPlanSelect }: PricingPlansProps) => {
+export const PricingPlans = ({ onPlanSelect }: PricingPlansProps) => {
   const { plans, handlePlanSelect } = usePricingPlans({ onPlanSelect });
 
   return (
