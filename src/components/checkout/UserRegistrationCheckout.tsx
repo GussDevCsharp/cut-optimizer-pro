@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import CheckoutModal from './CheckoutModal';
 import { PaymentStatus } from './CheckoutModal';
+import { useNavigate } from 'react-router-dom';
 
 interface UserRegistrationCheckoutProps {
   isOpen: boolean;
@@ -33,6 +34,7 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
 }) => {
   const { register } = useAuth();
   const [isRegistering, setIsRegistering] = useState(false);
+  const navigate = useNavigate();
 
   const handlePaymentComplete = async (status: PaymentStatus, paymentId?: string) => {
     console.log("------ FLUXO DE PAGAMENTO E REGISTRO ------");
@@ -109,6 +111,13 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
         });
         
         console.log("10. Processo de registro concluído com sucesso");
+        
+        // Redireciona para a página de login após o registro bem-sucedido
+        setTimeout(() => {
+          navigate('/login');
+          onOpenChange(false); // Fecha o modal após o redirecionamento
+        }, 2000);
+        
       } catch (error: any) {
         console.error("Erro no processo de registro:", error);
         toast.error("Erro ao criar conta", {

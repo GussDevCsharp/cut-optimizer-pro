@@ -67,9 +67,9 @@ const CTAButtonLogic = ({ productId, showCheckout }: CTAButtonLogicProps) => {
     console.log('Payment completed with status:', status, 'and ID:', paymentId);
     
     if (status === 'approved') {
-      // Redirect to dashboard after successful payment and registration
+      // Redirect to login page after successful payment and registration
       setTimeout(() => {
-        navigate('/dashboard');
+        navigate('/login');
       }, 3000);
     }
   };

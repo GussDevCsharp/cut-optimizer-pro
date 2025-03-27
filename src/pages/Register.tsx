@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -63,9 +62,9 @@ export default function Register() {
           description: "Seu acesso à plataforma foi ativado.",
         });
         
-        // Redirect to dashboard after successful payment and registration
+        // Redirect to login page after successful payment and registration
         setTimeout(() => {
-          navigate('/dashboard');
+          navigate('/login');
         }, 2000);
       } catch (error: any) {
         console.error("Register.tsx: Erro ao registrar usuário após pagamento:", error);
