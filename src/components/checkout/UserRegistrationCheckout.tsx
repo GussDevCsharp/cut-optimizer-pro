@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import CheckoutModal from './CheckoutModal';
 import { PaymentStatus } from './CheckoutModal';
@@ -43,11 +44,53 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
         console.log("Attempting to register user:", userCredentials.email);
         
         // Register the user with the provided credentials
-        await register(
+        const registrationResult = await register(
           userCredentials.name, 
           userCredentials.email, 
           userCredentials.password
         );
+        
+        // If registration successful, insert data into profiles table
+        if (registrationResult) {
+          const userId = registrationResult.user?.id;
+          
+          if (userId) {
+            // Insert user data into profiles table
+            const { error: profileError } = await supabase
+              .from('profiles')
+              .insert({
+                id: userId,
+                full_name: userCredentials.name,
+                email: userCredentials.email,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              });
+            
+            if (profileError) {
+              console.error("Error inserting profile data:", profileError);
+              // We don't throw here as user is already registered
+            }
+            
+            // Insert transaction data
+            const { error: transactionError } = await supabase
+              .from('transactions')
+              .insert({
+                user_id: userId,
+                product_id: product.id,
+                product_name: product.name,
+                amount: product.price,
+                payment_method: 'card',
+                payment_status: 'approved',
+                payment_id: paymentId || '',
+                created_at: new Date().toISOString()
+              });
+            
+            if (transactionError) {
+              console.error("Error inserting transaction data:", transactionError);
+              // We don't throw here as profile is already created
+            }
+          }
+        }
         
         toast.success("Conta criada com sucesso!", {
           description: "Seu acesso à plataforma foi ativado.",

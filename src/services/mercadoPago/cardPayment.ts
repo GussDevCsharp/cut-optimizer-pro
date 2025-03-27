@@ -36,7 +36,13 @@ export const processCardPayment = async (
           paymentMethod: 'card',
           paymentId,
           paymentStatus: status,
-          amount: product.price
+          amount: product.price,
+          customerData: {
+            name: customerData.name,
+            email: customerData.email,
+            identificationType: customerData.identificationType,
+            identificationNumber: customerData.identificationNumber
+          }
         });
       }
     }

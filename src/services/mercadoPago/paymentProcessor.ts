@@ -11,6 +11,12 @@ interface ProcessPaymentOptions {
   paymentId: string;
   paymentStatus: "pending" | "approved" | "rejected" | "error";
   amount: number;
+  customerData?: {
+    name: string;
+    email: string;
+    identificationType: string;
+    identificationNumber: string;
+  };
 }
 
 /**
@@ -24,7 +30,8 @@ export const processPayment = async ({
   paymentMethod,
   paymentId,
   paymentStatus,
-  amount
+  amount,
+  customerData
 }: ProcessPaymentOptions): Promise<{success: boolean, subscriptionId?: string}> => {
   try {
     // Get current user
@@ -66,6 +73,28 @@ export const processPayment = async ({
           paymentStatus,
           paymentId
         );
+        
+        // Insert transaction data
+        if (customerData) {
+          const { error: transactionError } = await supabase
+            .from('transactions')
+            .insert({
+              user_id: user.id,
+              product_id: productId,
+              payment_id: paymentId,
+              payment_method: paymentMethod,
+              payment_status: paymentStatus,
+              amount: amount,
+              customer_name: customerData.name,
+              customer_email: customerData.email,
+              customer_document: customerData.identificationNumber,
+              created_at: new Date().toISOString()
+            });
+            
+          if (transactionError) {
+            console.error("Erro ao inserir dados da transação:", transactionError);
+          }
+        }
       }
     } else {
       // For non-subscription products or non-approved payments,
@@ -103,6 +132,28 @@ export const processPayment = async ({
         // Create dummy subscription for payment record if necessary
         console.log("Nenhuma assinatura encontrada para associar o pagamento");
       }
+      
+      // Insert transaction data anyway
+      if (customerData) {
+        const { error: transactionError } = await supabase
+          .from('transactions')
+          .insert({
+            user_id: user.id,
+            product_id: productId,
+            payment_id: paymentId,
+            payment_method: paymentMethod,
+            payment_status: paymentStatus,
+            amount: amount,
+            customer_name: customerData.name,
+            customer_email: customerData.email,
+            customer_document: customerData.identificationNumber,
+            created_at: new Date().toISOString()
+          });
+          
+        if (transactionError) {
+          console.error("Erro ao inserir dados da transação:", transactionError);
+        }
+      }
     }
     
     return { 
@@ -125,14 +176,20 @@ export const usePaymentProcessor = () => {
     plan: ProductInfo,
     paymentMethod: 'pix' | 'card' | 'boleto',
     paymentId: string,
-    paymentStatus: PaymentStatus
+    paymentStatus: PaymentStatus,
+    customerData?: {
+      name: string;
+      email: string;
+      identificationType: string;
+      identificationNumber: string;
+    }
   ) => {
     if (!user) {
       console.error("Usuário não autenticado");
       return { success: false };
     }
     
-    // Convert PaymentStatus to the correct type
+    // Convert PaymentStatus from CheckoutModal to status for processPayment
     let status: "pending" | "approved" | "rejected" | "error";
     
     // Map PaymentStatus from CheckoutModal to status for processPayment
@@ -156,7 +213,8 @@ export const usePaymentProcessor = () => {
       paymentMethod,
       paymentId,
       paymentStatus: status,
-      amount: plan.price
+      amount: plan.price,
+      customerData
     });
   };
   
