@@ -14,6 +14,7 @@ import Testing from "./pages/Testing";
 import Home from "./pages/Home";
 import { useEffect } from "react";
 import { ThemeProvider } from "@/hooks/useTheme";
+import OfflineIndicator from "./components/OfflineIndicator";
 
 // Protected route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -153,6 +154,7 @@ const App = () => (
             </Routes>
             <Toaster />
             <Sonner />
+            <OfflineIndicator />
           </TooltipProvider>
         </AuthProvider>
       </ThemeProvider>

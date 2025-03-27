@@ -11,8 +11,7 @@ export const useSharingService = (
   projectName: string
 ) => {
   const handleSharePdf = async () => {
-    toast({
-      title: "Preparando arquivo",
+    toast("Preparando arquivo", {
       description: "Gerando PDF para compartilhamento...",
     });
     
@@ -32,8 +31,7 @@ export const useSharingService = (
           files: [file]
         });
         
-        toast({
-          title: "Compartilhado",
+        toast("Compartilhado", {
           description: "Seu plano de corte foi compartilhado com sucesso.",
         });
       } else {
@@ -45,15 +43,13 @@ export const useSharingService = (
         a.click();
         URL.revokeObjectURL(url);
         
-        toast({
-          title: "Download iniciado",
+        toast("Download iniciado", {
           description: "O PDF foi gerado e está sendo baixado.",
         });
       }
     } catch (error) {
       console.error('Error sharing PDF:', error);
-      toast({
-        title: "Erro ao compartilhar",
+      toast("Erro ao compartilhar", {
         description: "Não foi possível gerar ou compartilhar o PDF.",
         variant: "destructive",
       });

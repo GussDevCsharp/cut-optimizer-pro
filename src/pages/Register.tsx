@@ -1,17 +1,15 @@
-
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import PricingPlans from "@/components/home/PricingPlans";
 import { RegisterForm, RegisterFormValues } from "@/components/auth/RegisterForm";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import CheckoutModal from "@/components/checkout/CheckoutModal";
 import { PaymentStatus } from "@/components/checkout/CheckoutModal";
 
 export default function Register() {
   const { isAuthenticated, isLoading, register } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [formData, setFormData] = useState<RegisterFormValues | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<{
@@ -68,8 +66,7 @@ export default function Register() {
         // Register user with the provided credentials
         await register(formData.name, formData.email, formData.password);
         
-        toast({
-          title: "Conta criada com sucesso!",
+        toast("Conta criada com sucesso!", {
           description: "Seu acesso à plataforma foi ativado.",
         });
         
@@ -78,10 +75,9 @@ export default function Register() {
           navigate('/dashboard');
         }, 3000);
       } catch (error: any) {
-        toast({
-          variant: "destructive",
-          title: "Erro ao criar conta",
+        toast("Erro ao criar conta", {
           description: error.message || "Não foi possível criar sua conta. Entre em contato com o suporte.",
+          variant: "destructive",
         });
         console.error("Erro ao registrar usuário após pagamento:", error);
       }
@@ -103,7 +99,7 @@ export default function Register() {
               to="/login"
               className="text-sm font-medium text-muted-foreground hover:text-foreground mr-4"
             >
-              Já tenho uma conta
+              J�� tenho uma conta
             </Link>
           </div>
         </div>

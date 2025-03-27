@@ -1,8 +1,7 @@
-
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { projectService } from "@/services/projectService";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
 export function useProjectActions() {
@@ -10,7 +9,6 @@ export function useProjectActions() {
   const [isLoading, setIsLoading] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const { user } = useAuth();
-  const { toast } = useToast();
   const navigate = useNavigate();
 
   const saveProject = async (
@@ -20,10 +18,9 @@ export function useProjectActions() {
     imageFile?: File
   ) => {
     if (!user) {
-      toast({
-        variant: "destructive",
-        title: "Erro ao salvar",
+      toast("Erro ao salvar", {
         description: "Você precisa estar logado para salvar um projeto.",
+        variant: "destructive",
       });
       return null;
     }
@@ -38,10 +35,9 @@ export function useProjectActions() {
         
         if (fileError) {
           console.error("Error uploading image:", fileError);
-          toast({
+          toast("Erro ao fazer upload da imagem", {
+            description: "A imagem não pôde ser carregada, mas o projeto será salvo mesmo assim.",
             variant: "destructive",
-            title: "Erro ao fazer upload da imagem",
-            description: "A imagem não pôde ser carregada, mas o projeto será salvo mesmo assim."
           });
         } else if (fileData) {
           preview_url = fileData.path;
@@ -65,8 +61,7 @@ export function useProjectActions() {
         
         if (error) throw new Error(error);
         
-        toast({
-          title: "Projeto salvo",
+        toast("Projeto salvo", {
           description: "As alterações foram salvas com sucesso."
         });
         
@@ -82,8 +77,7 @@ export function useProjectActions() {
         
         if (error) throw new Error(error);
         
-        toast({
-          title: "Projeto criado",
+        toast("Projeto criado", {
           description: "Projeto criado e salvo com sucesso."
         });
         
@@ -99,10 +93,9 @@ export function useProjectActions() {
         return data;
       }
     } catch (error: any) {
-      toast({
+      toast("Erro ao salvar", {
+        description: error.message || "Não foi possível salvar o projeto.",
         variant: "destructive",
-        title: "Erro ao salvar",
-        description: error.message || "Não foi possível salvar o projeto."
       });
       return null;
     } finally {
@@ -133,10 +126,9 @@ export function useProjectActions() {
       
       return data;
     } catch (error: any) {
-      toast({
+      toast("Erro ao carregar projeto", {
+        description: error.message || "Não foi possível carregar o projeto.",
         variant: "destructive",
-        title: "Erro ao carregar projeto",
-        description: error.message || "Não foi possível carregar o projeto."
       });
       navigate("/dashboard");
       return null;
