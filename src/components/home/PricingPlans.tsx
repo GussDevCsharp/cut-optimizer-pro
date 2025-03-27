@@ -5,12 +5,7 @@ import { Button } from '@/components/ui/button';
 import { usePricingPlans, PricingPlan } from '@/hooks/usePricingPlans';
 
 interface PricingPlansProps {
-  onPlanSelect?: (plan: {
-    id: string;
-    name: string;
-    description: string;
-    price: number;
-  }) => void;
+  onPlanSelect?: (plan: PricingPlan) => void;
 }
 
 const PlanCard: React.FC<{
@@ -77,5 +72,4 @@ const PricingPlans = ({ onPlanSelect }: PricingPlansProps) => {
   );
 };
 
-// Export as default
 export default PricingPlans;

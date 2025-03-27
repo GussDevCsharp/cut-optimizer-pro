@@ -59,23 +59,13 @@ export const plans: PricingPlan[] = [
 ];
 
 interface UsePricingPlansProps {
-  onPlanSelect?: (plan: {
-    id: string;
-    name: string;
-    description: string;
-    price: number;
-  }) => void;
+  onPlanSelect?: (plan: PricingPlan) => void;
 }
 
-export const usePricingPlans = ({ onPlanSelect }: UsePricingPlansProps = {}) => {
+export function usePricingPlans({ onPlanSelect }: UsePricingPlansProps = {}) {
   const navigate = useNavigate();
 
-  const handlePlanSelect = (plan: {
-    id: string;
-    name: string;
-    description: string;
-    price: number;
-  }) => {
+  const handlePlanSelect = (plan: PricingPlan) => {
     if (onPlanSelect) {
       onPlanSelect(plan);
     } else {
@@ -87,4 +77,4 @@ export const usePricingPlans = ({ onPlanSelect }: UsePricingPlansProps = {}) => 
     plans,
     handlePlanSelect
   };
-};
+}

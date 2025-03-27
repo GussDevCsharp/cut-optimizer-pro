@@ -2,23 +2,19 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import PricingPlans from "@/components/home/PricingPlans";  // Changed back to default import
+import PricingPlans from "@/components/home/PricingPlans";
 import { RegisterForm, RegisterFormValues } from "@/components/auth/RegisterForm";
 import { toast } from "sonner";
 import CheckoutModal from "@/components/checkout/CheckoutModal";
 import { PaymentStatus } from "@/components/checkout/CheckoutModal";
+import { PricingPlan } from "@/hooks/usePricingPlans";
 
 export default function Register() {
   const { isAuthenticated, isLoading, register } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState<RegisterFormValues | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<{
-    id: string;
-    name: string;
-    description: string;
-    price: number;
-  } | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null);
 
   // Redirect to dashboard if already authenticated
   useEffect(() => {
@@ -50,12 +46,7 @@ export default function Register() {
     setCheckoutOpen(true);
   };
 
-  const handlePlanSelect = (plan: {
-    id: string;
-    name: string;
-    description: string;
-    price: number;
-  }) => {
+  const handlePlanSelect = (plan: PricingPlan) => {
     setSelectedPlan(plan);
   };
 
