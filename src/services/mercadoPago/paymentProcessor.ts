@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { createSubscription, recordPayment } from "@/services/subscriptionService";
 import { ProductInfo } from "./types";
@@ -131,11 +132,30 @@ export const usePaymentProcessor = () => {
       return { success: false };
     }
     
+    // Convert PaymentStatus to the correct type
+    let status: "pending" | "approved" | "rejected" | "error";
+    
+    // Map PaymentStatus from CheckoutModal to status for processPayment
+    switch (paymentStatus) {
+      case 'processing':
+        status = 'pending';
+        break;
+      case 'approved':
+      case 'rejected':
+      case 'error':
+      case 'pending':
+        status = paymentStatus;
+        break;
+      default:
+        status = 'error';
+        break;
+    }
+    
     return processPayment({
       productId: plan.id,
       paymentMethod,
       paymentId,
-      paymentStatus,
+      paymentStatus: status,
       amount: plan.price
     });
   };

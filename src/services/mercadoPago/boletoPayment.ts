@@ -3,10 +3,7 @@ import { CustomerData, ProductInfo } from './types';
 import { PaymentStatus } from "@/components/checkout/CheckoutModal";
 import { processPayment } from './paymentProcessor';
 import { supabase } from "@/integrations/supabase/client";
-import { formatCPF, validateCPF } from './pixPayment';
-
-// Re-export formatCPF and validateCPF from pixPayment
-export { formatCPF, validateCPF };
+import { formatCPF, validateCPF } from './utils';
 
 // Generate a fake boleto payment
 // In a real implementation, this would call the Mercado Pago API
