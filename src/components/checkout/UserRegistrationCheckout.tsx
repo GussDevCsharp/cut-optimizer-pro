@@ -35,26 +35,33 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
   const [isRegistering, setIsRegistering] = useState(false);
 
   const handlePaymentComplete = async (status: PaymentStatus, paymentId?: string) => {
-    console.log("Payment status in UserRegistrationCheckout:", status);
+    console.log("------ FLUXO DE PAGAMENTO E REGISTRO ------");
+    console.log("1. Status do pagamento:", status);
+    console.log("2. ID do pagamento:", paymentId || "Não disponível");
     
-    // Only register the user if payment was successful and not already registering
+    // Apenas registra o usuário se o pagamento foi bem-sucedido e não está já registrando
     if (status === 'approved' && !isRegistering) {
       setIsRegistering(true);
       try {
-        console.log("Attempting to register user:", userCredentials.email);
+        console.log("3. Iniciando registro do usuário:", userCredentials.email);
         
-        // Register the user with the provided credentials
+        // Registra o usuário com as credenciais fornecidas
         await register(
           userCredentials.name, 
           userCredentials.email, 
           userCredentials.password
         );
         
-        // Get the current user after registration
+        console.log("4. Usuário registrado com sucesso, obtendo dados do usuário");
+        
+        // Obtém o usuário atual após o registro
         const { data: { user } } = await supabase.auth.getUser();
         
         if (user) {
-          // Insert user data into profiles table
+          console.log("5. Usuário encontrado, ID:", user.id);
+          
+          // Insere dados do usuário na tabela profiles
+          console.log("6. Inserindo dados na tabela profiles");
           const { error: profileError } = await supabase
             .from('profiles')
             .insert({
@@ -66,11 +73,14 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
             });
           
           if (profileError) {
-            console.error("Error inserting profile data:", profileError);
-            // We don't throw here as user is already registered
+            console.error("7. Erro ao inserir dados do perfil:", profileError);
+            // Não lançamos erro aqui, pois o usuário já está registrado
+          } else {
+            console.log("7. Perfil criado com sucesso");
           }
           
-          // Insert transaction data
+          // Insere dados da transação
+          console.log("8. Inserindo dados da transação");
           const { error: transactionError } = await supabase
             .from('transactions')
             .insert({
@@ -85,27 +95,32 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
             });
           
           if (transactionError) {
-            console.error("Error inserting transaction data:", transactionError);
-            // We don't throw here as profile is already created
+            console.error("9. Erro ao inserir dados da transação:", transactionError);
+            // Não lançamos erro aqui, pois o perfil já foi criado
+          } else {
+            console.log("9. Transação registrada com sucesso");
           }
+        } else {
+          console.error("5. Usuário não encontrado após registro");
         }
         
         toast.success("Conta criada com sucesso!", {
           description: "Seu acesso à plataforma foi ativado.",
         });
         
-        console.log("User registration successful for:", userCredentials.email);
+        console.log("10. Processo de registro concluído com sucesso");
       } catch (error: any) {
-        console.error("Erro ao registrar usuário após pagamento:", error);
+        console.error("Erro no processo de registro:", error);
         toast.error("Erro ao criar conta", {
           description: error.message || "Não foi possível criar sua conta. Entre em contato com o suporte.",
         });
       } finally {
         setIsRegistering(false);
+        console.log("------ FIM DO FLUXO DE REGISTRO ------");
       }
     }
     
-    // Call the original onPaymentComplete callback
+    // Chama o callback original de onPaymentComplete
     if (onPaymentComplete) {
       onPaymentComplete(status, paymentId);
     }
