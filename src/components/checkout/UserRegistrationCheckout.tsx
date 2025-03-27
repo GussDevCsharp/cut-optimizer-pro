@@ -34,10 +34,14 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
   const [isRegistering, setIsRegistering] = useState(false);
 
   const handlePaymentComplete = async (status: PaymentStatus, paymentId?: string) => {
-    // Only register the user if payment was successful
+    console.log("Payment status in UserRegistrationCheckout:", status);
+    
+    // Only register the user if payment was successful and not already registering
     if (status === 'approved' && !isRegistering) {
       setIsRegistering(true);
       try {
+        console.log("Attempting to register user:", userCredentials.email);
+        
         // Register the user with the provided credentials
         await register(
           userCredentials.name, 
@@ -48,11 +52,13 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
         toast.success("Conta criada com sucesso!", {
           description: "Seu acesso à plataforma foi ativado.",
         });
+        
+        console.log("User registration successful for:", userCredentials.email);
       } catch (error: any) {
+        console.error("Erro ao registrar usuário após pagamento:", error);
         toast.error("Erro ao criar conta", {
           description: error.message || "Não foi possível criar sua conta. Entre em contato com o suporte.",
         });
-        console.error("Erro ao registrar usuário após pagamento:", error);
       } finally {
         setIsRegistering(false);
       }

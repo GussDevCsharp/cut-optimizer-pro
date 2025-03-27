@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import PricingPlans from "@/components/home/PricingPlans";
+import { PricingPlans } from "@/components/home/PricingPlans";
 import { RegisterForm, RegisterFormValues } from "@/components/auth/RegisterForm";
 import { toast } from "sonner";
 import CheckoutModal from "@/components/checkout/CheckoutModal";
@@ -63,6 +64,7 @@ export default function Register() {
     
     if (status === 'approved' && formData) {
       try {
+        console.log("Register.tsx: Registering user after payment approval");
         // Register user with the provided credentials
         await register(formData.name, formData.email, formData.password);
         
@@ -73,12 +75,12 @@ export default function Register() {
         // Redirect to dashboard after successful payment and registration
         setTimeout(() => {
           navigate('/dashboard');
-        }, 3000);
+        }, 2000);
       } catch (error: any) {
+        console.error("Register.tsx: Erro ao registrar usuário após pagamento:", error);
         toast.error("Erro ao criar conta", {
           description: error.message || "Não foi possível criar sua conta. Entre em contato com o suporte.",
         });
-        console.error("Erro ao registrar usuário após pagamento:", error);
       }
     }
   };
@@ -98,7 +100,7 @@ export default function Register() {
               to="/login"
               className="text-sm font-medium text-muted-foreground hover:text-foreground mr-4"
             >
-              J�� tenho uma conta
+              Já tenho uma conta
             </Link>
           </div>
         </div>
