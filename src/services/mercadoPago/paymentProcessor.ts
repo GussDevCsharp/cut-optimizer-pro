@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { createSubscription, recordPayment } from "@/services/subscriptionService";
 import { ProductInfo } from "./types";
@@ -9,7 +8,7 @@ interface ProcessPaymentOptions {
   productId: string;
   paymentMethod: 'pix' | 'card' | 'boleto';
   paymentId: string;
-  paymentStatus: PaymentStatus;
+  paymentStatus: "pending" | "approved" | "rejected" | "error";
   amount: number;
 }
 
