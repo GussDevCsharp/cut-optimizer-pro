@@ -1,5 +1,5 @@
 
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { Sheet, PlacedPiece } from '../hooks/useSheetData';
 import { generatePdf } from './pdf-generator';
 
