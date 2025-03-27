@@ -1,10 +1,12 @@
 
 // Inicialização do SDK do Mercado Pago
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 // Obter a chave pública das configurações
 export const getMercadoPagoConfig = async () => {
   try {
+    // Tentar obter as configurações do Mercado Pago do banco de dados
     const { data, error } = await supabase
       .from('system_settings')
       .select('settings')
@@ -13,28 +15,61 @@ export const getMercadoPagoConfig = async () => {
       
     if (error) {
       console.error('Erro ao carregar configurações do Mercado Pago:', error);
+      
+      // Caso a tabela não exista, criar a tabela
+      if (error.code === '42P01') { // relation does not exist
+        try {
+          // Criar a tabela system_settings
+          await supabase.rpc('create_system_settings_table');
+          
+          // Inserir as configurações padrão
+          await supabase.from('system_settings').insert({
+            key: 'mercado_pago_config',
+            settings: {
+              publicKey: 'TEST-743d3338-610c-4c0c-b612-8a9a5a9158ca',
+              accessToken: 'TEST-4308462599599565-022917-9343d6c28269cc4a693dfb9f0a6c7db6-458831007',
+              isSandbox: true
+            }
+          });
+          
+          // Retornar as configurações padrão
+          return {
+            publicKey: 'TEST-743d3338-610c-4c0c-b612-8a9a5a9158ca',
+            accessToken: 'TEST-4308462599599565-022917-9343d6c28269cc4a693dfb9f0a6c7db6-458831007',
+            isSandbox: true
+          };
+        } catch (createError) {
+          console.error('Erro ao criar tabela system_settings:', createError);
+          toast.error('Erro ao configurar o Mercado Pago. Entre em contato com o suporte.');
+        }
+      }
+      
+      // Retornar as chaves de teste padrão
       return {
-        publicKey: 'TEST-8f683d0c-1025-48db-8f1e-dae8d7f94a15', // Chave de teste padrão
+        publicKey: 'TEST-743d3338-610c-4c0c-b612-8a9a5a9158ca',
+        accessToken: 'TEST-4308462599599565-022917-9343d6c28269cc4a693dfb9f0a6c7db6-458831007',
         isSandbox: true
       };
     }
     
     if (data?.settings) {
       return {
-        publicKey: data.settings.publicKey,
-        accessToken: data.settings.accessToken,
+        publicKey: data.settings.publicKey || 'TEST-743d3338-610c-4c0c-b612-8a9a5a9158ca',
+        accessToken: data.settings.accessToken || 'TEST-4308462599599565-022917-9343d6c28269cc4a693dfb9f0a6c7db6-458831007',
         isSandbox: data.settings.isSandbox !== false
       };
     }
     
     return {
-      publicKey: 'TEST-8f683d0c-1025-48db-8f1e-dae8d7f94a15', // Chave de teste padrão
+      publicKey: 'TEST-743d3338-610c-4c0c-b612-8a9a5a9158ca',
+      accessToken: 'TEST-4308462599599565-022917-9343d6c28269cc4a693dfb9f0a6c7db6-458831007',
       isSandbox: true
     };
   } catch (error) {
     console.error('Erro ao obter configurações do Mercado Pago:', error);
     return {
-      publicKey: 'TEST-8f683d0c-1025-48db-8f1e-dae8d7f94a15', // Chave de teste padrão
+      publicKey: 'TEST-743d3338-610c-4c0c-b612-8a9a5a9158ca',
+      accessToken: 'TEST-4308462599599565-022917-9343d6c28269cc4a693dfb9f0a6c7db6-458831007',
       isSandbox: true
     };
   }
@@ -56,7 +91,8 @@ export const initMercadoPago = async (): Promise<void> => {
       script.type = 'text/javascript';
       script.onload = () => {
         if (window.MercadoPago) {
-          window.MercadoPago.setPublishableKey(publicKey);
+          const mp = new window.MercadoPago(publicKey);
+          window.mercadoPagoInstance = mp;
           resolve();
         } else {
           reject(new Error('MercadoPago SDK failed to load'));
@@ -74,12 +110,11 @@ export const initMercadoPago = async (): Promise<void> => {
 
 // Get Mercado Pago instance
 export const getMercadoPagoInstance = async () => {
-  if (!window.MercadoPago) {
+  if (!window.mercadoPagoInstance) {
     await initMercadoPago();
   }
   
-  const config = await getMercadoPagoConfig();
-  return new window.MercadoPago(config.publicKey);
+  return window.mercadoPagoInstance;
 };
 
 // Create payment preference (would be called from your backend)
@@ -94,7 +129,7 @@ export const createPaymentPreference = async (
     // Simulate API call delay
     setTimeout(() => {
       resolve({
-        preferenceId: `MOCK_PREFERENCE_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
+        preferenceId: `TEST-PREFERENCE-${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
       });
     }, 1000);
   });

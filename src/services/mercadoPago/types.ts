@@ -1,15 +1,28 @@
 
-import { ProductInfo, PaymentStatus } from '@/components/checkout/CheckoutModal';
+// Mercado Pago client types
+export interface MercadoPagoConfig {
+  publicKey: string;
+  accessToken?: string;
+  isSandbox?: boolean;
+}
 
-// Interface for customer data
+export type PaymentStatus = 'pending' | 'processing' | 'approved' | 'rejected' | 'error';
+
+export interface ProductInfo {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  image?: string;
+}
+
 export interface CustomerData {
   name: string;
   email: string;
-  identificationType: string;
+  identificationType: 'CPF' | 'CNPJ';
   identificationNumber: string;
 }
 
-// Interface for credit card data
 export interface CardData {
   cardNumber: string;
   cardholderName: string;
@@ -19,16 +32,14 @@ export interface CardData {
   issuer: string;
   installments: number;
   paymentMethodId: string;
-  identificationType?: string;
-  identificationNumber?: string;
+  identificationType: 'CPF' | 'CNPJ';
+  identificationNumber: string;
 }
 
-// Define MercadoPago on the window object
+// Augment Window interface
 declare global {
   interface Window {
-    MercadoPago?: any;
+    MercadoPago: any;
+    mercadoPagoInstance: any;
   }
 }
-
-// Re-export needed types from CheckoutModal
-export type { ProductInfo, PaymentStatus };
