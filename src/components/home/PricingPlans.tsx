@@ -60,7 +60,7 @@ interface PricingPlansProps {
   }) => void;
 }
 
-export default function PricingPlans({ onPlanSelect }: PricingPlansProps) {
+const PricingPlans = ({ onPlanSelect }: PricingPlansProps) => {
   const navigate = useNavigate();
 
   const handlePlanSelect = (plan: {
@@ -128,4 +128,7 @@ export default function PricingPlans({ onPlanSelect }: PricingPlansProps) {
       ))}
     </div>
   );
-}
+};
+
+// Export as default
+export default PricingPlans;
