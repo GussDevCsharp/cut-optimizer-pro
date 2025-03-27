@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import CheckoutModal from './CheckoutModal';
 import { PaymentStatus } from './CheckoutModal';
 
@@ -31,7 +31,6 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
   onPaymentComplete
 }) => {
   const { register } = useAuth();
-  const { toast } = useToast();
   const [isRegistering, setIsRegistering] = useState(false);
 
   const handlePaymentComplete = async (status: PaymentStatus, paymentId?: string) => {
@@ -46,14 +45,11 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
           userCredentials.password
         );
         
-        toast({
-          title: "Conta criada com sucesso!",
+        toast.success("Conta criada com sucesso!", {
           description: "Seu acesso à plataforma foi ativado.",
         });
       } catch (error: any) {
-        toast({
-          variant: "destructive",
-          title: "Erro ao criar conta",
+        toast.error("Erro ao criar conta", {
           description: error.message || "Não foi possível criar sua conta. Entre em contato com o suporte.",
         });
         console.error("Erro ao registrar usuário após pagamento:", error);

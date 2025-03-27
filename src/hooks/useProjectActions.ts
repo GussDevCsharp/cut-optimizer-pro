@@ -18,9 +18,8 @@ export function useProjectActions() {
     imageFile?: File
   ) => {
     if (!user) {
-      toast("Erro ao salvar", {
+      toast.error("Erro ao salvar", {
         description: "Você precisa estar logado para salvar um projeto.",
-        variant: "destructive",
       });
       return null;
     }
@@ -35,9 +34,8 @@ export function useProjectActions() {
         
         if (fileError) {
           console.error("Error uploading image:", fileError);
-          toast("Erro ao fazer upload da imagem", {
+          toast.error("Erro ao fazer upload da imagem", {
             description: "A imagem não pôde ser carregada, mas o projeto será salvo mesmo assim.",
-            variant: "destructive",
           });
         } else if (fileData) {
           preview_url = fileData.path;
@@ -61,7 +59,7 @@ export function useProjectActions() {
         
         if (error) throw new Error(error);
         
-        toast("Projeto salvo", {
+        toast.success("Projeto salvo", {
           description: "As alterações foram salvas com sucesso."
         });
         
@@ -77,7 +75,7 @@ export function useProjectActions() {
         
         if (error) throw new Error(error);
         
-        toast("Projeto criado", {
+        toast.success("Projeto criado", {
           description: "Projeto criado e salvo com sucesso."
         });
         
@@ -93,9 +91,8 @@ export function useProjectActions() {
         return data;
       }
     } catch (error: any) {
-      toast("Erro ao salvar", {
+      toast.error("Erro ao salvar", {
         description: error.message || "Não foi possível salvar o projeto.",
-        variant: "destructive",
       });
       return null;
     } finally {
@@ -126,9 +123,8 @@ export function useProjectActions() {
       
       return data;
     } catch (error: any) {
-      toast("Erro ao carregar projeto", {
+      toast.error("Erro ao carregar projeto", {
         description: error.message || "Não foi possível carregar o projeto.",
-        variant: "destructive",
       });
       navigate("/dashboard");
       return null;

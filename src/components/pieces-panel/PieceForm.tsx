@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Piece } from '../../hooks/useSheetData';
 import { useProjectActions } from "@/hooks/useProjectActions";
 import { useSheetData } from "@/hooks/useSheetData";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { PieceDimensionsInput } from './piece-form/PieceDimensionsInput';
 import { PieceQuantityInput } from './piece-form/PieceQuantityInput';
 import { AddPieceButton } from './piece-form/AddPieceButton';
@@ -22,7 +22,6 @@ export const PieceForm = ({ onAddPiece, projectId }: PieceFormProps) => {
   });
   const { saveProject, isSaving } = useProjectActions();
   const { projectName, sheet, pieces, placedPieces } = useSheetData();
-  const { toast } = useToast();
 
   const handleAddPiece = async () => {
     // Basic validation
@@ -53,22 +52,17 @@ export const PieceForm = ({ onAddPiece, projectId }: PieceFormProps) => {
     try {
       if (projectName) {
         await saveProject(projectId, projectName, projectData);
-        toast({
-          title: "Peça adicionada",
+        toast.success("Peça adicionada", {
           description: "Peça adicionada e projeto salvo automaticamente."
         });
       } else {
-        toast({
-          variant: "destructive",
-          title: "Atenção",
+        toast.error("Atenção", {
           description: "Defina um nome para o projeto para salvar automaticamente."
         });
       }
     } catch (err) {
       console.error("Error saving project after adding piece:", err);
-      toast({
-        variant: "destructive",
-        title: "Erro ao salvar",
+      toast.error("Erro ao salvar", {
         description: "Não foi possível salvar o projeto após adicionar a peça."
       });
     }

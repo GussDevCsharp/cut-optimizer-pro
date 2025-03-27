@@ -66,7 +66,7 @@ export default function Register() {
         // Register user with the provided credentials
         await register(formData.name, formData.email, formData.password);
         
-        toast("Conta criada com sucesso!", {
+        toast.success("Conta criada com sucesso!", {
           description: "Seu acesso à plataforma foi ativado.",
         });
         
@@ -75,9 +75,8 @@ export default function Register() {
           navigate('/dashboard');
         }, 3000);
       } catch (error: any) {
-        toast("Erro ao criar conta", {
+        toast.error("Erro ao criar conta", {
           description: error.message || "Não foi possível criar sua conta. Entre em contato com o suporte.",
-          variant: "destructive",
         });
         console.error("Erro ao registrar usuário após pagamento:", error);
       }

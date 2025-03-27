@@ -3,12 +3,12 @@ import { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 
 const resetPasswordSchema = z.object({
@@ -24,7 +24,6 @@ interface ResetPasswordFormProps {
 export function ResetPasswordForm({ onCancel }: ResetPasswordFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { resetPassword } = useAuth();
-  const { toast } = useToast();
 
   const form = useForm<ResetPasswordFormValues>({
     resolver: zodResolver(resetPasswordSchema),
@@ -40,9 +39,7 @@ export function ResetPasswordForm({ onCancel }: ResetPasswordFormProps) {
       onCancel();
       form.reset();
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Erro ao solicitar redefinição de senha",
+      toast.error("Erro ao solicitar redefinição de senha", {
         description: error.message || "Houve um problema ao processar sua solicitação.",
       });
     } finally {

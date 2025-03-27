@@ -31,7 +31,7 @@ export const useSharingService = (
           files: [file]
         });
         
-        toast("Compartilhado", {
+        toast.success("Compartilhado", {
           description: "Seu plano de corte foi compartilhado com sucesso.",
         });
       } else {
@@ -43,15 +43,14 @@ export const useSharingService = (
         a.click();
         URL.revokeObjectURL(url);
         
-        toast("Download iniciado", {
+        toast.success("Download iniciado", {
           description: "O PDF foi gerado e está sendo baixado.",
         });
       }
     } catch (error) {
       console.error('Error sharing PDF:', error);
-      toast("Erro ao compartilhar", {
+      toast.error("Erro ao compartilhar", {
         description: "Não foi possível gerar ou compartilhar o PDF.",
-        variant: "destructive",
       });
     }
   };

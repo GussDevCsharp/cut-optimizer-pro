@@ -4,7 +4,7 @@ import { AuthContextType } from "@/types/auth";
 import { useAuthState } from "@/hooks/useAuthState";
 import { loginWithEmail, registerUser, resetPasswordEmail, logout } from "@/services/authService";
 
-// Use the toast from sonner directly to avoid circular dependencies
+// Use the toast from sonner directly
 import { toast } from "sonner";
 
 const AuthContext = createContext<AuthContextType | null>(null);

@@ -12,7 +12,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { EmailDialog } from './EmailDialog';
-import { toast } from '@/hooks/use-toast';
+import { toast } from "sonner";
 import { useNavigate } from 'react-router-dom';
 
 interface StatsDisplayProps {

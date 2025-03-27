@@ -19,9 +19,8 @@ export const useEmailService = (
       // Get email settings from localStorage
       const emailSettingsString = localStorage.getItem('emailSettings');
       if (!emailSettingsString) {
-        toast("Configurações não encontradas", {
+        toast.error("Configurações não encontradas", {
           description: "Configure suas credenciais de email nas configurações da conta.",
-          variant: "destructive",
         });
         return false;
       }
