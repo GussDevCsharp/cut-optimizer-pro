@@ -1,22 +1,106 @@
 
-import { ProductInfo, CustomerData, PaymentStatus } from './types';
+import { CustomerData, ProductInfo } from './types';
+import { PaymentStatus } from "@/components/checkout/CheckoutModal";
+import { processPayment } from './paymentProcessor';
+import { supabase } from "@/integrations/supabase/client";
 
-// Generate Pix payment (mock implementation)
-export const generatePixPayment = async (product: ProductInfo, customer: CustomerData) => {
-  console.log('Generating Pix payment:', { product, customer });
+// Format CPF as user types
+export const formatCPF = (value: string): string => {
+  const cpf = value.replace(/\D/g, '');
+  if (cpf.length <= 3) return cpf;
+  if (cpf.length <= 6) return `${cpf.slice(0, 3)}.${cpf.slice(3)}`;
+  if (cpf.length <= 9) return `${cpf.slice(0, 3)}.${cpf.slice(3, 6)}.${cpf.slice(6)}`;
+  return `${cpf.slice(0, 3)}.${cpf.slice(3, 6)}.${cpf.slice(6, 9)}-${cpf.slice(9, 11)}`;
+};
+
+// Validate CPF
+export const validateCPF = (cpf: string): boolean => {
+  const cleanCPF = cpf.replace(/\D/g, '');
   
-  // Simulate API call delay
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      // Mock Pix response
-      resolve({
-        status: 'pending' as PaymentStatus,
-        paymentId: `MOCK_PIX_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-        qrCode: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADIAQMAAACXljzdAAAABlBMVEX///8AAABVwtN+AAABX0lEQVRYw+2YS47DMAxDfYFeoEfz0T2ajyYXqCXK+bWTTDB1UbctIOuxBEuUQtqypS3Df2REp6xtXzJPXi3N5DBx7rLQOa/lwZw1G8rWYyF/0qQtr4Y8mzMuW7/EceS9MR5EnUZz+3kwx01Dybs5VzZq++U6Z8Phuc6/Y1U4A9hsBPjL5mGPcNSsOf5suzgM35vj55hT+25OXDk+Rd9xPD00Z89L7eaIatuU7b05fgx0yGl7lhmDyw4j45KryFGzv2YWjDNuDJFrC+fNwRlUWYJjbxfOJuXQTBhnME6J2zPAMXNw2+LE4Dhv4UgsbMxpn6e5M47jdkF+86Jtbn4ezmCcYnW7jDzk6ONBC8eNx7k8cO5uE4fY0hyVE/Zws1rnPYcVnFhXD86bmXOqs2FNz67cGefGm26Mh1F2aK9aLhYfjtqWu3cLyiRmzOFamDN5tSTnVh2aWW3ptLFE5tSrNUdm+L/2AVJXvUVHpOd7AAAAAElFTkSuQmCC',
-        qrCodeBase64: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADIAQMAAACXljzdAAAABlBMVEX///8AAABVwtN+AAABX0lEQVRYw+2YS47DMAxDfYFeoEfz0T2ajyYXqCXK+bWTTDB1UbctIOuxBEuUQtqypS3Df2REp6xtXzJPXi3N5DBx7rLQOa/lwZw1G8rWYyF/0qQtr4Y8mzMuW7/EceS9MR5EnUZz+3kwx01Dybs5VzZq++U6Z8Phuc6/Y1U4A9hsBPjL5mGPcNSsOf5suzgM35vj55hT+25OXDk+Rd9xPD00Z89L7eaIatuU7b05fgx0yGl7lhmDyw4j45KryFGzv2YWjDNuDJFrC+fNwRlUWYJjbxfOJuXQTBhnME6J2zPAMXNw2+LE4Dhv4UgsbMxpn6e5M47jdkF+86Jtbn4ezmCcYnW7jDzk6ONBC8eNx7k8cO5uE4fY0hyVE/Zws1rnPYcVnFhXD86bmXOqs2FNz67cGefGm26Mh1F2aK9aLhYfjtqWu3cLyiRmzOFamDN5tSTnVh2aWW3ptLFE5tSrNUdm+L/2AVJXvUVHpOd7AAAAAElFTkSuQmCC',
-        qrCodeText: '00020126580014br.gov.bcb.pix0136.0ae94857-c1bd-4782-9682-45b579795e395204000053039865802BR5921Merchant Name Example6009SAO PAULO61080540900062070503***63044C2C',
-        expirationDate: new Date(Date.now() + 30 * 60000).toISOString(), // 30 minutes from now
+  // CPF must have 11 digits
+  if (cleanCPF.length !== 11) return false;
+  
+  // Check if all digits are the same (invalid CPF)
+  if (/^(\d)\1{10}$/.test(cleanCPF)) return false;
+  
+  // Validate CPF algorithm
+  let sum = 0;
+  let remainder;
+  
+  // First digit validation
+  for (let i = 1; i <= 9; i++) {
+    sum += parseInt(cleanCPF.substring(i - 1, i)) * (11 - i);
+  }
+  remainder = (sum * 10) % 11;
+  if (remainder === 10 || remainder === 11) remainder = 0;
+  if (remainder !== parseInt(cleanCPF.substring(9, 10))) return false;
+  
+  // Second digit validation
+  sum = 0;
+  for (let i = 1; i <= 10; i++) {
+    sum += parseInt(cleanCPF.substring(i - 1, i)) * (12 - i);
+  }
+  remainder = (sum * 10) % 11;
+  if (remainder === 10 || remainder === 11) remainder = 0;
+  if (remainder !== parseInt(cleanCPF.substring(10, 11))) return false;
+  
+  return true;
+};
+
+// Generate a fake PIX QR code payment
+// In a real implementation, this would call the Mercado Pago API
+export const generatePixPayment = async (
+  product: ProductInfo,
+  customerData: CustomerData
+): Promise<{
+  status: PaymentStatus;
+  paymentId: string;
+  qrCode: string;
+  qrCodeBase64: string;
+  qrCodeText: string;
+  expirationDate: string;
+}> => {
+  try {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Generate a fake payment ID
+    const paymentId = `pix_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    
+    // For demo purposes, use a static QR code image
+    const qrCode = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
+      `PIX*${paymentId}*${product.name}*${product.price}`
+    )}`;
+    
+    // Generate fake PIX code (in a real scenario this would come from Mercado Pago)
+    const qrCodeText = '00020126330014BR.GOV.BCB.PIX01112233445566778899020115Merchant name520400005303986540510.005802BR5913Merchant name6015CITY Name62070503***6304C2CA';
+    
+    // Set expiration date (30 minutes from now)
+    const expirationDate = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+    
+    // Process the payment in the database
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (user) {
+      await processPayment({
+        productId: product.id,
+        paymentMethod: 'pix',
+        paymentId,
+        paymentStatus: 'pending', // PIX starts as pending
+        amount: product.price
       });
-    }, 1500);
-  });
+    }
+    
+    return {
+      status: 'pending',
+      paymentId,
+      qrCode,
+      qrCodeBase64: qrCode, // In a real implementation, this would be a base64 string
+      qrCodeText,
+      expirationDate
+    };
+  } catch (error) {
+    console.error('Error generating PIX payment:', error);
+    throw error;
+  }
 };

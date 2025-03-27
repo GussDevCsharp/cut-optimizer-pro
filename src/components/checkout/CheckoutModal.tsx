@@ -11,6 +11,9 @@ import { initMercadoPago } from "@/services/mercadoPago";
 import { PaymentSelectionPanel } from "./payment-selection";
 import { ProductInfoPanel } from "./product-info";
 import PaymentConfirmation from "./PaymentConfirmation";
+import { usePaymentProcessor } from "@/services/mercadoPago/paymentProcessor";
+import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
 
 // Payment status types
 export type PaymentStatus = 'pending' | 'processing' | 'approved' | 'rejected' | 'error';
@@ -43,6 +46,8 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [paymentId, setPaymentId] = useState<string | undefined>(undefined);
   const [mpInitialized, setMpInitialized] = useState(false);
   const { toast } = useToast();
+  const { processPlanPurchase } = usePaymentProcessor();
+  const { user } = useAuth();
 
   // Initialize Mercado Pago SDK when modal opens
   useEffect(() => {
@@ -63,9 +68,22 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
   }, [isOpen, mpInitialized, toast]);
 
   // Handle payment completion callback
-  const handlePaymentComplete = (status: PaymentStatus, id?: string) => {
+  const handlePaymentComplete = async (status: PaymentStatus, id?: string) => {
     setPaymentStatus(status);
     if (id) setPaymentId(id);
+    
+    // Process payment in database if user is logged in
+    if (user && id) {
+      try {
+        const result = await processPlanPurchase(product, paymentMethod, id, status);
+        
+        if (result.success) {
+          console.log("Pagamento processado com sucesso no banco de dados");
+        }
+      } catch (error) {
+        console.error("Erro ao processar pagamento no banco de dados:", error);
+      }
+    }
     
     if (onPaymentComplete) {
       onPaymentComplete(status, id);
