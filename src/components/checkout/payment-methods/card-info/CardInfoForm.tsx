@@ -63,7 +63,7 @@ const CardInfoForm: React.FC<CardInfoFormProps> = ({
           value={cardNumber}
           onChange={handleCardNumberChange}
           placeholder="0000 0000 0000 0000"
-          maxLength={19} // 16 digits + 3 spaces
+          maxLength={19}
           disabled={isLoading}
         />
         {errors.cardNumber && <p className="text-xs text-destructive">{errors.cardNumber}</p>}
