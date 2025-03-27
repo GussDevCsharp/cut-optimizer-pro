@@ -1,22 +1,16 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, CreditCard, QrCode, FileText, Loader, CheckCircle, AlertCircle } from 'lucide-react';
+import { X } from 'lucide-react';
 import { 
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
   DialogClose
 } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { initMercadoPago } from "@/services/mercadoPago";
-import PixPayment from "./payment-methods/PixPayment";
-import CardPayment from "./payment-methods/CardPayment";
-import BoletoPayment from "./payment-methods/BoletoPayment";
+import { PaymentSelectionPanel } from "./payment-selection";
+import { ProductInfoPanel } from "./product-info";
 import PaymentConfirmation from "./PaymentConfirmation";
-import { cn } from "@/lib/utils";
 
 // Payment status types
 export type PaymentStatus = 'pending' | 'processing' | 'approved' | 'rejected' | 'error';
@@ -68,14 +62,6 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
     }
   }, [isOpen, mpInitialized, toast]);
 
-  // Format price to Brazilian currency
-  const formatPrice = (price: number): string => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(price);
-  };
-
   // Handle payment completion callback
   const handlePaymentComplete = (status: PaymentStatus, id?: string) => {
     setPaymentStatus(status);
@@ -124,67 +110,17 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
           </DialogClose>
         )}
 
-        {/* Show product information */}
-        <div className="p-6 border-b">
-          <h3 className="text-lg font-semibold">{product.name}</h3>
-          <p className="mt-1 text-sm text-muted-foreground">{product.description}</p>
-          <p className="mt-2 text-xl font-bold">{formatPrice(product.price)}</p>
-        </div>
+        <ProductInfoPanel product={product} />
 
         {paymentStatus === 'pending' ? (
-          <div className="px-6 pb-6">
-            <DialogHeader className="pt-4 pb-2">
-              <DialogTitle>Escolha o método de pagamento</DialogTitle>
-              <DialogDescription>
-                Selecione a forma de pagamento que preferir.
-              </DialogDescription>
-            </DialogHeader>
-
-            <Tabs 
-              value={paymentMethod} 
-              onValueChange={(value) => setPaymentMethod(value as any)} 
-              className="mt-4"
-            >
-              <TabsList className="grid grid-cols-3 mb-6">
-                <TabsTrigger value="pix" className="flex items-center space-x-2">
-                  <QrCode className="h-4 w-4" />
-                  <span>Pix</span>
-                </TabsTrigger>
-                <TabsTrigger value="card" className="flex items-center space-x-2">
-                  <CreditCard className="h-4 w-4" />
-                  <span>Cartão</span>
-                </TabsTrigger>
-                <TabsTrigger value="boleto" className="flex items-center space-x-2">
-                  <FileText className="h-4 w-4" />
-                  <span>Boleto</span>
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="pix" className="mt-0">
-                <PixPayment
-                  product={product}
-                  onProcessing={setIsProcessing}
-                  onComplete={handlePaymentComplete}
-                />
-              </TabsContent>
-
-              <TabsContent value="card" className="mt-0">
-                <CardPayment
-                  product={product}
-                  onProcessing={setIsProcessing}
-                  onComplete={handlePaymentComplete}
-                />
-              </TabsContent>
-
-              <TabsContent value="boleto" className="mt-0">
-                <BoletoPayment
-                  product={product}
-                  onProcessing={setIsProcessing}
-                  onComplete={handlePaymentComplete}
-                />
-              </TabsContent>
-            </Tabs>
-          </div>
+          <PaymentSelectionPanel
+            product={product}
+            isProcessing={isProcessing}
+            setIsProcessing={setIsProcessing}
+            onComplete={handlePaymentComplete}
+            paymentMethod={paymentMethod}
+            setPaymentMethod={setPaymentMethod}
+          />
         ) : (
           <PaymentConfirmation 
             status={paymentStatus} 
