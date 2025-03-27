@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -71,4 +72,5 @@ export const PricingPlans = ({ onPlanSelect }: PricingPlansProps) => {
   );
 };
 
+// Add default export to resolve import issue in Register.tsx
 export default PricingPlans;
