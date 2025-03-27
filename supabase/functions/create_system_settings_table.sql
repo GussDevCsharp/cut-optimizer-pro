@@ -25,8 +25,12 @@ BEGIN
     
     -- Create policy for admin access
     CREATE POLICY "Allow full access for admins" ON public.system_settings
-      USING (auth.jwt() ->> 'role' = 'master_admin')
-      WITH CHECK (auth.jwt() ->> 'role' = 'master_admin');
+      USING (EXISTS (
+        SELECT 1 FROM profiles WHERE id = auth.uid() AND email = 'gustavo@softcomfortaleza.com.br'
+      ))
+      WITH CHECK (EXISTS (
+        SELECT 1 FROM profiles WHERE id = auth.uid() AND email = 'gustavo@softcomfortaleza.com.br'
+      ));
       
     -- Create policy for read access
     CREATE POLICY "Allow read access for all authenticated users" ON public.system_settings
@@ -35,3 +39,4 @@ BEGIN
   END IF;
 END;
 $$;
+

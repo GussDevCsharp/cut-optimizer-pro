@@ -35,6 +35,14 @@ export interface PaymentHistory {
   created_at: string;
 }
 
+export interface SystemSettings {
+  id: string;
+  key: string;
+  settings: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+}
+
 // Update Database type to include our new tables
 export type Database = {
   public: {
@@ -54,7 +62,13 @@ export type Database = {
         Insert: Omit<PaymentHistory, 'id' | 'created_at'>;
         Update: Partial<Omit<PaymentHistory, 'id' | 'created_at'>>;
       };
+      system_settings: {
+        Row: SystemSettings;
+        Insert: Omit<SystemSettings, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<SystemSettings, 'id' | 'created_at' | 'updated_at'>>;
+      };
       // Add other existing tables here
     };
   };
 };
+
