@@ -1,22 +1,62 @@
 
-// This would be your public key from Mercado Pago
-// In production, you would likely store this in an environment variable
-// For sandbox testing, we're using a test public key
-const PUBLIC_KEY = 'TEST-8f683d0c-1025-48db-8f1e-dae8d7f94a15';
+// Inicialização do SDK do Mercado Pago
+import { supabase } from "@/integrations/supabase/client";
+
+// Obter a chave pública das configurações
+export const getMercadoPagoConfig = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('system_settings')
+      .select('settings')
+      .eq('key', 'mercado_pago_config')
+      .single();
+      
+    if (error) {
+      console.error('Erro ao carregar configurações do Mercado Pago:', error);
+      return {
+        publicKey: 'TEST-8f683d0c-1025-48db-8f1e-dae8d7f94a15', // Chave de teste padrão
+        isSandbox: true
+      };
+    }
+    
+    if (data?.settings) {
+      return {
+        publicKey: data.settings.publicKey,
+        accessToken: data.settings.accessToken,
+        isSandbox: data.settings.isSandbox !== false
+      };
+    }
+    
+    return {
+      publicKey: 'TEST-8f683d0c-1025-48db-8f1e-dae8d7f94a15', // Chave de teste padrão
+      isSandbox: true
+    };
+  } catch (error) {
+    console.error('Erro ao obter configurações do Mercado Pago:', error);
+    return {
+      publicKey: 'TEST-8f683d0c-1025-48db-8f1e-dae8d7f94a15', // Chave de teste padrão
+      isSandbox: true
+    };
+  }
+};
 
 // Initialize Mercado Pago SDK
 export const initMercadoPago = async (): Promise<void> => {
   if (window.MercadoPago) return Promise.resolve();
   
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     try {
+      // Obter a chave pública das configurações
+      const config = await getMercadoPagoConfig();
+      const publicKey = config.publicKey;
+      
       // Create script element
       const script = document.createElement('script');
       script.src = 'https://sdk.mercadopago.com/js/v2';
       script.type = 'text/javascript';
       script.onload = () => {
         if (window.MercadoPago) {
-          window.MercadoPago.setPublishableKey(PUBLIC_KEY);
+          window.MercadoPago.setPublishableKey(publicKey);
           resolve();
         } else {
           reject(new Error('MercadoPago SDK failed to load'));
@@ -33,11 +73,13 @@ export const initMercadoPago = async (): Promise<void> => {
 };
 
 // Get Mercado Pago instance
-export const getMercadoPagoInstance = () => {
+export const getMercadoPagoInstance = async () => {
   if (!window.MercadoPago) {
-    throw new Error('MercadoPago not initialized. Call initMercadoPago first.');
+    await initMercadoPago();
   }
-  return new window.MercadoPago(PUBLIC_KEY);
+  
+  const config = await getMercadoPagoConfig();
+  return new window.MercadoPago(config.publicKey);
 };
 
 // Create payment preference (would be called from your backend)

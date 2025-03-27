@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { useAuth } from "@/context/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Briefcase, Package, BookOpen, Settings } from "lucide-react";
+import { Briefcase, Package, BookOpen, Settings, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { generateUserManual } from "@/utils/userManual";
 import { useToast } from "@/hooks/use-toast";
@@ -18,6 +18,7 @@ import { UserDropdownMenu } from "@/components/header/UserDropdownMenu";
 import { UserManagementPanel } from "@/components/settings/UserManagementPanel";
 import { EmailSettings } from "@/components/settings/EmailSettings";
 import { MasterPanelManual } from "@/components/settings/MasterPanelManual";
+import { MercadoPagoSettings } from "@/components/settings/MercadoPagoSettings";
 
 export default function Dashboard() {
   const { user, logout, isMasterAdmin } = useAuth();
@@ -155,6 +156,10 @@ export default function Dashboard() {
                   <TabsList className="mb-4">
                     <TabsTrigger value="email">Email</TabsTrigger>
                     <TabsTrigger value="users">Usuários</TabsTrigger>
+                    <TabsTrigger value="mercado-pago">
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      Mercado Pago
+                    </TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="email">
@@ -163,6 +168,10 @@ export default function Dashboard() {
                   
                   <TabsContent value="users">
                     <UserManagementPanel />
+                  </TabsContent>
+                  
+                  <TabsContent value="mercado-pago">
+                    <MercadoPagoSettings />
                   </TabsContent>
                 </Tabs>
               </div>
