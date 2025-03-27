@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Loader, CreditCard } from 'lucide-react';
 import { CustomerInfoForm } from "../customer-info";
-import { CardInfoForm } from './CardInfoForm';
+import CardInfoForm from './CardInfoForm';
 
 interface CardFormProps {
   // Customer information
