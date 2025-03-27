@@ -15,14 +15,12 @@ export default function Register() {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null);
 
-  // Redirect to dashboard if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
       navigate("/dashboard");
     }
   }, [isAuthenticated, navigate]);
   
-  // Show loading state
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -34,14 +32,12 @@ export default function Register() {
     );
   }
   
-  // If already authenticated, don't render the register form
   if (isAuthenticated) {
     return null;
   }
 
   const handleFormSubmit = async (data: RegisterFormValues) => {
     setFormData(data);
-    // Show checkout modal
     setCheckoutOpen(true);
   };
 
@@ -55,14 +51,12 @@ export default function Register() {
     if (status === 'approved' && formData) {
       try {
         console.log("Register.tsx: Registering user after payment approval");
-        // Register user with the provided credentials
         await register(formData.name, formData.email, formData.password);
         
         toast.success("Conta criada com sucesso!", {
           description: "Seu acesso à plataforma foi ativado.",
         });
         
-        // Redirect to login page after successful payment and registration
         setTimeout(() => {
           navigate('/login');
         }, 2000);

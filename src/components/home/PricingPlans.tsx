@@ -56,7 +56,7 @@ const PlanCard: React.FC<{
   );
 };
 
-export const PricingPlans = ({ onPlanSelect }: PricingPlansProps) => {
+const PricingPlans = ({ onPlanSelect }: PricingPlansProps) => {
   const { plans, handlePlanSelect } = usePricingPlans({ onPlanSelect });
 
   return (
@@ -72,5 +72,5 @@ export const PricingPlans = ({ onPlanSelect }: PricingPlansProps) => {
   );
 };
 
-// Add default export to resolve import issue in Register.tsx
+export { PricingPlans };
 export default PricingPlans;
