@@ -3,9 +3,9 @@ import React from 'react';
 import { CreditCard, QrCode, FileText } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProductInfo, PaymentStatus } from "../CheckoutModal";
-import PixPayment from "./PixPayment";
-import CardPayment from "./CardPayment";
-import BoletoPayment from "./BoletoPayment";
+import { PixPayment } from "./pix";
+import { CardPayment } from "./card";
+import { BoletoPayment } from "./boleto";
 
 interface PaymentMethodTabsProps {
   product: ProductInfo;

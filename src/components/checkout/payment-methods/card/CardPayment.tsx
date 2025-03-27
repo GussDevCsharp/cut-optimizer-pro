@@ -1,7 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
-import { Loader, CreditCard } from 'lucide-react';
 import { 
   getInstallmentOptions,
   processCardPayment,
@@ -9,9 +7,8 @@ import {
   CardData,
   validateCPF
 } from "@/services/mercadoPago";
-import { ProductInfo, PaymentStatus } from "../CheckoutModal";
-import { CustomerInfoForm } from './customer-info';
-import { CardInfoForm } from './card-info';
+import { ProductInfo, PaymentStatus } from "../../CheckoutModal";
+import CardForm from './CardForm';
 
 interface CardPaymentProps {
   product: ProductInfo;
@@ -130,56 +127,35 @@ const CardPayment: React.FC<CardPaymentProps> = ({ product, onProcessing, onComp
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Customer Information Component */}
-      <CustomerInfoForm
-        name={name}
-        setName={setName}
-        email={email}
-        setEmail={setEmail}
-        cpf={cpf}
-        setCpf={setCpf}
-        errors={errors}
-        isLoading={isLoading}
-      />
+    <CardForm
+      // Customer information
+      name={name}
+      setName={setName}
+      email={email}
+      setEmail={setEmail}
+      cpf={cpf}
+      setCpf={setCpf}
       
-      {/* Card Information Component */}
-      <CardInfoForm
-        cardNumber={cardNumber}
-        setCardNumber={setCardNumber}
-        cardholderName={cardholderName}
-        setCardholderName={setCardholderName}
-        expirationMonth={expirationMonth}
-        setExpirationMonth={setExpirationMonth}
-        expirationYear={expirationYear}
-        setExpirationYear={setExpirationYear}
-        securityCode={securityCode}
-        setSecurityCode={setSecurityCode}
-        installments={installments}
-        setInstallments={setInstallments}
-        installmentOptions={installmentOptions}
-        errors={errors}
-        isLoading={isLoading}
-      />
+      // Card information
+      cardNumber={cardNumber}
+      setCardNumber={setCardNumber}
+      cardholderName={cardholderName}
+      setCardholderName={setCardholderName}
+      expirationMonth={expirationMonth}
+      setExpirationMonth={setExpirationMonth}
+      expirationYear={expirationYear}
+      setExpirationYear={setExpirationYear}
+      securityCode={securityCode}
+      setSecurityCode={setSecurityCode}
+      installments={installments}
+      setInstallments={setInstallments}
+      installmentOptions={installmentOptions}
       
-      <Button 
-        type="submit" 
-        className="w-full mt-6" 
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <>
-            <Loader className="mr-2 h-4 w-4 animate-spin" />
-            Processando pagamento...
-          </>
-        ) : (
-          <>
-            <CreditCard className="mr-2 h-4 w-4" />
-            Pagar com cartão
-          </>
-        )}
-      </Button>
-    </form>
+      // UI states
+      errors={errors}
+      isLoading={isLoading}
+      onSubmit={handleSubmit}
+    />
   );
 };
 
