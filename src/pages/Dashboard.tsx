@@ -7,7 +7,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Briefcase, Package, BookOpen, Settings, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { generateUserManual } from "@/utils/userManual";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 // Dashboard components
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -25,7 +25,6 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState("projects");
-  const { toast } = useToast();
 
   // Listen for tab change events
   useEffect(() => {
@@ -49,24 +48,14 @@ export default function Dashboard() {
 
   const handleDownloadManual = async () => {
     try {
-      toast({
-        title: "Gerando manual do usuário",
-        description: "Aguarde enquanto geramos o manual em PDF.",
-      });
+      toast.loading("Gerando manual do usuário. Aguarde enquanto geramos o PDF.");
       
       await generateUserManual();
       
-      toast({
-        title: "Manual gerado com sucesso!",
-        description: "O download do manual deve começar automaticamente.",
-      });
+      toast.success("Manual gerado com sucesso! O download deve começar automaticamente.");
     } catch (error) {
       console.error("Error generating user manual:", error);
-      toast({
-        variant: "destructive",
-        title: "Erro ao gerar manual",
-        description: "Não foi possível gerar o manual do usuário. Tente novamente.",
-      });
+      toast.error("Erro ao gerar manual. Não foi possível gerar o manual do usuário. Tente novamente.");
     }
   };
 
