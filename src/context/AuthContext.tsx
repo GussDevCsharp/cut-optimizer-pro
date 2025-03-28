@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext } from "react";
+import * as React from "react";
 import { AuthContextType } from "@/types/auth";
 import { useAuthState } from "@/hooks/useAuthState";
 import { loginWithEmail, registerUser, resetPasswordEmail, logout } from "@/services/authService";
@@ -7,13 +7,13 @@ import { loginWithEmail, registerUser, resetPasswordEmail, logout } from "@/serv
 // Use the toast from sonner directly
 import { toast } from "sonner";
 
-const AuthContext = createContext<AuthContextType | null>(null);
+const AuthContext = React.createContext<AuthContextType | null>(null);
 
 // Master admin email - centralized constant
 export const MASTER_ADMIN_EMAIL = "gustavo@softcomfortaleza.com.br";
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
+  const context = React.useContext(AuthContext);
   if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
