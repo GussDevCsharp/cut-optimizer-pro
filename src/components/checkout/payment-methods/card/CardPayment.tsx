@@ -5,7 +5,8 @@ import {
   processCardPayment,
   CustomerData,
   CardData,
-  validateCPF
+  validateCPF,
+  getMercadoPagoConfig
 } from "@/services/mercadoPago";
 import { ProductInfo, PaymentStatus } from "../../CheckoutModal";
 import CardForm from './CardForm';
@@ -41,9 +42,25 @@ const CardPayment: React.FC<CardPaymentProps> = ({ product, onProcessing, onComp
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [installmentOptions, setInstallmentOptions] = useState<any[]>([]);
+  const [isSandbox, setIsSandbox] = useState(true);
   
   // Get transaction step tracking from context
   const { startTransaction, updateTransactionStep } = usePayment();
+
+  // Check if we're in sandbox mode
+  useEffect(() => {
+    const checkSandboxMode = async () => {
+      try {
+        const config = await getMercadoPagoConfig();
+        setIsSandbox(config.isSandbox);
+        console.log(`Card payment initialized in ${config.isSandbox ? 'SANDBOX' : 'PRODUCTION'} mode`);
+      } catch (error) {
+        console.error('Error checking sandbox mode:', error);
+      }
+    };
+    
+    checkSandboxMode();
+  }, []);
 
   // Generate installment options when component mounts
   useEffect(() => {
@@ -163,6 +180,14 @@ const CardPayment: React.FC<CardPaymentProps> = ({ product, onProcessing, onComp
 
   return (
     <div className="space-y-4">
+      {!isSandbox && (
+        <div className="bg-green-50 border border-green-200 p-3 rounded-md mb-4">
+          <p className="text-green-800 text-sm">
+            <strong>Modo de produção ativo.</strong> Pagamentos reais serão processados.
+          </p>
+        </div>
+      )}
+      
       <TransactionStatusTracker />
       
       <CardForm
