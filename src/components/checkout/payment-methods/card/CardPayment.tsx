@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   getInstallmentOptions,
@@ -151,7 +152,8 @@ const CardPayment: React.FC<CardPaymentProps> = ({ product, onProcessing, onComp
       onComplete(response.status, response.paymentId);
     } catch (error) {
       console.error('Error processing card payment:', error);
-      updateTransactionStep(currentStep, 'error');
+      // Fix: Use the step number directly instead of referencing currentStep variable
+      updateTransactionStep(2, 'error'); // Assuming error happens during payment processing (step 2)
       onComplete('error');
     } finally {
       setIsLoading(false);
