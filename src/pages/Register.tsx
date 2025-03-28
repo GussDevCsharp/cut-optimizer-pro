@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -7,6 +8,7 @@ import { toast } from "sonner";
 import CheckoutModal from "@/components/checkout/CheckoutModal";
 import { PaymentStatus } from "@/components/checkout/CheckoutModal";
 import { PricingPlan } from "@/hooks/usePricingPlans";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Register() {
   const { isAuthenticated, isLoading, register } = useAuth();
@@ -14,6 +16,7 @@ export default function Register() {
   const [formData, setFormData] = useState<RegisterFormValues | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null);
+  const [leadId, setLeadId] = useState<string | null>(null);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -36,9 +39,42 @@ export default function Register() {
     return null;
   }
 
+  const saveLeadToDatabase = async (data: RegisterFormValues) => {
+    try {
+      // Save lead to database
+      const { data: leadData, error } = await supabase
+        .from('leads')
+        .insert({
+          name: data.name,
+          email: data.email,
+          created_at: new Date().toISOString(),
+          status: 'pending'
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      console.log('Lead saved successfully:', leadData);
+      toast.success('Dados salvos com sucesso!');
+      
+      return leadData.id;
+    } catch (error: any) {
+      console.error('Error saving lead:', error);
+      toast.error('Erro ao salvar dados. Tente novamente.');
+      return null;
+    }
+  };
+
   const handleFormSubmit = async (data: RegisterFormValues) => {
-    setFormData(data);
-    setCheckoutOpen(true);
+    // First, save as lead in database
+    const id = await saveLeadToDatabase(data);
+    
+    if (id) {
+      setLeadId(id);
+      setFormData(data);
+      setCheckoutOpen(true);
+    }
   };
 
   const handlePlanSelect = (plan: PricingPlan) => {
@@ -48,8 +84,14 @@ export default function Register() {
   const handlePaymentComplete = async (status: PaymentStatus, paymentId?: string) => {
     console.log('Payment completed with status:', status, 'and ID:', paymentId);
     
-    if (status === 'approved' && formData) {
+    if (status === 'approved' && formData && leadId) {
       try {
+        // Update lead status
+        await supabase
+          .from('leads')
+          .update({ status: 'converted', payment_id: paymentId })
+          .eq('id', leadId);
+          
         console.log("Register.tsx: Registering user after payment approval");
         await register(formData.name, formData.email, formData.password);
         

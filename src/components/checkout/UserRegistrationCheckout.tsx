@@ -20,6 +20,7 @@ interface UserRegistrationCheckoutProps {
   userCredentials: {
     name: string;
     email: string;
+    address: string;
     password: string;
   };
   onPaymentComplete?: (status: PaymentStatus, paymentId?: string) => void;
@@ -70,6 +71,7 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
               id: user.id,
               full_name: userCredentials.name,
               email: userCredentials.email,
+              address: userCredentials.address,
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             });

@@ -6,6 +6,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { UserFormValues } from './CTAButtonLogic';
+import AddressInput from './AddressInput';
 
 interface UserRegistrationDialogProps {
   userDialogOpen: boolean;
@@ -58,6 +59,9 @@ const UserRegistrationDialog: React.FC<UserRegistrationDialogProps> = ({
                 </FormItem>
               )}
             />
+            
+            <AddressInput control={form.control} />
+            
             <FormField
               control={form.control}
               name="password"
