@@ -3,8 +3,9 @@ import React, { createContext, useState, useContext, ReactNode } from 'react';
 import { PaymentStatus, ProductInfo } from '../CheckoutModal';
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
-import { usePaymentProcessor } from "@/services/mercadoPago/paymentProcessor";
+import { usePaymentProcessor } from "@/services/mercadoPago/hooks/usePaymentProcessor";
 import { toast } from "sonner";
+import { mapPaymentStatus } from "@/services/mercadoPago/processors/baseProcessor";
 
 interface PaymentContextType {
   paymentMethod: 'pix' | 'card' | 'boleto';
@@ -49,6 +50,49 @@ export const PaymentProvider: React.FC<PaymentProviderProps> = ({
   const { processPlanPurchase } = usePaymentProcessor();
   const { user } = useAuth();
 
+  // Log transaction to payment_logs table
+  const logTransaction = async (status: PaymentStatus, id?: string) => {
+    if (!id) return;
+    
+    // Log transaction details to payment_logs table
+    try {
+      const mappedStatus = mapPaymentStatus(status);
+      
+      const logData = {
+        timestamp: new Date().toISOString(),
+        product_id: product.id,
+        product_name: product.name,
+        price: product.price,
+        payment_method: paymentMethod,
+        status: mappedStatus,
+        payment_id: id,
+        user_id: user?.id || null,
+        is_sandbox: isSandbox,
+        user_agent: navigator.userAgent,
+        // For card payments, we could track card type and installments here
+      };
+      
+      if (window.navigator.onLine) {
+        const { error } = await supabase
+          .from('payment_logs')
+          .insert([logData]);
+          
+        if (error) {
+          console.error('Error logging payment transaction:', error);
+        } else {
+          console.log('Payment log recorded successfully');
+        }
+      } else {
+        // Store offline for later sync
+        const offlineLogs = JSON.parse(localStorage.getItem('offlinePaymentLogs') || '[]');
+        offlineLogs.push(logData);
+        localStorage.setItem('offlinePaymentLogs', JSON.stringify(offlineLogs));
+      }
+    } catch (error) {
+      console.error('Error saving payment log:', error);
+    }
+  };
+
   // Handle payment completion callback
   const handlePaymentComplete = async (status: PaymentStatus, id?: string) => {
     setPaymentStatus(status);
@@ -71,28 +115,8 @@ export const PaymentProvider: React.FC<PaymentProviderProps> = ({
     // Log transaction details to console for debugging
     console.log('TRANSACTION LOG:', JSON.stringify(transactionLog, null, 2));
     
-    // In a real implementation, you would send this log to your backend
-    try {
-      // Send transaction log to database if available
-      if (window.navigator.onLine) {
-        const { error } = await supabase
-          .from('payment_logs')
-          .insert([transactionLog]);
-          
-        if (error) {
-          console.error('Error logging transaction:', error);
-        } else {
-          console.log('Transaction logged successfully');
-        }
-      } else {
-        // Store offline for later sync
-        const offlineLogs = JSON.parse(localStorage.getItem('offlinePaymentLogs') || '[]');
-        offlineLogs.push(transactionLog);
-        localStorage.setItem('offlinePaymentLogs', JSON.stringify(offlineLogs));
-      }
-    } catch (error) {
-      console.error('Error saving transaction log:', error);
-    }
+    // Log to payment_logs table
+    await logTransaction(status, id);
     
     // Process payment in database if user is logged in
     if (user && id) {

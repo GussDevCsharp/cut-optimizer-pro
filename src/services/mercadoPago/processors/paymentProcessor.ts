@@ -1,8 +1,53 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { ProductInfo } from "../types";
-import { ProcessPaymentOptions, recordTransaction } from "./baseProcessor";
+import { ProcessPaymentOptions, recordTransaction, mapPaymentStatus } from "./baseProcessor";
 import { processSubscriptionPlan, recordExistingSubscriptionPayment } from "./subscriptionProcessor";
+
+/**
+ * Record transaction data to payment_logs table
+ */
+const recordPaymentLog = async (
+  options: ProcessPaymentOptions,
+  userId: string
+): Promise<void> => {
+  try {
+    const { data: productInfo, error: productError } = await supabase
+      .from('subscription_plans')
+      .select('name')
+      .eq('id', options.productId)
+      .maybeSingle();
+      
+    // Prepare log data
+    const logData = {
+      timestamp: new Date().toISOString(),
+      product_id: options.productId,
+      product_name: productInfo?.name || 'Produto não identificado',
+      price: options.amount,
+      payment_method: options.paymentMethod,
+      status: options.paymentStatus,
+      payment_id: options.paymentId,
+      user_id: userId,
+      is_sandbox: true, // Por padrão assumimos sandbox, isso poderia ser configurável
+      user_agent: typeof window !== 'undefined' ? window.navigator.userAgent : 'servidor',
+      customer_email: options.customerData?.email || null,
+      metadata: options.customerData ? { customerData: options.customerData } : null
+    };
+    
+    // Insert log data
+    const { error } = await supabase
+      .from('payment_logs')
+      .insert([logData]);
+      
+    if (error) {
+      console.error("Erro ao registrar log de pagamento:", error);
+    } else {
+      console.log("Log de pagamento registrado com sucesso");
+    }
+  } catch (error) {
+    console.error("Erro ao processar log de pagamento:", error);
+  }
+};
 
 /**
  * Process a payment after it's been completed
@@ -21,6 +66,9 @@ export const processPayment = async (
       console.error("Usuário não autenticado");
       return { success: false, subscriptionId: null };
     }
+    
+    // Always record payment log first
+    await recordPaymentLog(options, user.id);
     
     // Check if product is a subscription plan
     const { data: plan, error: planError } = await supabase
