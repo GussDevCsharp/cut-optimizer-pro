@@ -7,13 +7,10 @@ import {
   DialogClose
 } from "@/components/ui/dialog";
 import { initMercadoPago, getMercadoPagoConfig } from "@/services/mercadoPago";
-import { PaymentSelectionPanel } from "./payment-selection";
-import { ProductInfoPanel } from "./product-info";
-import PaymentConfirmation from "./PaymentConfirmation";
-import { usePaymentProcessor } from "@/services/mercadoPago/paymentProcessor";
+import SandboxBanner from './components/SandboxBanner';
+import CheckoutContent from './components/CheckoutContent';
+import { PaymentProvider } from './context/PaymentContext';
 import { toast } from "sonner";
-import { useAuth } from "@/context/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 
 // Payment status types
 export type PaymentStatus = 'pending' | 'processing' | 'approved' | 'rejected' | 'error';
@@ -40,14 +37,9 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
   product,
   onPaymentComplete 
 }) => {
-  const [paymentMethod, setPaymentMethod] = useState<'pix' | 'card' | 'boleto'>('pix');
-  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('pending');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentId, setPaymentId] = useState<string | undefined>(undefined);
   const [mpInitialized, setMpInitialized] = useState(false);
   const [isSandbox, setIsSandbox] = useState(true);
-  const { processPlanPurchase } = usePaymentProcessor();
-  const { user } = useAuth();
 
   // Initialize Mercado Pago SDK when modal opens
   useEffect(() => {
@@ -84,88 +76,12 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
     }
   }, [isOpen, mpInitialized]);
 
-  // Handle payment completion callback
-  const handlePaymentComplete = async (status: PaymentStatus, id?: string) => {
-    setPaymentStatus(status);
-    if (id) setPaymentId(id);
-    
-    // Log transaction attempt
-    const transactionLog = {
-      timestamp: new Date().toISOString(),
-      productId: product.id,
-      productName: product.name,
-      price: product.price,
-      paymentMethod,
-      status,
-      paymentId: id,
-      userId: user?.id || 'anonymous',
-      isSandbox,
-      userAgent: navigator.userAgent
-    };
-    
-    // Log transaction details to console for debugging
-    console.log('TRANSACTION LOG:', JSON.stringify(transactionLog, null, 2));
-    
-    // In a real implementation, you would send this log to your backend
-    try {
-      // Send transaction log to database if available
-      if (window.navigator.onLine) {
-        const { error } = await supabase
-          .from('payment_logs')
-          .insert([transactionLog]);
-          
-        if (error) {
-          console.error('Error logging transaction:', error);
-        } else {
-          console.log('Transaction logged successfully');
-        }
-      } else {
-        // Store offline for later sync
-        const offlineLogs = JSON.parse(localStorage.getItem('offlinePaymentLogs') || '[]');
-        offlineLogs.push(transactionLog);
-        localStorage.setItem('offlinePaymentLogs', JSON.stringify(offlineLogs));
-      }
-    } catch (error) {
-      console.error('Error saving transaction log:', error);
-    }
-    
-    // Process payment in database if user is logged in
-    if (user && id) {
-      try {
-        const result = await processPlanPurchase(product, paymentMethod, id, status);
-        
-        if (result.success) {
-          console.log("Pagamento processado com sucesso no banco de dados");
-        }
-      } catch (error) {
-        console.error("Erro ao processar pagamento no banco de dados:", error);
-      }
-    }
-    
-    if (onPaymentComplete) {
-      onPaymentComplete(status, id);
-    }
-    
-    // Show toast notification based on status
-    if (status === 'approved') {
-      toast.success("Pagamento aprovado!", {
-        description: "Seu pagamento foi processado com sucesso."
-      });
-    } else if (status === 'rejected' || status === 'error') {
-      toast.error("Falha no pagamento", {
-        description: "Houve um problema com seu pagamento. Por favor, tente novamente."
-      });
-    }
-  };
-
   // Reset state when modal closes
   const handleOpenChange = (open: boolean) => {
     if (!open) {
       // Only reset if payment is not in progress
       if (!isProcessing) {
-        setPaymentMethod('pix');
-        setPaymentStatus('pending');
-        setPaymentId(undefined);
+        // The reset will be handled by PaymentProvider's default state
       }
     }
     onOpenChange(open);
@@ -182,31 +98,15 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
           </DialogClose>
         )}
 
-        {isSandbox && (
-          <div className="bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-400 text-xs p-2 text-center">
-            Ambiente de teste (sandbox) ativo. Pagamentos não serão reais.
-          </div>
-        )}
+        <SandboxBanner isSandbox={isSandbox} />
 
-        <ProductInfoPanel product={product} />
-
-        {paymentStatus === 'pending' ? (
-          <PaymentSelectionPanel
-            product={product}
-            isProcessing={isProcessing}
-            setIsProcessing={setIsProcessing}
-            onComplete={handlePaymentComplete}
-            paymentMethod={paymentMethod}
-            setPaymentMethod={setPaymentMethod}
-          />
-        ) : (
-          <PaymentConfirmation 
-            status={paymentStatus} 
-            paymentMethod={paymentMethod}
-            paymentId={paymentId}
-            product={product}
-          />
-        )}
+        <PaymentProvider 
+          product={product} 
+          onPaymentComplete={onPaymentComplete}
+          isSandbox={isSandbox}
+        >
+          <CheckoutContent product={product} />
+        </PaymentProvider>
       </DialogContent>
     </Dialog>
   );
