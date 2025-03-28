@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePricingPlans, PricingPlan } from '@/hooks/usePricingPlans';
+import { MercadoPagoButton } from '@/components/checkout/payment-methods/mercado-pago';
 
 interface PricingPlansProps {
   onPlanSelect?: (plan: PricingPlan) => void;
@@ -12,6 +13,28 @@ const PlanCard: React.FC<{
   plan: PricingPlan;
   onSelect: (plan: PricingPlan) => void;
 }> = ({ plan, onSelect }) => {
+  const [useCustomButton, setUseCustomButton] = useState(false);
+  
+  // Produto para o MercadoPagoButton
+  const productInfo = {
+    id: plan.id,
+    name: plan.name,
+    description: plan.description,
+    price: plan.price
+  };
+
+  const handlePaymentCreated = (preferenceId: string) => {
+    console.log("MercadoPago preferenceId:", preferenceId);
+    // Após criar o pagamento, notificar sobre o plano selecionado
+    onSelect(plan);
+  };
+
+  const handlePaymentError = (error: any) => {
+    console.error("Erro ao processar pagamento:", error);
+    // Falha no botão do MercadoPago, voltar para o botão padrão
+    setUseCustomButton(true);
+  };
+
   return (
     <div 
       className={`relative flex flex-col p-6 bg-card rounded-xl shadow-sm border ${
@@ -45,13 +68,23 @@ const PlanCard: React.FC<{
         ))}
       </ul>
       
-      <Button 
-        className={`w-full ${plan.highlighted ? '' : 'bg-card hover:bg-card/90 text-card-foreground border'}`}
-        variant={plan.highlighted ? "default" : "outline"}
-        onClick={() => onSelect(plan)}
-      >
-        Assinar agora
-      </Button>
+      {useCustomButton ? (
+        <Button 
+          className={`w-full ${plan.highlighted ? '' : 'bg-card hover:bg-card/90 text-card-foreground border'}`}
+          variant={plan.highlighted ? "default" : "outline"}
+          onClick={() => onSelect(plan)}
+        >
+          Assinar agora
+        </Button>
+      ) : (
+        <div className="w-full">
+          <MercadoPagoButton 
+            product={productInfo}
+            onPaymentCreated={handlePaymentCreated}
+            onPaymentError={handlePaymentError}
+          />
+        </div>
+      )}
     </div>
   );
 };
