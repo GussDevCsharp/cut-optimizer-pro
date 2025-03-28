@@ -54,14 +54,39 @@ export const getMercadoPagoConfig = async () => {
     
     if (data?.settings) {
       // Verifique se estamos usando chaves de produção ou teste
-      const isTestKey = data.settings.publicKey?.startsWith('TEST-') || false;
+      const isTestPublicKey = data.settings.publicKey?.startsWith('TEST-') || false;
+      const isTestAccessToken = data.settings.accessToken?.startsWith('TEST-') || false;
       
-      // Se a configuração diz que não é sandbox, mas a chave começa com TEST-, exiba um aviso
-      if (!data.settings.isSandbox && isTestKey) {
+      // Se a configuração diz que não é sandbox, mas está usando chaves de teste, exiba um aviso
+      if (!data.settings.isSandbox && (isTestPublicKey || isTestAccessToken)) {
         console.warn('Atenção: Modo de produção está ativado, mas está usando chaves de teste do Mercado Pago.');
-        toast.warning('Atenção', {
-          description: 'Modo de produção ativado com chaves de teste. Configure as chaves de produção nas configurações.'
+        
+        // Log extra para debugging
+        if (isTestPublicKey) {
+          console.warn('Chave pública de teste detectada:', data.settings.publicKey);
+        }
+        
+        if (isTestAccessToken) {
+          console.warn('Token de acesso de teste detectado (parcialmente oculto):', 
+            data.settings.accessToken.substring(0, 15) + '...');
+        }
+      }
+
+      // Forçar o uso do modo sandbox se estiver usando chaves de teste, 
+      // mesmo que o usuário tenha desabilitado o modo sandbox
+      if (!data.settings.isSandbox && (isTestPublicKey || isTestAccessToken)) {
+        console.warn('Forçando modo sandbox devido ao uso de chaves de teste');
+        
+        // Opcionalmente, mostrar toast avisando o usuário
+        toast.warning('Configuração incorreta', {
+          description: 'Usando modo de produção com chaves de teste. O sistema usará modo de teste para evitar erros.'
         });
+        
+        return {
+          publicKey: data.settings.publicKey || 'TEST-743d3338-610c-4c0c-b612-8a9a5a9158ca',
+          accessToken: data.settings.accessToken || 'TEST-4308462599599565-022917-9343d6c28269cc4a693dfb9f0a6c7db6-458831007',
+          isSandbox: true // Forçar modo sandbox
+        };
       }
 
       return {
@@ -96,9 +121,16 @@ export const initMercadoPago = async (): Promise<void> => {
       const config = await getMercadoPagoConfig();
       const publicKey = config.publicKey;
       
+      // Log detalhado sobre o estado de inicialização
       console.log('Inicializando Mercado Pago com chave:', 
         publicKey.startsWith('TEST-') ? 'CHAVE DE TESTE' : 'CHAVE DE PRODUÇÃO',
         'Modo sandbox:', config.isSandbox ? 'ATIVO' : 'DESATIVADO');
+      
+      // Se estiver em modo de produção com chave de teste, mostrar aviso mais destacado
+      if (!config.isSandbox && publicKey.startsWith('TEST-')) {
+        console.warn('⚠️ ATENÇÃO: MODO DE PRODUÇÃO COM CHAVE DE TESTE ⚠️');
+        console.warn('Os pagamentos não funcionarão corretamente com esta configuração.');
+      }
       
       // Create script element
       const script = document.createElement('script');
@@ -108,16 +140,22 @@ export const initMercadoPago = async (): Promise<void> => {
         if (window.MercadoPago) {
           const mp = new window.MercadoPago(publicKey);
           window.mercadoPagoInstance = mp;
+          
+          // Log após inicialização bem-sucedida
+          console.log('Mercado Pago SDK inicializado com sucesso');
           resolve();
         } else {
+          console.error('Falha ao inicializar o SDK do Mercado Pago');
           reject(new Error('MercadoPago SDK failed to load'));
         }
       };
-      script.onerror = () => {
+      script.onerror = (e) => {
+        console.error('Erro ao carregar script do Mercado Pago:', e);
         reject(new Error('Failed to load MercadoPago SDK'));
       };
       document.body.appendChild(script);
     } catch (error) {
+      console.error('Erro durante inicialização do Mercado Pago:', error);
       reject(error);
     }
   });

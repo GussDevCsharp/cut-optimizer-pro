@@ -59,6 +59,12 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
           
           if (!config.isSandbox) {
             console.log('Mercado Pago inicializado em modo de PRODUÇÃO');
+            if (config.publicKey.startsWith('TEST-')) {
+              console.warn('ATENÇÃO: Modo de produção ativado, mas usando chave pública de TESTE');
+              toast.warning('Configuração incorreta', {
+                description: "Modo de produção ativado com chaves de teste. Pagamentos não serão processados."
+              });
+            }
           } else {
             console.log('Mercado Pago inicializado em modo de TESTE (sandbox)');
           }

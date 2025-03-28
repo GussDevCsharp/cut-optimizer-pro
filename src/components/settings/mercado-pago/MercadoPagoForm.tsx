@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -15,11 +15,11 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Loader, Save, CreditCard, Check, Key, AlertTriangle } from 'lucide-react';
+import { Loader, Save, CreditCard, Check, Key, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { MercadoPagoFormValues, mercadoPagoSchema } from './types';
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface MercadoPagoFormProps {
   initialValues: MercadoPagoFormValues;
@@ -40,6 +40,13 @@ export function MercadoPagoForm({ initialValues }: MercadoPagoFormProps) {
     !form.watch('isSandbox') && 
     (form.watch('publicKey')?.startsWith('TEST-') || form.watch('accessToken')?.startsWith('TEST-'));
 
+  // Detect if both keys are production keys
+  const hasProductionKeys = 
+    form.watch('publicKey') && 
+    !form.watch('publicKey').startsWith('TEST-') && 
+    form.watch('accessToken') && 
+    !form.watch('accessToken').startsWith('TEST-');
+
   // Save configurations
   const onSubmit = async (values: MercadoPagoFormValues) => {
     try {
@@ -47,7 +54,16 @@ export function MercadoPagoForm({ initialValues }: MercadoPagoFormProps) {
       
       // Check for production mode with test keys
       if (!values.isSandbox && (values.publicKey.startsWith('TEST-') || values.accessToken.startsWith('TEST-'))) {
-        if (!window.confirm('Você está tentando usar o modo de produção com chaves de teste. Isso não funcionará corretamente. Deseja continuar mesmo assim?')) {
+        const confirmed = window.confirm(
+          'ATENÇÃO: Você está tentando usar o modo de produção com chaves de teste. ' +
+          'Isso não funcionará corretamente para processar pagamentos reais. ' +
+          '\n\nRecomendamos que você:\n' +
+          '1. Mantenha o modo de homologação (sandbox) ATIVO enquanto estiver usando chaves de teste, OU\n' +
+          '2. Configure chaves de produção válidas para usar o modo de produção.\n\n' +
+          'Deseja continuar mesmo assim?'
+        );
+        
+        if (!confirmed) {
           setIsLoading(false);
           return;
         }
@@ -110,7 +126,14 @@ export function MercadoPagoForm({ initialValues }: MercadoPagoFormProps) {
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 3000);
       
-      toast.success('Configurações do Mercado Pago salvas com sucesso');
+      // Mostrar mensagem específica se estiver ativando o modo de produção corretamente
+      if (!values.isSandbox && hasProductionKeys) {
+        toast.success('Modo de produção ativado com sucesso', {
+          description: 'O sistema está configurado para processar pagamentos reais.'
+        });
+      } else {
+        toast.success('Configurações do Mercado Pago salvas com sucesso');
+      }
       
       // Reload the page to reinitialize the Mercado Pago SDK
       setTimeout(() => {
@@ -130,10 +153,22 @@ export function MercadoPagoForm({ initialValues }: MercadoPagoFormProps) {
         {productionModeWithTestKeys && (
           <Alert variant="warning" className="border-amber-500 bg-amber-50 dark:bg-amber-950/30">
             <AlertTriangle className="h-4 w-4 text-amber-600" />
+            <AlertTitle className="text-amber-600">Configuração inadequada detectada</AlertTitle>
             <AlertDescription className="text-amber-600">
               <strong>Atenção:</strong> Você está configurando o Mercado Pago para funcionar em modo de produção, 
               mas está usando chaves de teste (TEST-*). Para processar pagamentos reais, você precisa fornecer 
-              chaves de produção.
+              chaves de produção obtidas em sua conta Mercado Pago.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {!form.watch('isSandbox') && hasProductionKeys && (
+          <Alert className="border-green-500 bg-green-50 dark:bg-green-950/30">
+            <ShieldCheck className="h-4 w-4 text-green-600" />
+            <AlertTitle className="text-green-600">Modo de produção</AlertTitle>
+            <AlertDescription className="text-green-600">
+              <strong>Atenção:</strong> O sistema está configurado para processar pagamentos reais. 
+              Certifique-se de que as chaves fornecidas são válidas e estão corretas.
             </AlertDescription>
           </Alert>
         )}
