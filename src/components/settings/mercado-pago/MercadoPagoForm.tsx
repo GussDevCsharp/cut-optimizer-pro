@@ -1,25 +1,15 @@
 
-import React, { useState, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { 
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage
-} from "@/components/ui/form";
+import React, { useState } from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Loader, Save, CreditCard, Check, Key, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { Form } from "@/components/ui/form";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { MercadoPagoFormValues, mercadoPagoSchema } from './types';
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { SandboxToggle } from './SandboxToggle';
+import { ApiKeysFields } from './ApiKeysFields';
+import { ConfigAlerts } from './ConfigAlerts';
+import { SaveButton } from './SaveButton';
 
 interface MercadoPagoFormProps {
   initialValues: MercadoPagoFormValues;
@@ -150,140 +140,18 @@ export function MercadoPagoForm({ initialValues }: MercadoPagoFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        {productionModeWithTestKeys && (
-          <Alert variant="warning" className="border-amber-500 bg-amber-50 dark:bg-amber-950/30">
-            <AlertTriangle className="h-4 w-4 text-amber-600" />
-            <AlertTitle className="text-amber-600">Configuração inadequada detectada</AlertTitle>
-            <AlertDescription className="text-amber-600">
-              <strong>Atenção:</strong> Você está configurando o Mercado Pago para funcionar em modo de produção, 
-              mas está usando chaves de teste (TEST-*). Para processar pagamentos reais, você precisa fornecer 
-              chaves de produção obtidas em sua conta Mercado Pago.
-            </AlertDescription>
-          </Alert>
-        )}
+        <ConfigAlerts 
+          productionModeWithTestKeys={productionModeWithTestKeys}
+          hasProductionKeys={hasProductionKeys}
+          isSandbox={form.watch('isSandbox')}
+        />
 
-        {!form.watch('isSandbox') && hasProductionKeys && (
-          <Alert className="border-green-500 bg-green-50 dark:bg-green-950/30">
-            <ShieldCheck className="h-4 w-4 text-green-600" />
-            <AlertTitle className="text-green-600">Modo de produção</AlertTitle>
-            <AlertDescription className="text-green-600">
-              <strong>Atenção:</strong> O sistema está configurado para processar pagamentos reais. 
-              Certifique-se de que as chaves fornecidas são válidas e estão corretas.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        <FormField
-          control={form.control}
-          name="isSandbox"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-              <div className="space-y-0.5">
-                <FormLabel className="text-base">Modo de homologação (Sandbox)</FormLabel>
-                <FormDescription>
-                  Ative para usar em ambiente de testes. Desative apenas em produção.
-                </FormDescription>
-              </div>
-              <FormControl>
-                <Switch
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-            </FormItem>
-          )}
-        />
+        <SandboxToggle form={form} />
         
-        <FormField
-          control={form.control}
-          name="publicKey"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Chave Pública</FormLabel>
-              <FormControl>
-                <div className="flex items-center space-x-2">
-                  <Key className="h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="TEST-abcd1234-5678-... ou APP_USR-abcd1234-5678-..." 
-                    {...field} 
-                  />
-                </div>
-              </FormControl>
-              <FormDescription>
-                A chave pública (public key) utilizada para inicializar o SDK do Mercado Pago.
-                {field.value.startsWith('TEST-') && (
-                  <span className="block mt-1 text-amber-600">
-                    Esta é uma chave de teste (homologação).
-                  </span>
-                )}
-                {!field.value.startsWith('TEST-') && field.value && (
-                  <span className="block mt-1 text-green-600">
-                    Esta parece ser uma chave de produção.
-                  </span>
-                )}
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="accessToken"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Token de Acesso</FormLabel>
-              <FormControl>
-                <div className="flex items-center space-x-2">
-                  <CreditCard className="h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="APP_USR-1234567890abcdef-... ou TEST-1234567890abcdef-..." 
-                    type="password" 
-                    {...field} 
-                  />
-                </div>
-              </FormControl>
-              <FormDescription>
-                O token de acesso (access token) para autenticar requisições à API do Mercado Pago.
-                {field.value.startsWith('TEST-') && (
-                  <span className="block mt-1 text-amber-600">
-                    Este é um token de teste (homologação).
-                  </span>
-                )}
-                {!field.value.startsWith('TEST-') && field.value && (
-                  <span className="block mt-1 text-green-600">
-                    Este parece ser um token de produção.
-                  </span>
-                )}
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <ApiKeysFields form={form} />
         
         <div className="pt-4">
-          <Button 
-            type="submit" 
-            disabled={isLoading}
-            className="w-full md:w-auto"
-          >
-            {isLoading ? (
-              <>
-                <Loader className="mr-2 h-4 w-4 animate-spin" />
-                Salvando...
-              </>
-            ) : isSaved ? (
-              <>
-                <Check className="mr-2 h-4 w-4" />
-                Configurações Salvas
-              </>
-            ) : (
-              <>
-                <Save className="mr-2 h-4 w-4" />
-                Salvar Configurações
-              </>
-            )}
-          </Button>
+          <SaveButton isLoading={isLoading} isSaved={isSaved} />
         </div>
       </form>
     </Form>
