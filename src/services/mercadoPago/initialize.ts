@@ -47,37 +47,95 @@ export const getMercadoPagoConfig = async () => {
   }
 };
 
-// Initialize Mercado Pago SDK - simplified version
+// Initialize Mercado Pago SDK
 export const initMercadoPago = async (): Promise<void> => {
-  // For now, just return a resolved promise
-  // This avoids the SDK loading issues
-  return Promise.resolve();
-};
-
-// Get Mercado Pago instance - simplified version
-export const getMercadoPagoInstance = async () => {
-  // Return a simple mock instance for now
-  return {
-    checkout: () => {
-      console.log('Mock checkout called');
-      return { render: () => console.log('Mock render called') };
+  try {
+    const config = await getMercadoPagoConfig();
+    
+    // Verifica se o script já foi carregado
+    if (document.getElementById('mercadopago-script')) {
+      return Promise.resolve();
     }
-  };
+    
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.id = 'mercadopago-script';
+      script.src = 'https://sdk.mercadopago.com/js/v2';
+      script.type = 'text/javascript';
+      
+      script.onload = () => {
+        try {
+          if (window.MercadoPago) {
+            window.mercadoPagoInstance = new window.MercadoPago(config.publicKey, {
+              locale: 'pt-BR'
+            });
+            console.log('Mercado Pago SDK inicializado com sucesso');
+            resolve();
+          } else {
+            console.error('Mercado Pago SDK não disponível após carregamento');
+            reject(new Error('Mercado Pago SDK not available after loading'));
+          }
+        } catch (err) {
+          console.error('Erro ao inicializar Mercado Pago SDK:', err);
+          reject(err);
+        }
+      };
+      
+      script.onerror = (error) => {
+        console.error('Erro ao carregar script do Mercado Pago:', error);
+        reject(error);
+      };
+      
+      document.head.appendChild(script);
+    });
+  } catch (error) {
+    console.error('Erro ao inicializar Mercado Pago:', error);
+    return Promise.reject(error);
+  }
 };
 
-// Create payment preference (would be called from your backend)
+// Get Mercado Pago instance 
+export const getMercadoPagoInstance = async () => {
+  // Se já temos uma instância, retorna ela
+  if (window.mercadoPagoInstance) {
+    return window.mercadoPagoInstance;
+  }
+  
+  // Caso contrário, inicializa o SDK
+  await initMercadoPago();
+  return window.mercadoPagoInstance;
+};
+
+// Create payment preference (would normally be called from your backend)
 export const createPaymentPreference = async (
   product: import('./types').ProductInfo, 
   paymentMethod: 'pix' | 'card' | 'boleto'
 ): Promise<{ preferenceId: string }> => {
-  // In a real implementation, you would call your backend API that interacts with Mercado Pago's API
-  // For this example, we're simulating a successful response
-  return new Promise((resolve) => {
-    // Simulate API call delay
-    setTimeout(() => {
-      resolve({
-        preferenceId: `TEST-PREFERENCE-${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
-      });
-    }, 1000);
-  });
+  try {
+    // Em um ambiente real, isso seria uma chamada para seu backend
+    // que interage com a API do Mercado Pago para criar a preferência
+    const response = await fetch('/api/create-preference', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        product,
+        paymentMethod
+      }),
+    });
+    
+    if (!response.ok) {
+      throw new Error('Falha ao criar preferência de pagamento');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Erro ao criar preferência de pagamento:', error);
+    
+    // Fallback para simulação em ambiente de desenvolvimento
+    return {
+      preferenceId: `TEST-PREFERENCE-${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
+    };
+  }
 };

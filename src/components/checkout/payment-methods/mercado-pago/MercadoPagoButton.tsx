@@ -1,6 +1,6 @@
 
 import React, { useEffect, useRef, useState } from 'react';
-import { getMercadoPagoConfig } from "@/services/mercadoPago/initialize";
+import { getMercadoPagoConfig, initMercadoPago, getMercadoPagoInstance } from "@/services/mercadoPago/initialize";
 import { ProductInfo } from '@/components/checkout/CheckoutModal';
 import { Button } from '@/components/ui/button';
 import { Loader2, CreditCard } from 'lucide-react';
@@ -20,10 +20,51 @@ const MercadoPagoButton: React.FC<MercadoPagoButtonProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [sdkLoaded, setSdkLoaded] = useState(false);
   const [error, setError] = useState<any>(null);
+  const checkoutBtnRef = useRef<HTMLDivElement>(null);
 
-  // Function to create a simple preference ID (simulated)
-  const createPreferenceId = () => {
-    return `TEST-${Date.now()}`;
+  // Function to generate checkout button with Mercado Pago
+  const renderCheckoutButton = async () => {
+    try {
+      if (!checkoutBtnRef.current) return;
+      
+      const mpInstance = await getMercadoPagoInstance();
+      if (!mpInstance) {
+        throw new Error("Mercado Pago instance not available");
+      }
+      
+      // Limpa o container antes de renderizar novo botão
+      checkoutBtnRef.current.innerHTML = '';
+      
+      // Cria um ID único para este checkout
+      const preferenceId = `TEST-${Date.now()}`;
+      
+      // Inicializa o checkout
+      const checkout = mpInstance.checkout({
+        preference: {
+          id: preferenceId
+        },
+        render: {
+          container: checkoutBtnRef.current,
+          label: 'Pagar com Mercado Pago'
+        }
+      });
+      
+      // Notifica sobre a criação do pagamento
+      if (onPaymentCreated) {
+        onPaymentCreated(preferenceId);
+      }
+      
+      console.log("Botão de checkout do Mercado Pago renderizado com sucesso");
+    } catch (err) {
+      console.error("Erro ao renderizar botão do Mercado Pago:", err);
+      setError(err);
+      
+      if (onPaymentError) {
+        onPaymentError(err);
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Handle direct payment without SDK
@@ -32,7 +73,7 @@ const MercadoPagoButton: React.FC<MercadoPagoButtonProps> = ({
       setIsLoading(true);
       
       // Generate a simulated preference ID
-      const preferenceId = createPreferenceId();
+      const preferenceId = `TEST-${Date.now()}`;
       
       // Notify about payment creation
       if (onPaymentCreated) {
@@ -57,10 +98,12 @@ const MercadoPagoButton: React.FC<MercadoPagoButtonProps> = ({
 
         // Get MercadoPago configuration
         const config = await getMercadoPagoConfig();
-        console.log("MercadoPago config loaded, initializing direct payment.");
+        console.log("MercadoPago config loaded, initializing SDK.");
         
-        // Since the SDK initialization is causing issues, we'll use direct payment for now
+        await initMercadoPago();
         setSdkLoaded(true);
+        
+        // Rendering button is now handled in a separate effect
       } catch (err) {
         console.error("Failed to initialize MercadoPago:", err);
         setError(err);
@@ -76,6 +119,13 @@ const MercadoPagoButton: React.FC<MercadoPagoButtonProps> = ({
 
     loadSDK();
   }, [onPaymentError]);
+  
+  // Render checkout button once SDK is loaded
+  useEffect(() => {
+    if (sdkLoaded && checkoutBtnRef.current) {
+      renderCheckoutButton();
+    }
+  }, [sdkLoaded, product]);
 
   if (isLoading) {
     return (
@@ -91,10 +141,7 @@ const MercadoPagoButton: React.FC<MercadoPagoButtonProps> = ({
       <Button 
         variant="destructive" 
         className="w-full" 
-        onClick={() => {
-          // Try again with direct payment
-          handleDirectPayment();
-        }}
+        onClick={handleDirectPayment}
       >
         Tentar pagamento alternativo
       </Button>
@@ -102,13 +149,21 @@ const MercadoPagoButton: React.FC<MercadoPagoButtonProps> = ({
   }
 
   return (
-    <Button 
-      className="w-full" 
-      onClick={handleDirectPayment}
-    >
-      <CreditCard className="mr-2 h-4 w-4" />
-      Pagar com Mercado Pago
-    </Button>
+    <>
+      {/* Container for Mercado Pago checkout button */}
+      <div ref={checkoutBtnRef} className="w-full mp-checkout-container"></div>
+      
+      {/* Fallback button in case the SDK fails to render */}
+      {!sdkLoaded && (
+        <Button 
+          className="w-full" 
+          onClick={handleDirectPayment}
+        >
+          <CreditCard className="mr-2 h-4 w-4" />
+          Pagar com Mercado Pago
+        </Button>
+      )}
+    </>
   );
 };
 

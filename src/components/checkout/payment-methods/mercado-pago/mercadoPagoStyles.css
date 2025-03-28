@@ -1,0 +1,21 @@
+
+/* Estilos para o botão do Mercado Pago */
+.mp-checkout-container {
+  width: 100%;
+  margin: 1rem 0;
+}
+
+/* Estilos personalizados para o botão */
+.mercadopago-button {
+  width: 100% !important;
+  height: 40px !important;
+  border-radius: 0.375rem !important;
+  font-weight: 500 !important;
+  text-transform: none !important;
+  background-color: #009ee3 !important;
+}
+
+/* Hover state */
+.mercadopago-button:hover {
+  background-color: #007eb5 !important;
+}

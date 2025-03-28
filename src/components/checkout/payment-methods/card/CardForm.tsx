@@ -1,10 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Loader, CreditCard } from 'lucide-react';
 import { CustomerInfoForm } from "../customer-info";
 import { CardInfoForm } from '../card-info';
 import { MercadoPagoButton } from '../mercado-pago';
+import "../mercado-pago/mercadoPagoStyles.css";
 
 interface CardFormProps {
   // Customer information
@@ -67,6 +68,8 @@ const CardForm: React.FC<CardFormProps> = ({
 }) => {
   // Determine if we should use the custom button instead of MercadoPago
   const [useCustomButton, setUseCustomButton] = useState(false);
+  // State to track if customer data has been filled
+  const [isCustomerDataValid, setIsCustomerDataValid] = useState(false);
   
   // Product info para o MercadoPagoButton
   const productInfo = {
@@ -76,6 +79,19 @@ const CardForm: React.FC<CardFormProps> = ({
     price: installmentOptions?.length > 0 && installments ? 
       installmentOptions[parseInt(installments) - 1]?.totalAmount || 0 : 0
   };
+
+  // Validate customer data before showing payment button
+  useEffect(() => {
+    const isValid = Boolean(
+      name.trim() && 
+      email.trim() && 
+      email.includes('@') && 
+      cpf.trim() && 
+      cpf.replace(/\D/g, '').length === 11
+    );
+    
+    setIsCustomerDataValid(isValid);
+  }, [name, email, cpf]);
 
   // Handler for when payment is created by MercadoPago
   const handlePaymentCreated = (preferenceId: string) => {
@@ -125,12 +141,19 @@ const CardForm: React.FC<CardFormProps> = ({
       />
       
       <div className="w-full mt-6">
-        {/* Show regular button if loading, or if MercadoPago button failed */}
-        {useCustomButton || isLoading ? (
+        {/* Show MercadoPago button if customer data is valid */}
+        {isCustomerDataValid && !useCustomButton && !isLoading ? (
+          <MercadoPagoButton 
+            product={productInfo}
+            onPaymentCreated={handlePaymentCreated}
+            onPaymentError={handlePaymentError}
+          />
+        ) : (
+          /* Show regular button if loading, or if MercadoPago button failed */
           <Button 
             type="submit" 
             className="w-full" 
-            disabled={isLoading}
+            disabled={isLoading || !isCustomerDataValid}
           >
             {isLoading ? (
               <>
@@ -140,17 +163,10 @@ const CardForm: React.FC<CardFormProps> = ({
             ) : (
               <>
                 <CreditCard className="mr-2 h-4 w-4" />
-                Pagar com cartão
+                {isCustomerDataValid ? 'Pagar com cartão' : 'Preencha os dados para continuar'}
               </>
             )}
           </Button>
-        ) : (
-          /* MercadoPago Button */
-          <MercadoPagoButton 
-            product={productInfo}
-            onPaymentCreated={handlePaymentCreated}
-            onPaymentError={handlePaymentError}
-          />
         )}
       </div>
     </form>
