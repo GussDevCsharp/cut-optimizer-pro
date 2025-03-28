@@ -13,6 +13,7 @@ import PaymentConfirmation from "./PaymentConfirmation";
 import { usePaymentProcessor } from "@/services/mercadoPago/paymentProcessor";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 // Payment status types
 export type PaymentStatus = 'pending' | 'processing' | 'approved' | 'rejected' | 'error';
