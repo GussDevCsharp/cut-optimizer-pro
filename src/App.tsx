@@ -84,28 +84,6 @@ const DashboardWithTabs = () => {
   return <Dashboard />;
 };
 
-// Mobile viewport height fix
-const ViewportHeightFix = () => {
-  useEffect(() => {
-    const setViewportHeight = () => {
-      const vh = window.innerHeight * 0.01;
-      document.documentElement.style.setProperty('--vh', `${vh}px`);
-    };
-
-    setViewportHeight();
-
-    window.addEventListener('resize', setViewportHeight);
-    window.addEventListener('orientationchange', setViewportHeight);
-
-    return () => {
-      window.removeEventListener('resize', setViewportHeight);
-      window.removeEventListener('orientationchange', setViewportHeight);
-    };
-  }, []);
-
-  return null;
-};
-
 // Create a new QueryClient
 const queryClient = new QueryClient();
 
@@ -115,7 +93,6 @@ const App = () => (
     <BrowserRouter>
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
-          <Sonner />
           <AuthProvider>
             <Routes>
               <Route path="/home" element={<Home />} />
@@ -153,6 +130,7 @@ const App = () => (
             </Routes>
             <Toaster />
             <OfflineIndicator />
+            <Sonner />
           </AuthProvider>
         </TooltipProvider>
       </ThemeProvider>
