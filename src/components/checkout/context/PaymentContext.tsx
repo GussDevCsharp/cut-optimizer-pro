@@ -48,9 +48,9 @@ export const PaymentProvider: React.FC<PaymentProviderProps> = ({
     
     // Update transaction status on completion
     if (status === 'approved') {
-      setTransactionStatus('success');
+      updateTransactionStep(currentStep, 'success');
     } else if (status === 'rejected' || status === 'error') {
-      setTransactionStatus('error');
+      updateTransactionStep(currentStep, 'error');
     }
     
     // Log transaction attempt in console for debugging
