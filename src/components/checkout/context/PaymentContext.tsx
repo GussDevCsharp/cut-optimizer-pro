@@ -18,6 +18,13 @@ interface PaymentContextType {
   setPaymentId: (id: string | undefined) => void;
   handlePaymentComplete: (status: PaymentStatus, id?: string) => Promise<void>;
   isSandbox: boolean;
+  // New transaction tracking fields
+  transactionSteps: string[];
+  currentStep: number;
+  transactionStatus: 'idle' | 'processing' | 'success' | 'error';
+  updateTransactionStep: (step: number, status?: 'idle' | 'processing' | 'success' | 'error') => void;
+  startTransaction: (steps: string[]) => void;
+  resetTransaction: () => void;
 }
 
 const PaymentContext = createContext<PaymentContextType | undefined>(undefined);
@@ -49,6 +56,31 @@ export const PaymentProvider: React.FC<PaymentProviderProps> = ({
   const [paymentId, setPaymentId] = useState<string | undefined>(undefined);
   const { processPlanPurchase } = usePaymentProcessor();
   const { user } = useAuth();
+  
+  // New transaction step tracking state
+  const [transactionSteps, setTransactionSteps] = useState<string[]>([]);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [transactionStatus, setTransactionStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
+
+  // Start a new transaction with defined steps
+  const startTransaction = (steps: string[]) => {
+    setTransactionSteps(steps);
+    setCurrentStep(0);
+    setTransactionStatus('processing');
+  };
+
+  // Update the current transaction step
+  const updateTransactionStep = (step: number, status: 'idle' | 'processing' | 'success' | 'error' = 'processing') => {
+    setCurrentStep(step);
+    setTransactionStatus(status);
+  };
+
+  // Reset transaction tracking
+  const resetTransaction = () => {
+    setTransactionSteps([]);
+    setCurrentStep(0);
+    setTransactionStatus('idle');
+  };
 
   // Log transaction to payment_logs table directly using RPC
   const logTransaction = async (status: PaymentStatus, id?: string) => {
@@ -106,6 +138,13 @@ export const PaymentProvider: React.FC<PaymentProviderProps> = ({
   const handlePaymentComplete = async (status: PaymentStatus, id?: string) => {
     setPaymentStatus(status);
     if (id) setPaymentId(id);
+    
+    // Update transaction status on completion
+    if (status === 'approved') {
+      setTransactionStatus('success');
+    } else if (status === 'rejected' || status === 'error') {
+      setTransactionStatus('error');
+    }
     
     // Log transaction attempt in console for debugging
     const transactionLog = {
@@ -166,7 +205,14 @@ export const PaymentProvider: React.FC<PaymentProviderProps> = ({
     paymentId,
     setPaymentId,
     handlePaymentComplete,
-    isSandbox
+    isSandbox,
+    // Provide transaction tracking to consumers
+    transactionSteps,
+    currentStep,
+    transactionStatus,
+    updateTransactionStep,
+    startTransaction,
+    resetTransaction
   };
 
   return (

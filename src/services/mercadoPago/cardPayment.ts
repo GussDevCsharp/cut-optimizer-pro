@@ -1,4 +1,3 @@
-
 import { CustomerData, CardData, ProductInfo } from './types';
 import { PaymentStatus } from "@/components/checkout/CheckoutModal";
 import { processPayment } from './paymentProcessor';
@@ -32,8 +31,8 @@ export const processCardPayment = async (
       customerEmail: customerData.email
     });
     
-    // API call simulation with a 30% chance of rejection for test purposes
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Simulate gateway processing delay
+    await new Promise(resolve => setTimeout(resolve, 2500));
     
     // Generate a test payment ID
     const paymentId = `card_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   getInstallmentOptions,
@@ -9,6 +8,8 @@ import {
 } from "@/services/mercadoPago";
 import { ProductInfo, PaymentStatus } from "../../CheckoutModal";
 import CardForm from './CardForm';
+import { usePayment } from '../../context/PaymentContext';
+import TransactionStatusTracker from '../../components/TransactionStatusTracker';
 
 interface CardPaymentProps {
   product: ProductInfo;
@@ -39,6 +40,9 @@ const CardPayment: React.FC<CardPaymentProps> = ({ product, onProcessing, onComp
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [installmentOptions, setInstallmentOptions] = useState<any[]>([]);
+  
+  // Get transaction step tracking from context
+  const { startTransaction, updateTransactionStep } = usePayment();
 
   // Generate installment options when component mounts
   useEffect(() => {
@@ -93,12 +97,29 @@ const CardPayment: React.FC<CardPaymentProps> = ({ product, onProcessing, onComp
       setIsLoading(true);
       onProcessing(true);
       
+      // Define transaction steps for visual tracking
+      startTransaction([
+        "Validando informações do cliente",
+        "Verificando dados do cartão",
+        "Processando pagamento",
+        "Autorizando transação",
+        "Finalizando"
+      ]);
+      
+      // Step 1: Validate customer info
+      updateTransactionStep(0);
+      await new Promise(resolve => setTimeout(resolve, 800)); // Simulate delay
+      
       const customerData: CustomerData = {
         name,
         email,
         identificationType: 'CPF',
         identificationNumber: cpf.replace(/\D/g, '')
       };
+      
+      // Step 2: Prepare card data
+      updateTransactionStep(1);
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate delay
       
       const cardData: CardData = {
         cardNumber: cardNumber.replace(/\D/g, ''),
@@ -113,12 +134,24 @@ const CardPayment: React.FC<CardPaymentProps> = ({ product, onProcessing, onComp
         identificationNumber: cpf.replace(/\D/g, '')
       };
       
+      // Step 3: Process payment
+      updateTransactionStep(2);
+      
       // Call the service to process the card payment and explicitly type the response
       const response = await processCardPayment(product, cardData, customerData) as PaymentResponse;
+      
+      // Step 4: Authorization
+      updateTransactionStep(3);
+      await new Promise(resolve => setTimeout(resolve, 800)); // Simulate delay
+      
+      // Step 5: Finalizing
+      updateTransactionStep(4);
+      await new Promise(resolve => setTimeout(resolve, 600)); // Simulate delay
       
       onComplete(response.status, response.paymentId);
     } catch (error) {
       console.error('Error processing card payment:', error);
+      updateTransactionStep(currentStep, 'error');
       onComplete('error');
     } finally {
       setIsLoading(false);
@@ -127,35 +160,39 @@ const CardPayment: React.FC<CardPaymentProps> = ({ product, onProcessing, onComp
   };
 
   return (
-    <CardForm
-      // Customer information
-      name={name}
-      setName={setName}
-      email={email}
-      setEmail={setEmail}
-      cpf={cpf}
-      setCpf={setCpf}
+    <div className="space-y-4">
+      <TransactionStatusTracker />
       
-      // Card information
-      cardNumber={cardNumber}
-      setCardNumber={setCardNumber}
-      cardholderName={cardholderName}
-      setCardholderName={setCardholderName}
-      expirationMonth={expirationMonth}
-      setExpirationMonth={setExpirationMonth}
-      expirationYear={expirationYear}
-      setExpirationYear={setExpirationYear}
-      securityCode={securityCode}
-      setSecurityCode={setSecurityCode}
-      installments={installments}
-      setInstallments={setInstallments}
-      installmentOptions={installmentOptions}
-      
-      // UI states
-      errors={errors}
-      isLoading={isLoading}
-      onSubmit={handleSubmit}
-    />
+      <CardForm
+        // Customer information
+        name={name}
+        setName={setName}
+        email={email}
+        setEmail={setEmail}
+        cpf={cpf}
+        setCpf={setCpf}
+        
+        // Card information
+        cardNumber={cardNumber}
+        setCardNumber={setCardNumber}
+        cardholderName={cardholderName}
+        setCardholderName={setCardholderName}
+        expirationMonth={expirationMonth}
+        setExpirationMonth={setExpirationMonth}
+        expirationYear={expirationYear}
+        setExpirationYear={setExpirationYear}
+        securityCode={securityCode}
+        setSecurityCode={setSecurityCode}
+        installments={installments}
+        setInstallments={setInstallments}
+        installmentOptions={installmentOptions}
+        
+        // UI states
+        errors={errors}
+        isLoading={isLoading}
+        onSubmit={handleSubmit}
+      />
+    </div>
   );
 };
 
