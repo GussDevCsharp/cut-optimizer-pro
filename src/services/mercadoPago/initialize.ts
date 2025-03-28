@@ -1,4 +1,3 @@
-
 // Inicialização do SDK do Mercado Pago
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -161,7 +160,6 @@ export const getMercadoPagoInstance = async () => {
 };
 
 // Create payment preference (would be called from your backend)
-// This is a mock function. In a real implementation, this would make a call to your backend
 export const createPaymentPreference = async (
   product: import('./types').ProductInfo, 
   paymentMethod: 'pix' | 'card' | 'boleto'
