@@ -110,11 +110,22 @@ async function saveTransactionRecord(
   });
   
   if (user) {
+    // Fix: Map 'processing' to 'pending' when calling processPayment
+    // since processPayment only accepts 'pending', 'approved', 'rejected', or 'error'
+    let mappedStatus: "pending" | "approved" | "rejected" | "error";
+    if (status === "processing") {
+      mappedStatus = "pending";
+    } else if (status === "approved" || status === "rejected" || status === "error" || status === "pending") {
+      mappedStatus = status;
+    } else {
+      mappedStatus = "error";
+    }
+    
     await processPayment({
       productId: product.id,
       paymentMethod: 'card',
       paymentId,
-      paymentStatus: status,
+      paymentStatus: mappedStatus,
       amount: product.price,
       customerData: {
         name: customerData.name,
