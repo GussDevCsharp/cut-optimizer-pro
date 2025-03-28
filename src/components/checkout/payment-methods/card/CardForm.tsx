@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Loader, CreditCard } from 'lucide-react';
 import { CustomerInfoForm } from "../customer-info";
 import { CardInfoForm } from '../card-info';
+import { MercadoPagoButton } from '../mercado-pago';
 
 interface CardFormProps {
   // Customer information
@@ -64,6 +65,29 @@ const CardForm: React.FC<CardFormProps> = ({
   isLoading,
   onSubmit
 }) => {
+  const [useCustomButton, setUseCustomButton] = useState(false);
+  
+  // Product info para o MercadoPagoButton
+  const productInfo = {
+    id: 'card-payment',
+    name: 'Pagamento com Cartão',
+    description: 'Pagamento via cartão de crédito',
+    price: installmentOptions?.length > 0 && installments ? 
+      installmentOptions[parseInt(installments) - 1]?.amount || 0 : 0
+  };
+
+  const handlePaymentCreated = (preferenceId: string) => {
+    console.log("MercadoPago preferenceId:", preferenceId);
+    // Após criar o pagamento, notificar através do formulário
+    onSubmit({} as React.FormEvent);
+  };
+
+  const handlePaymentError = (error: any) => {
+    console.error("Erro ao processar pagamento:", error);
+    // Falha no botão do MercadoPago, voltar para o botão padrão
+    setUseCustomButton(true);
+  };
+
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       {/* Customer Information Component */}
@@ -97,23 +121,33 @@ const CardForm: React.FC<CardFormProps> = ({
         isLoading={isLoading}
       />
       
-      <Button 
-        type="submit" 
-        className="w-full mt-6" 
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <>
-            <Loader className="mr-2 h-4 w-4 animate-spin" />
-            Processando pagamento...
-          </>
+      <div className="w-full mt-6">
+        {useCustomButton || isLoading ? (
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader className="mr-2 h-4 w-4 animate-spin" />
+                Processando pagamento...
+              </>
+            ) : (
+              <>
+                <CreditCard className="mr-2 h-4 w-4" />
+                Pagar com cartão
+              </>
+            )}
+          </Button>
         ) : (
-          <>
-            <CreditCard className="mr-2 h-4 w-4" />
-            Pagar com cartão
-          </>
+          <MercadoPagoButton 
+            product={productInfo}
+            onPaymentCreated={handlePaymentCreated}
+            onPaymentError={handlePaymentError}
+          />
         )}
-      </Button>
+      </div>
     </form>
   );
 };
