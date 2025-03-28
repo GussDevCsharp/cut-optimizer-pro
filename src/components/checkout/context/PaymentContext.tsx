@@ -50,7 +50,7 @@ export const PaymentProvider: React.FC<PaymentProviderProps> = ({
   const { processPlanPurchase } = usePaymentProcessor();
   const { user } = useAuth();
 
-  // Log transaction to payment_logs table
+  // Log transaction to payment_logs table directly using RPC
   const logTransaction = async (status: PaymentStatus, id?: string) => {
     if (!id) return;
     
@@ -68,29 +68,37 @@ export const PaymentProvider: React.FC<PaymentProviderProps> = ({
         user_id: user?.id || null,
         is_sandbox: isSandbox,
         user_agent: navigator.userAgent,
-        customer_email: null // Will be populated in the payment processor
+        customer_email: user?.email || null
       };
       
+      console.log('Salvando log de pagamento via RPC:', logData);
+      
+      // Use a RPC function to bypass RLS policies
       if (window.navigator.onLine) {
-        // Don't try to save logs directly here - we'll handle this in the payment processor
-        // instead, to avoid RLS policy issues
-        console.log('Payment data prepared for logging:', logData);
-        
-        // Store data for offline users just in case
-        if (!user) {
+        const { data, error } = await supabase
+          .rpc('insert_payment_log', {
+            log_data: logData
+          });
+          
+        if (error) {
+          console.error('Erro ao salvar log de pagamento:', error);
+          // Store offline for later sync
           const offlineLogs = JSON.parse(localStorage.getItem('offlinePaymentLogs') || '[]');
           offlineLogs.push(logData);
           localStorage.setItem('offlinePaymentLogs', JSON.stringify(offlineLogs));
-          console.log('Stored payment log offline for future sync');
+          console.log('Log armazenado offline para sincronização futura');
+        } else {
+          console.log('Log de pagamento salvo com sucesso:', data);
         }
       } else {
         // Store offline for later sync
         const offlineLogs = JSON.parse(localStorage.getItem('offlinePaymentLogs') || '[]');
         offlineLogs.push(logData);
         localStorage.setItem('offlinePaymentLogs', JSON.stringify(offlineLogs));
+        console.log('Log armazenado offline para sincronização futura (offline)');
       }
     } catch (error) {
-      console.error('Error preparing payment log:', error);
+      console.error('Erro ao preparar log de pagamento:', error);
     }
   };
 
@@ -99,7 +107,7 @@ export const PaymentProvider: React.FC<PaymentProviderProps> = ({
     setPaymentStatus(status);
     if (id) setPaymentId(id);
     
-    // Log transaction attempt
+    // Log transaction attempt in console for debugging
     const transactionLog = {
       timestamp: new Date().toISOString(),
       productId: product.id,
