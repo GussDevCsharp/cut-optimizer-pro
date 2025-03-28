@@ -3,6 +3,7 @@ import { CustomerData, CardData, ProductInfo } from './types';
 import { PaymentStatus } from "@/components/checkout/CheckoutModal";
 import { processPayment } from './paymentProcessor';
 import { supabase } from "@/integrations/supabase/client";
+import { getMercadoPagoConfig } from './initialize';
 
 // Simulate card payment processing
 // In a real implementation, this would call the Mercado Pago API
@@ -15,6 +16,22 @@ export const processCardPayment = async (
   paymentId?: string;
 }> => {
   try {
+    // Get configuration to determine if we're in sandbox mode
+    const config = await getMercadoPagoConfig();
+    const isSandbox = config.isSandbox;
+    
+    // Log detailed payment attempt for debugging
+    console.log('PAYMENT ATTEMPT', {
+      timestamp: new Date().toISOString(),
+      product,
+      cardType: cardData.paymentMethodId,
+      installments: cardData.installments,
+      isSandbox,
+      isTestKey: config.publicKey.startsWith('TEST-'),
+      cardNumberMasked: '*'.repeat(12) + cardData.cardNumber.slice(-4),
+      customerEmail: customerData.email
+    });
+    
     // API call simulation with a 30% chance of rejection for test purposes
     await new Promise(resolve => setTimeout(resolve, 2000));
     
@@ -24,6 +41,16 @@ export const processCardPayment = async (
     // Simulate a successful response in most cases, but randomly reject some
     const isApproved = Math.random() > 0.3;
     const status: PaymentStatus = isApproved ? 'approved' : 'rejected';
+    
+    // Log payment result
+    console.log('PAYMENT RESULT', {
+      paymentId,
+      status,
+      timestamp: new Date().toISOString(),
+      isSandbox,
+      productId: product.id,
+      amount: product.price
+    });
     
     // Process the payment in the database if the card payment was approved
     if (isApproved) {

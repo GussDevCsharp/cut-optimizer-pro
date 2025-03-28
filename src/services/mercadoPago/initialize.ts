@@ -58,6 +58,7 @@ export const getMercadoPagoConfig = async () => {
       const isTestAccessToken = data.settings.accessToken?.startsWith('TEST-') || false;
       
       // Se a configuração diz que não é sandbox, mas está usando chaves de teste, exiba um aviso
+      // mas NÃO forçar modo sandbox - respeitar a configuração do usuário em produção
       if (!data.settings.isSandbox && (isTestPublicKey || isTestAccessToken)) {
         console.warn('Atenção: Modo de produção está ativado, mas está usando chaves de teste do Mercado Pago.');
         
@@ -70,29 +71,18 @@ export const getMercadoPagoConfig = async () => {
           console.warn('Token de acesso de teste detectado (parcialmente oculto):', 
             data.settings.accessToken.substring(0, 15) + '...');
         }
-      }
-
-      // Forçar o uso do modo sandbox se estiver usando chaves de teste, 
-      // mesmo que o usuário tenha desabilitado o modo sandbox
-      if (!data.settings.isSandbox && (isTestPublicKey || isTestAccessToken)) {
-        console.warn('Forçando modo sandbox devido ao uso de chaves de teste');
         
-        // Opcionalmente, mostrar toast avisando o usuário
-        toast.warning('Configuração incorreta', {
-          description: 'Usando modo de produção com chaves de teste. O sistema usará modo de teste para evitar erros.'
+        // IMPORTANTE: Apenas mostrar o aviso, mas não forçar o modo sandbox
+        // se o usuário explicitamente desativou o modo sandbox
+        toast.warning('Configuração inadequada', {
+          description: 'Usando modo de produção com chaves de teste. Pagamentos reais não funcionarão.'
         });
-        
-        return {
-          publicKey: data.settings.publicKey || 'TEST-743d3338-610c-4c0c-b612-8a9a5a9158ca',
-          accessToken: data.settings.accessToken || 'TEST-4308462599599565-022917-9343d6c28269cc4a693dfb9f0a6c7db6-458831007',
-          isSandbox: true // Forçar modo sandbox
-        };
       }
 
       return {
         publicKey: data.settings.publicKey || 'TEST-743d3338-610c-4c0c-b612-8a9a5a9158ca',
         accessToken: data.settings.accessToken || 'TEST-4308462599599565-022917-9343d6c28269cc4a693dfb9f0a6c7db6-458831007',
-        isSandbox: data.settings.isSandbox !== false
+        isSandbox: data.settings.isSandbox !== false // Se for undefined, assumir true
       };
     }
     

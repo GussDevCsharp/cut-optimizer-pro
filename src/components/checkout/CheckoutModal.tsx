@@ -88,6 +88,46 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
     setPaymentStatus(status);
     if (id) setPaymentId(id);
     
+    // Log transaction attempt
+    const transactionLog = {
+      timestamp: new Date().toISOString(),
+      productId: product.id,
+      productName: product.name,
+      price: product.price,
+      paymentMethod,
+      status,
+      paymentId: id,
+      userId: user?.id || 'anonymous',
+      isSandbox,
+      userAgent: navigator.userAgent
+    };
+    
+    // Log transaction details to console for debugging
+    console.log('TRANSACTION LOG:', JSON.stringify(transactionLog, null, 2));
+    
+    // In a real implementation, you would send this log to your backend
+    try {
+      // Send transaction log to database if available
+      if (window.navigator.onLine) {
+        const { error } = await supabase
+          .from('payment_logs')
+          .insert([transactionLog]);
+          
+        if (error) {
+          console.error('Error logging transaction:', error);
+        } else {
+          console.log('Transaction logged successfully');
+        }
+      } else {
+        // Store offline for later sync
+        const offlineLogs = JSON.parse(localStorage.getItem('offlinePaymentLogs') || '[]');
+        offlineLogs.push(transactionLog);
+        localStorage.setItem('offlinePaymentLogs', JSON.stringify(offlineLogs));
+      }
+    } catch (error) {
+      console.error('Error saving transaction log:', error);
+    }
+    
     // Process payment in database if user is logged in
     if (user && id) {
       try {
