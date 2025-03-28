@@ -10,7 +10,7 @@ export const processSubscriptionPlan = async (
   userId: string,
   planId: string,
   options: ProcessPaymentOptions
-): Promise<{ success: boolean, subscriptionId?: string }> => {
+): Promise<{ success: boolean, subscriptionId: string | null }> => {
   try {
     // If payment was approved
     if (options.paymentStatus === 'approved') {
@@ -37,10 +37,10 @@ export const processSubscriptionPlan = async (
       }
     }
     
-    return { success: false };
+    return { success: false, subscriptionId: null };
   } catch (error) {
     console.error("Erro ao processar assinatura:", error);
-    return { success: false };
+    return { success: false, subscriptionId: null };
   }
 };
 
@@ -50,7 +50,7 @@ export const processSubscriptionPlan = async (
 export const recordExistingSubscriptionPayment = async (
   userId: string,
   options: ProcessPaymentOptions
-): Promise<{ success: boolean, subscriptionId?: string }> => {
+): Promise<{ success: boolean, subscriptionId: string | null }> => {
   try {
     // Get user's active subscription if exists
     const { data: activeSubscription, error: subError } = await supabase
@@ -64,7 +64,7 @@ export const recordExistingSubscriptionPayment = async (
       
     if (subError && subError.code !== 'PGRST116') {
       console.error("Erro ao verificar assinatura ativa:", subError);
-      return { success: false };
+      return { success: false, subscriptionId: null };
     }
     
     if (activeSubscription) {
@@ -87,9 +87,9 @@ export const recordExistingSubscriptionPayment = async (
     }
     
     console.log("Nenhuma assinatura encontrada para associar o pagamento");
-    return { success: false };
+    return { success: false, subscriptionId: null };
   } catch (error) {
     console.error("Erro ao registrar pagamento para assinatura existente:", error);
-    return { success: false };
+    return { success: false, subscriptionId: null };
   }
 };

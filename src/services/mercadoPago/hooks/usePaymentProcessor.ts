@@ -25,7 +25,7 @@ export const usePaymentProcessor = () => {
   ) => {
     if (!user) {
       console.error("Usuário não autenticado");
-      return { success: false };
+      return { success: false, subscriptionId: null };
     }
     
     // Map PaymentStatus from CheckoutModal to status for processPayment

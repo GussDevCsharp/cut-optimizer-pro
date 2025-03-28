@@ -12,14 +12,14 @@ import { processSubscriptionPlan, recordExistingSubscriptionPayment } from "./su
  */
 export const processPayment = async (
   options: ProcessPaymentOptions
-): Promise<{success: boolean, subscriptionId?: string}> => {
+): Promise<{success: boolean, subscriptionId: string | null}> => {
   try {
     // Get current user
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
       console.error("Usuário não autenticado");
-      return { success: false };
+      return { success: false, subscriptionId: null };
     }
     
     // Check if product is a subscription plan
@@ -31,10 +31,10 @@ export const processPayment = async (
       
     if (planError && planError.code !== 'PGRST116') {
       console.error("Erro ao verificar plano:", planError);
-      return { success: false };
+      return { success: false, subscriptionId: null };
     }
     
-    let result = { success: false, subscriptionId: undefined };
+    let result = { success: false, subscriptionId: null };
     
     // If it's a subscription plan
     if (plan) {
@@ -52,6 +52,6 @@ export const processPayment = async (
     return result;
   } catch (error) {
     console.error("Erro ao processar pagamento:", error);
-    return { success: false };
+    return { success: false, subscriptionId: null };
   }
 };
