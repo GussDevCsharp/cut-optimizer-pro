@@ -72,5 +72,8 @@ const PricingPlans = ({ onPlanSelect }: PricingPlansProps) => {
   );
 };
 
+// Export as named export
 export { PricingPlans };
+
+// Export as default export
 export default PricingPlans;
