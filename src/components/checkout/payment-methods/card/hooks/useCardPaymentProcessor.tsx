@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { 
   CustomerData,
@@ -155,7 +154,7 @@ export const useCardPaymentProcessor = ({
       onComplete(response.status, response.paymentId);
     } catch (error) {
       console.error('Error processing card payment:', error);
-      // Use the step number directly instead of referencing currentStep variable
+      // Use the fixed step number instead of referencing a non-existent variable
       updateTransactionStep(2, 'error'); // Assuming error happens during payment processing (step 2)
       onComplete('error');
     } finally {
