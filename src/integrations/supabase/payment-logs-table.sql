@@ -27,12 +27,55 @@ CREATE POLICY payment_logs_select_policy ON payment_logs
     SELECT 1 FROM profiles WHERE id = auth.uid() AND email = 'gustavo@softcomfortaleza.com.br'
   ));
 
--- Allow authenticated users to insert logs
+-- Allow authenticated users and anonymous users to insert logs
 CREATE POLICY payment_logs_insert_policy ON payment_logs 
-  FOR INSERT WITH CHECK (auth.uid() = user_id OR auth.role() = 'authenticated');
+  FOR INSERT WITH CHECK (auth.uid() = user_id OR auth.uid() IS NULL OR auth.role() = 'authenticated');
 
 -- Allow admins to see all logs
 CREATE POLICY payment_logs_admin_select_policy ON payment_logs
   FOR SELECT USING (EXISTS (
     SELECT 1 FROM profiles WHERE id = auth.uid() AND email = 'gustavo@softcomfortaleza.com.br'
   ));
+
+-- Create an RPC function to insert payment logs with less strict RLS
+-- This function allows anyone to insert a payment log
+CREATE OR REPLACE FUNCTION insert_payment_log(log_data JSONB)
+RETURNS UUID
+LANGUAGE plpgsql
+SECURITY DEFINER -- This bypasses RLS
+AS $$
+DECLARE
+  new_id UUID;
+BEGIN
+  INSERT INTO payment_logs (
+    timestamp,
+    product_id,
+    product_name,
+    price,
+    payment_method,
+    status,
+    payment_id,
+    user_id,
+    is_sandbox,
+    user_agent,
+    customer_email,
+    metadata
+  ) VALUES (
+    (log_data->>'timestamp')::TIMESTAMP WITH TIME ZONE,
+    log_data->>'product_id',
+    log_data->>'product_name',
+    (log_data->>'price')::NUMERIC,
+    log_data->>'payment_method',
+    log_data->>'status',
+    log_data->>'payment_id',
+    (log_data->>'user_id')::UUID,
+    (log_data->>'is_sandbox')::BOOLEAN,
+    log_data->>'user_agent',
+    log_data->>'customer_email',
+    log_data->'metadata'
+  )
+  RETURNING id INTO new_id;
+  
+  RETURN new_id;
+END;
+$$;

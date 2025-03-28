@@ -54,7 +54,6 @@ export const PaymentProvider: React.FC<PaymentProviderProps> = ({
   const logTransaction = async (status: PaymentStatus, id?: string) => {
     if (!id) return;
     
-    // Log transaction details to payment_logs table
     try {
       const mappedStatus = mapPaymentStatus(status);
       
@@ -69,18 +68,20 @@ export const PaymentProvider: React.FC<PaymentProviderProps> = ({
         user_id: user?.id || null,
         is_sandbox: isSandbox,
         user_agent: navigator.userAgent,
-        // For card payments, we could track card type and installments here
+        customer_email: null // Will be populated in the payment processor
       };
       
       if (window.navigator.onLine) {
-        const { error } = await supabase
-          .from('payment_logs')
-          .insert([logData]);
-          
-        if (error) {
-          console.error('Error logging payment transaction:', error);
-        } else {
-          console.log('Payment log recorded successfully');
+        // Don't try to save logs directly here - we'll handle this in the payment processor
+        // instead, to avoid RLS policy issues
+        console.log('Payment data prepared for logging:', logData);
+        
+        // Store data for offline users just in case
+        if (!user) {
+          const offlineLogs = JSON.parse(localStorage.getItem('offlinePaymentLogs') || '[]');
+          offlineLogs.push(logData);
+          localStorage.setItem('offlinePaymentLogs', JSON.stringify(offlineLogs));
+          console.log('Stored payment log offline for future sync');
         }
       } else {
         // Store offline for later sync
@@ -89,7 +90,7 @@ export const PaymentProvider: React.FC<PaymentProviderProps> = ({
         localStorage.setItem('offlinePaymentLogs', JSON.stringify(offlineLogs));
       }
     } catch (error) {
-      console.error('Error saving payment log:', error);
+      console.error('Error preparing payment log:', error);
     }
   };
 

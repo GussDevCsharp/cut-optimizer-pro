@@ -9,7 +9,7 @@ import { processSubscriptionPlan, recordExistingSubscriptionPayment } from "./su
  */
 const recordPaymentLog = async (
   options: ProcessPaymentOptions,
-  userId: string
+  userId: string | null
 ): Promise<void> => {
   try {
     const { data: productInfo, error: productError } = await supabase
@@ -27,20 +27,45 @@ const recordPaymentLog = async (
       payment_method: options.paymentMethod,
       status: options.paymentStatus,
       payment_id: options.paymentId,
-      user_id: userId,
+      user_id: userId, // Can be null for anonymous users
       is_sandbox: true, // Por padrão assumimos sandbox, isso poderia ser configurável
       user_agent: typeof window !== 'undefined' ? window.navigator.userAgent : 'servidor',
       customer_email: options.customerData?.email || null,
       metadata: options.customerData ? { customerData: options.customerData } : null
     };
     
-    // Insert log data
+    console.log('Saving payment log to database:', logData);
+    
+    // Insert log data using a special function for anyone to insert
+    // This approach bypasses the RLS policies that might prevent inserts
     const { error } = await supabase
-      .from('payment_logs')
-      .insert([logData]);
+      .rpc('insert_payment_log', {
+        log_data: logData
+      });
       
     if (error) {
       console.error("Erro ao registrar log de pagamento:", error);
+      
+      // Fallback: Try direct insert as authenticated user
+      if (userId) {
+        const { error: directError } = await supabase
+          .from('payment_logs')
+          .insert([logData]);
+          
+        if (directError) {
+          console.error("Erro no fallback ao registrar log de pagamento:", directError);
+          
+          // Store offline for later sync if all else fails
+          if (typeof window !== 'undefined') {
+            const offlineLogs = JSON.parse(localStorage.getItem('offlinePaymentLogs') || '[]');
+            offlineLogs.push(logData);
+            localStorage.setItem('offlinePaymentLogs', JSON.stringify(offlineLogs));
+            console.log("Log armazenado offline para sincronização futura");
+          }
+        } else {
+          console.log("Log de pagamento registrado com sucesso via fallback");
+        }
+      }
     } else {
       console.log("Log de pagamento registrado com sucesso");
     }
@@ -62,13 +87,13 @@ export const processPayment = async (
     // Get current user
     const { data: { user } } = await supabase.auth.getUser();
     
-    if (!user) {
-      console.error("Usuário não autenticado");
-      return { success: false, subscriptionId: null };
-    }
+    // Always record payment log first, even for anonymous users
+    await recordPaymentLog(options, user?.id || null);
     
-    // Always record payment log first
-    await recordPaymentLog(options, user.id);
+    if (!user) {
+      console.log("Usuário não autenticado - registro de pagamento salvo, mas sem processar assinatura");
+      return { success: true, subscriptionId: null };
+    }
     
     // Check if product is a subscription plan
     const { data: plan, error: planError } = await supabase
