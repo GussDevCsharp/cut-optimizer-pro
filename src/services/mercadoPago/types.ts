@@ -36,10 +36,24 @@ export interface CardData {
   identificationNumber: string;
 }
 
+// Tipos para o SDK do MercadoPago
+interface MercadoPagoCheckout {
+  preference: {
+    id: string;
+  };
+  render: {
+    container: string | HTMLElement;
+    label?: string;
+  };
+  autoOpen?: boolean;
+}
+
 // Augment Window interface
 declare global {
   interface Window {
-    MercadoPago: any;
+    MercadoPago: new (publicKey: string, options?: any) => {
+      checkout: (options: MercadoPagoCheckout) => void;
+    };
     mercadoPagoInstance: any;
   }
 }

@@ -5,3 +5,4 @@ export * from './card-info';
 export * from './card';
 export * from './pix';
 export * from './boleto';
+export * from './mercado-pago';
