@@ -4,7 +4,7 @@ import { AuthContextType } from "@/types/auth";
 import { useAuthState } from "@/hooks/useAuthState";
 import { loginWithEmail, registerUser, resetPasswordEmail, logout } from "@/services/authService";
 
-// Use the toast from sonner directly
+// Use the toast from sonner directly for notifications without hooks
 import { toast } from "sonner";
 
 const AuthContext = React.createContext<AuthContextType | null>(null);

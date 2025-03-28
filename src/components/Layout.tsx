@@ -7,6 +7,7 @@ import OfflineIndicator from './OfflineIndicator';
 import TopLoadingBar from './ui/top-loading-bar';
 import { ThemeProvider } from '@/hooks/useTheme';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { Toaster } from "@/components/ui/sonner";
 
 const LayoutContent = ({ children }: PropsWithChildren) => {
   const isMobile = useIsMobile();
@@ -42,6 +43,7 @@ export const Layout = ({ children }: PropsWithChildren) => {
         <SheetProvider>
           <LayoutContent>{children}</LayoutContent>
         </SheetProvider>
+        <Toaster />
       </TooltipProvider>
     </ThemeProvider>
   );
