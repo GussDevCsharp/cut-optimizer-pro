@@ -59,6 +59,10 @@ const MercadoPagoButton: React.FC<MercadoPagoButtonProps> = ({
       console.error("Erro ao renderizar botão do Mercado Pago:", err);
       setError(err);
       
+      toast.error("Erro ao carregar Mercado Pago", {
+        description: "Não foi possível inicializar o botão de pagamento."
+      });
+      
       if (onPaymentError) {
         onPaymentError(err);
       }
@@ -79,6 +83,10 @@ const MercadoPagoButton: React.FC<MercadoPagoButtonProps> = ({
       if (onPaymentCreated) {
         onPaymentCreated(preferenceId);
       }
+
+      toast.success("Iniciando pagamento alternativo", {
+        description: "Redirecionando para o processamento..."
+      });
     } catch (err) {
       console.error("Error processing direct payment:", err);
       if (onPaymentError) {
@@ -107,6 +115,10 @@ const MercadoPagoButton: React.FC<MercadoPagoButtonProps> = ({
       } catch (err) {
         console.error("Failed to initialize MercadoPago:", err);
         setError(err);
+        
+        toast.error("Erro ao inicializar Mercado Pago", {
+          description: "Verifique sua conexão e tente novamente."
+        });
         
         // Notify parent about the error
         if (onPaymentError) {

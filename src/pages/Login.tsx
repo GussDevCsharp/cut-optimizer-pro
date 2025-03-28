@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +16,6 @@ export default function Login() {
   const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
   const [redirectDialogOpen, setRedirectDialogOpen] = useState(false);
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { toast } = useToast();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [searchParams] = useSearchParams();
@@ -29,25 +27,21 @@ export default function Login() {
   // Check for verification parameter
   useEffect(() => {
     if (verifiedParam === 'true' && emailParam) {
-      toast({
-        title: "Email confirmado com sucesso!",
-        description: "Sua conta foi ativada. Agora você pode fazer login.",
-        variant: "default",
+      toast.success("Email confirmado com sucesso!", {
+        description: "Sua conta foi ativada. Agora você pode fazer login."
       });
     }
     
     if (resetParam === 'true') {
-      toast({
-        title: "Redefinição de senha",
-        description: "Você pode agora definir uma nova senha. Verifique seu email.",
-        variant: "default",
+      toast.info("Redefinição de senha", {
+        description: "Você pode agora definir uma nova senha. Verifique seu email."
       });
     }
     
     if (fromFailedLoginParam === 'true') {
       setRedirectDialogOpen(true);
     }
-  }, [verifiedParam, emailParam, resetParam, fromFailedLoginParam, toast]);
+  }, [verifiedParam, emailParam, resetParam, fromFailedLoginParam]);
 
   // Redirect to dashboard if already authenticated
   useEffect(() => {
