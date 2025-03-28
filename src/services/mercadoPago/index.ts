@@ -6,5 +6,5 @@ export * from './pixPayment';
 export * from './boletoPayment';
 export * from './processors';
 export * from './hooks/usePaymentProcessor';
-// Export utils but rename getInstallmentOptions to avoid duplicate export
+export * from './installments';
 export { formatCPF, formatCardNumber, validateCPF, formatCurrency } from './utils';
