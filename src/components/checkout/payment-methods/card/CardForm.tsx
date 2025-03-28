@@ -65,6 +65,7 @@ const CardForm: React.FC<CardFormProps> = ({
   isLoading,
   onSubmit
 }) => {
+  // Determine if we should use the custom button instead of MercadoPago
   const [useCustomButton, setUseCustomButton] = useState(false);
   
   // Product info para o MercadoPagoButton
@@ -73,18 +74,20 @@ const CardForm: React.FC<CardFormProps> = ({
     name: 'Pagamento com Cartão',
     description: 'Pagamento via cartão de crédito',
     price: installmentOptions?.length > 0 && installments ? 
-      installmentOptions[parseInt(installments) - 1]?.amount || 0 : 0
+      installmentOptions[parseInt(installments) - 1]?.totalAmount || 0 : 0
   };
 
+  // Handler for when payment is created by MercadoPago
   const handlePaymentCreated = (preferenceId: string) => {
-    console.log("MercadoPago preferenceId:", preferenceId);
-    // Após criar o pagamento, notificar através do formulário
+    console.log("Payment created with preferenceId:", preferenceId);
+    // Submit the form directly without event
     onSubmit({} as React.FormEvent);
   };
 
+  // Handler for errors in MercadoPago button
   const handlePaymentError = (error: any) => {
-    console.error("Erro ao processar pagamento:", error);
-    // Falha no botão do MercadoPago, voltar para o botão padrão
+    console.error("Error processing payment:", error);
+    // Fall back to standard button
     setUseCustomButton(true);
   };
 
@@ -122,6 +125,7 @@ const CardForm: React.FC<CardFormProps> = ({
       />
       
       <div className="w-full mt-6">
+        {/* Show regular button if loading, or if MercadoPago button failed */}
         {useCustomButton || isLoading ? (
           <Button 
             type="submit" 
@@ -141,6 +145,7 @@ const CardForm: React.FC<CardFormProps> = ({
             )}
           </Button>
         ) : (
+          /* MercadoPago Button */
           <MercadoPagoButton 
             product={productInfo}
             onPaymentCreated={handlePaymentCreated}
