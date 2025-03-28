@@ -2,21 +2,17 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import PricingPlans from "@/components/home/PricingPlans";
 import { RegisterForm, RegisterFormValues } from "@/components/auth/RegisterForm";
 import { toast } from "sonner";
 import CheckoutModal from "@/components/checkout/CheckoutModal";
 import { PaymentStatus } from "@/components/checkout/CheckoutModal";
 import { PricingPlan } from "@/hooks/usePricingPlans";
 import { supabase } from "@/integrations/supabase/client";
+import StepByStepRegister from "@/components/auth/StepByStepRegister";
 
 export default function Register() {
-  const { isAuthenticated, isLoading, register } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
-  const [formData, setFormData] = useState<RegisterFormValues | null>(null);
-  const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null);
-  const [leadId, setLeadId] = useState<string | null>(null);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -38,78 +34,6 @@ export default function Register() {
   if (isAuthenticated) {
     return null;
   }
-
-  const saveLeadToDatabase = async (data: RegisterFormValues) => {
-    try {
-      // Save lead to database
-      const { data: leadData, error } = await supabase
-        .from('leads')
-        .insert({
-          name: data.name,
-          email: data.email,
-          created_at: new Date().toISOString(),
-          status: 'pending'
-        })
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      console.log('Lead saved successfully:', leadData);
-      toast.success('Dados salvos com sucesso!');
-      
-      return leadData.id;
-    } catch (error: any) {
-      console.error('Error saving lead:', error);
-      toast.error('Erro ao salvar dados. Tente novamente.');
-      return null;
-    }
-  };
-
-  const handleFormSubmit = async (data: RegisterFormValues) => {
-    // First, save as lead in database
-    const id = await saveLeadToDatabase(data);
-    
-    if (id) {
-      setLeadId(id);
-      setFormData(data);
-      setCheckoutOpen(true);
-    }
-  };
-
-  const handlePlanSelect = (plan: PricingPlan) => {
-    setSelectedPlan(plan);
-  };
-
-  const handlePaymentComplete = async (status: PaymentStatus, paymentId?: string) => {
-    console.log('Payment completed with status:', status, 'and ID:', paymentId);
-    
-    if (status === 'approved' && formData && leadId) {
-      try {
-        // Update lead status
-        await supabase
-          .from('leads')
-          .update({ status: 'converted', payment_id: paymentId })
-          .eq('id', leadId);
-          
-        console.log("Register.tsx: Registering user after payment approval");
-        await register(formData.name, formData.email, formData.password);
-        
-        toast.success("Conta criada com sucesso!", {
-          description: "Seu acesso à plataforma foi ativado.",
-        });
-        
-        setTimeout(() => {
-          navigate('/login');
-        }, 2000);
-      } catch (error: any) {
-        console.error("Register.tsx: Erro ao registrar usuário após pagamento:", error);
-        toast.error("Erro ao criar conta", {
-          description: error.message || "Não foi possível criar sua conta. Entre em contato com o suporte.",
-        });
-      }
-    }
-  };
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -135,41 +59,15 @@ export default function Register() {
       <main className="flex-1">
         <div className="container py-8">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold tracking-tight">Escolha seu plano</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Crie sua conta</h1>
             <p className="text-muted-foreground mt-2">
-              Selecione o plano ideal para o seu negócio e comece a otimizar seus projetos hoje mesmo.
+              Complete seu cadastro para acessar todos os recursos da plataforma.
             </p>
           </div>
 
-          <PricingPlans onPlanSelect={handlePlanSelect} />
-
-          {selectedPlan && (
-            <div className="mt-8 max-w-md mx-auto">
-              <div className="bg-card rounded-lg p-6 shadow-sm border">
-                <h2 className="text-xl font-semibold mb-4">Crie sua conta</h2>
-                <p className="text-muted-foreground mb-6">
-                  Complete seu cadastro para continuar com a compra do plano {selectedPlan.name}
-                </p>
-                <RegisterForm onSubmit={handleFormSubmit} isLoading={false} />
-              </div>
-            </div>
-          )}
+          <StepByStepRegister />
         </div>
       </main>
-
-      {formData && selectedPlan && (
-        <CheckoutModal
-          isOpen={checkoutOpen}
-          onOpenChange={setCheckoutOpen}
-          product={{
-            id: selectedPlan.id,
-            name: selectedPlan.name,
-            description: selectedPlan.description,
-            price: selectedPlan.price
-          }}
-          onPaymentComplete={handlePaymentComplete}
-        />
-      )}
 
       <footer className="border-t py-6 md:py-0">
         <div className="container flex flex-col md:h-16 items-center justify-between gap-4 md:flex-row">

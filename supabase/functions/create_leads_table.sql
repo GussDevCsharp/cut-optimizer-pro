@@ -63,6 +63,25 @@ begin
           and profiles.is_admin = true
         )
       );
+  else
+    -- Add any missing columns to the existing table
+    if not exists (
+      select from information_schema.columns
+      where table_schema = 'public'
+      and table_name = 'leads'
+      and column_name = 'address'
+    ) then
+      alter table public.leads add column address text;
+    end if;
+    
+    if not exists (
+      select from information_schema.columns
+      where table_schema = 'public'
+      and table_name = 'leads'
+      and column_name = 'source'
+    ) then
+      alter table public.leads add column source text;
+    end if;
   end if;
 end;
 $$;
