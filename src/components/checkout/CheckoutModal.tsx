@@ -6,7 +6,7 @@ import {
   DialogContent,
   DialogClose
 } from "@/components/ui/dialog";
-import { initMercadoPago } from "@/services/mercadoPago";
+import { initMercadoPago, getMercadoPagoConfig } from "@/services/mercadoPago";
 import { PaymentSelectionPanel } from "./payment-selection";
 import { ProductInfoPanel } from "./product-info";
 import PaymentConfirmation from "./PaymentConfirmation";
@@ -44,22 +44,36 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentId, setPaymentId] = useState<string | undefined>(undefined);
   const [mpInitialized, setMpInitialized] = useState(false);
+  const [isSandbox, setIsSandbox] = useState(true);
   const { processPlanPurchase } = usePaymentProcessor();
   const { user } = useAuth();
 
   // Initialize Mercado Pago SDK when modal opens
   useEffect(() => {
     if (isOpen && !mpInitialized) {
-      initMercadoPago()
-        .then(() => {
+      const initMP = async () => {
+        try {
+          // Get config first to check sandbox mode
+          const config = await getMercadoPagoConfig();
+          setIsSandbox(config.isSandbox);
+          
+          if (!config.isSandbox) {
+            console.log('Mercado Pago inicializado em modo de PRODUÇÃO');
+          } else {
+            console.log('Mercado Pago inicializado em modo de TESTE (sandbox)');
+          }
+          
+          await initMercadoPago();
           setMpInitialized(true);
-        })
-        .catch(error => {
+        } catch (error) {
           console.error("Failed to initialize Mercado Pago:", error);
           toast.error("Erro ao inicializar pagamento", {
             description: "Por favor, tente novamente mais tarde."
           });
-        });
+        }
+      };
+      
+      initMP();
     }
   }, [isOpen, mpInitialized]);
 
@@ -119,6 +133,12 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
             <X className="h-4 w-4" />
             <span className="sr-only">Fechar</span>
           </DialogClose>
+        )}
+
+        {isSandbox && (
+          <div className="bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-400 text-xs p-2 text-center">
+            Ambiente de teste (sandbox) ativo. Pagamentos não serão reais.
+          </div>
         )}
 
         <ProductInfoPanel product={product} />

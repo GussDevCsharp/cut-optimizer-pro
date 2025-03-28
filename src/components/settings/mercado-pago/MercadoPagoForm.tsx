@@ -15,10 +15,11 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Loader, Save, CreditCard, Check, Key } from 'lucide-react';
+import { Loader, Save, CreditCard, Check, Key, AlertTriangle } from 'lucide-react';
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { MercadoPagoFormValues, mercadoPagoSchema } from './types';
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface MercadoPagoFormProps {
   initialValues: MercadoPagoFormValues;
@@ -34,10 +35,23 @@ export function MercadoPagoForm({ initialValues }: MercadoPagoFormProps) {
     defaultValues: initialValues,
   });
 
+  // Detect if production mode conflicts with test keys
+  const productionModeWithTestKeys = 
+    !form.watch('isSandbox') && 
+    (form.watch('publicKey')?.startsWith('TEST-') || form.watch('accessToken')?.startsWith('TEST-'));
+
   // Save configurations
   const onSubmit = async (values: MercadoPagoFormValues) => {
     try {
       setIsLoading(true);
+      
+      // Check for production mode with test keys
+      if (!values.isSandbox && (values.publicKey.startsWith('TEST-') || values.accessToken.startsWith('TEST-'))) {
+        if (!window.confirm('Você está tentando usar o modo de produção com chaves de teste. Isso não funcionará corretamente. Deseja continuar mesmo assim?')) {
+          setIsLoading(false);
+          return;
+        }
+      }
       
       // Check if a record already exists
       const { data: existingConfig, error: checkError } = await supabase
@@ -113,6 +127,17 @@ export function MercadoPagoForm({ initialValues }: MercadoPagoFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        {productionModeWithTestKeys && (
+          <Alert variant="warning" className="border-amber-500 bg-amber-50 dark:bg-amber-950/30">
+            <AlertTriangle className="h-4 w-4 text-amber-600" />
+            <AlertDescription className="text-amber-600">
+              <strong>Atenção:</strong> Você está configurando o Mercado Pago para funcionar em modo de produção, 
+              mas está usando chaves de teste (TEST-*). Para processar pagamentos reais, você precisa fornecer 
+              chaves de produção.
+            </AlertDescription>
+          </Alert>
+        )}
+
         <FormField
           control={form.control}
           name="isSandbox"
@@ -144,7 +169,7 @@ export function MercadoPagoForm({ initialValues }: MercadoPagoFormProps) {
                 <div className="flex items-center space-x-2">
                   <Key className="h-4 w-4 text-muted-foreground" />
                   <Input 
-                    placeholder="TEST-abcd1234-5678-..." 
+                    placeholder="TEST-abcd1234-5678-... ou APP_USR-abcd1234-5678-..." 
                     {...field} 
                   />
                 </div>
@@ -154,6 +179,11 @@ export function MercadoPagoForm({ initialValues }: MercadoPagoFormProps) {
                 {field.value.startsWith('TEST-') && (
                   <span className="block mt-1 text-amber-600">
                     Esta é uma chave de teste (homologação).
+                  </span>
+                )}
+                {!field.value.startsWith('TEST-') && field.value && (
+                  <span className="block mt-1 text-green-600">
+                    Esta parece ser uma chave de produção.
                   </span>
                 )}
               </FormDescription>
@@ -172,7 +202,7 @@ export function MercadoPagoForm({ initialValues }: MercadoPagoFormProps) {
                 <div className="flex items-center space-x-2">
                   <CreditCard className="h-4 w-4 text-muted-foreground" />
                   <Input 
-                    placeholder="APP_USR-1234567890abcdef-..." 
+                    placeholder="APP_USR-1234567890abcdef-... ou TEST-1234567890abcdef-..." 
                     type="password" 
                     {...field} 
                   />
@@ -183,6 +213,11 @@ export function MercadoPagoForm({ initialValues }: MercadoPagoFormProps) {
                 {field.value.startsWith('TEST-') && (
                   <span className="block mt-1 text-amber-600">
                     Este é um token de teste (homologação).
+                  </span>
+                )}
+                {!field.value.startsWith('TEST-') && field.value && (
+                  <span className="block mt-1 text-green-600">
+                    Este parece ser um token de produção.
                   </span>
                 )}
               </FormDescription>

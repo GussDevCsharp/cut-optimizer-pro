@@ -53,6 +53,17 @@ export const getMercadoPagoConfig = async () => {
     }
     
     if (data?.settings) {
+      // Verifique se estamos usando chaves de produção ou teste
+      const isTestKey = data.settings.publicKey?.startsWith('TEST-') || false;
+      
+      // Se a configuração diz que não é sandbox, mas a chave começa com TEST-, exiba um aviso
+      if (!data.settings.isSandbox && isTestKey) {
+        console.warn('Atenção: Modo de produção está ativado, mas está usando chaves de teste do Mercado Pago.');
+        toast.warning('Atenção', {
+          description: 'Modo de produção ativado com chaves de teste. Configure as chaves de produção nas configurações.'
+        });
+      }
+
       return {
         publicKey: data.settings.publicKey || 'TEST-743d3338-610c-4c0c-b612-8a9a5a9158ca',
         accessToken: data.settings.accessToken || 'TEST-4308462599599565-022917-9343d6c28269cc4a693dfb9f0a6c7db6-458831007',
@@ -84,6 +95,10 @@ export const initMercadoPago = async (): Promise<void> => {
       // Obter a chave pública das configurações
       const config = await getMercadoPagoConfig();
       const publicKey = config.publicKey;
+      
+      console.log('Inicializando Mercado Pago com chave:', 
+        publicKey.startsWith('TEST-') ? 'CHAVE DE TESTE' : 'CHAVE DE PRODUÇÃO',
+        'Modo sandbox:', config.isSandbox ? 'ATIVO' : 'DESATIVADO');
       
       // Create script element
       const script = document.createElement('script');
