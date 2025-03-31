@@ -154,7 +154,6 @@ const CTAButton: React.FC<CTAButtonProps> = ({
                       <Input 
                         placeholder="******" 
                         type="password" 
-                        showPasswordToggle={true}
                         {...field} 
                       />
                     </FormControl>
@@ -172,7 +171,6 @@ const CTAButton: React.FC<CTAButtonProps> = ({
                       <Input 
                         placeholder="******" 
                         type="password" 
-                        showPasswordToggle={true}
                         {...field} 
                       />
                     </FormControl>
@@ -193,12 +191,7 @@ const CTAButton: React.FC<CTAButtonProps> = ({
         <UserRegistrationCheckout 
           isOpen={checkoutOpen}
           onOpenChange={setCheckoutOpen}
-          product={{
-            id: productId,
-            name: productName,
-            description: productDescription,
-            price: productPrice
-          }}
+          planId={productId}
           userCredentials={userCredentials}
           onPaymentComplete={handlePaymentComplete}
         />

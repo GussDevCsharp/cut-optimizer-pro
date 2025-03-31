@@ -4,12 +4,9 @@ import { PaymentStatus } from '../CheckoutModal';
 import { useToast } from "@/hooks/use-toast";
 import { initMercadoPago } from "@/services/mercadoPagoService";
 
-export const usePaymentState = (
-  isOpen: boolean, 
-  onPaymentComplete?: (status: PaymentStatus, paymentId?: string) => void
-) => {
+export const usePaymentState = (isOpen: boolean) => {
   const [paymentMethod, setPaymentMethod] = useState<'pix' | 'card' | 'boleto'>('pix');
-  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('pending');
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentId, setPaymentId] = useState<string | undefined>(undefined);
   const [mpInitialized, setMpInitialized] = useState(false);
@@ -33,34 +30,39 @@ export const usePaymentState = (
     }
   }, [isOpen, mpInitialized, toast]);
 
-  // Handle payment completion callback
-  const handlePaymentComplete = (status: PaymentStatus, id?: string) => {
-    setPaymentStatus(status);
+  const handlePaymentSuccess = (id?: string) => {
+    setPaymentStatus('approved');
     if (id) setPaymentId(id);
     
-    if (onPaymentComplete) {
-      onPaymentComplete(status, id);
-    }
+    toast({
+      title: "Pagamento aprovado!",
+      description: "Seu pagamento foi processado com sucesso.",
+    });
+  };
+
+  const handlePaymentRejected = () => {
+    setPaymentStatus('rejected');
     
-    // Show toast notification based on status
-    if (status === 'approved') {
-      toast({
-        title: "Pagamento aprovado!",
-        description: "Seu pagamento foi processado com sucesso.",
-      });
-    } else if (status === 'rejected' || status === 'error') {
-      toast({
-        variant: "destructive",
-        title: "Falha no pagamento",
-        description: "Houve um problema com seu pagamento. Por favor, tente novamente.",
-      });
-    }
+    toast({
+      variant: "destructive",
+      title: "Falha no pagamento",
+      description: "Houve um problema com seu pagamento. Por favor, tente novamente.",
+    });
+  };
+
+  const handlePaymentPending = () => {
+    setPaymentStatus('pending');
+    
+    toast({
+      title: "Pagamento pendente",
+      description: "Seu pagamento está sendo processado. Você receberá uma confirmação em breve.",
+    });
   };
 
   const resetPaymentState = () => {
     if (!isProcessing) {
       setPaymentMethod('pix');
-      setPaymentStatus('pending');
+      setPaymentStatus(null);
       setPaymentId(undefined);
     }
   };
@@ -73,7 +75,9 @@ export const usePaymentState = (
     setIsProcessing,
     paymentId,
     mpInitialized,
-    handlePaymentComplete,
+    handlePaymentSuccess,
+    handlePaymentRejected,
+    handlePaymentPending,
     resetPaymentState
   };
 };

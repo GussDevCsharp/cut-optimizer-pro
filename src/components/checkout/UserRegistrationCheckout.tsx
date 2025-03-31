@@ -117,20 +117,20 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
       setIsRegistering(true);
       try {
         // Register the user with the provided credentials
-        const user = await register(
+        const userData = await register(
           userCredentials.name, 
           userCredentials.email, 
           userCredentials.password
         );
         
-        if (user && user.id) {
+        if (userData && userData.user && userData.user.id) {
           // Create user subscription
-          await createUserSubscription(user.id, plan.id);
+          await createUserSubscription(userData.user.id, plan.id);
           
           // Record payment
           if (paymentId) {
             await recordPayment(
-              user.id,
+              userData.user.id,
               plan.id,
               plan.price,
               'card', // Default to card, could be enhanced to track actual method

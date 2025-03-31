@@ -1,6 +1,6 @@
 
 import { MASTER_ADMIN_EMAIL } from "@/context/AuthContext";
-import { getUsersWithSubscriptionInfo, getUsersWithoutSubscription } from "./subscriptionService";
+import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Verifica se usuário é admin pelo email
@@ -21,6 +21,67 @@ export const isUserAdmin = (email: string): boolean => {
  */
 export const hasFullDataAccess = (email: string): boolean => {
   return email === MASTER_ADMIN_EMAIL;
+};
+
+/**
+ * Obtém todos os usuários com informações de assinatura
+ */
+export const getUsersWithSubscriptionInfo = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select(`
+        id,
+        email,
+        name,
+        created_at,
+        user_subscriptions (
+          id,
+          plan_id,
+          status,
+          start_date,
+          expiration_date,
+          subscription_plans (
+            name,
+            price
+          )
+        )
+      `)
+      .order('created_at', { ascending: false });
+      
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error("Error fetching users with subscription info:", error);
+    return [];
+  }
+};
+
+/**
+ * Obtém usuários sem assinatura
+ */
+export const getUsersWithoutSubscription = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select(`
+        id,
+        email,
+        name,
+        created_at
+      `)
+      .not('id', 'in', supabase
+        .from('user_subscriptions')
+        .select('user_id')
+      )
+      .order('created_at', { ascending: false });
+      
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error("Error fetching users without subscription:", error);
+    return [];
+  }
 };
 
 /**

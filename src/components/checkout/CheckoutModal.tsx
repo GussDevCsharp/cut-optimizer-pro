@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProductSummary } from './components/ProductSummary';
-import { PaymentMethodTabs } from './components/PaymentMethodTabs';
+import PaymentMethodTabs from './components/PaymentMethodTabs';
 import { usePaymentState } from './hooks/usePaymentState';
 import { X } from 'lucide-react';
 import { SubscriptionPlan } from '@/integrations/supabase/schema';
@@ -40,7 +40,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   isLoadingPlans
 }) => {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
-  const { paymentState, handlePaymentSuccess, handlePaymentRejected, handlePaymentPending, resetPaymentState } = usePaymentState();
+  const { 
+    paymentStatus, 
+    isProcessing, 
+    setIsProcessing, 
+    resetPaymentState 
+  } = usePaymentState(isOpen);
 
   // Convert selected plan to ProductInfo format
   const getProductInfo = (): ProductInfo | null => {
@@ -56,29 +61,30 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
   const handleCloseDialog = () => {
     // Only allow closing if not in the middle of a payment process
-    if (!paymentState.isProcessing) {
+    if (!isProcessing) {
       resetPaymentState();
       onOpenChange(false);
     }
   };
 
-  const handleChangePaymentMethod = (method: PaymentMethod) => {
-    setPaymentMethod(method);
+  const handlePaymentComplete = (status: PaymentStatus, paymentId?: string) => {
+    // Handle payment completion
+    console.log("Payment completed with status:", status, "and ID:", paymentId);
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleCloseDialog}>
       <DialogContent className="sm:max-w-[600px] p-0">
-        {!paymentState.isComplete && (
+        {!paymentStatus || paymentStatus === 'pending' ? (
           <button
             onClick={handleCloseDialog}
             className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100 z-10"
-            disabled={paymentState.isProcessing}
+            disabled={isProcessing}
           >
             <X className="h-4 w-4" />
             <span className="sr-only">Fechar</span>
           </button>
-        )}
+        ) : null}
 
         <div className="grid grid-cols-1 md:grid-cols-2">
           {/* Product Summary Section */}
@@ -127,31 +133,15 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             </DialogHeader>
 
             {selectedPlan && getProductInfo() && (
-              <Tabs defaultValue="card" className="w-full" onValueChange={(value) => handleChangePaymentMethod(value as PaymentMethod)}>
-                <TabsList className="grid w-full grid-cols-3 mb-4">
-                  <TabsTrigger value="card">Cartão</TabsTrigger>
-                  <TabsTrigger value="pix">Pix</TabsTrigger>
-                  <TabsTrigger value="boleto">Boleto</TabsTrigger>
-                </TabsList>
-
-                <PaymentMethodTabs
-                  paymentMethod={paymentMethod}
-                  product={getProductInfo() as ProductInfo}
-                  onProcessing={(isProcessing) => {
-                    paymentState.setIsProcessing(isProcessing);
-                  }}
-                  onPaymentComplete={(status, paymentId) => {
-                    if (status === 'approved') {
-                      handlePaymentSuccess(paymentId);
-                    } else if (status === 'rejected') {
-                      handlePaymentRejected();
-                    } else if (status === 'pending') {
-                      handlePaymentPending();
-                    }
-                  }}
-                  paymentState={paymentState}
-                />
-              </Tabs>
+              <PaymentMethodTabs
+                product={getProductInfo() as ProductInfo}
+                paymentMethod={paymentMethod}
+                setPaymentMethod={setPaymentMethod}
+                onProcessing={(isProcessing) => {
+                  setIsProcessing(isProcessing);
+                }}
+                onComplete={handlePaymentComplete}
+              />
             )}
           </div>
         </div>
@@ -159,3 +149,5 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     </Dialog>
   );
 };
+
+export default CheckoutModal;
