@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -109,10 +108,10 @@ const ViewportHeightFix = () => {
 // Create a new QueryClient
 const queryClient = new QueryClient();
 
-// Component to render application routes within the app context
+// App content component to contain all routes and UI elements
 const AppContent = () => {
   return (
-    <>
+    <BrowserRouter>
       <ViewportHeightFix />
       <Routes>
         <Route path="/home" element={<Home />} />
@@ -150,24 +149,24 @@ const AppContent = () => {
       </Routes>
       <Toaster />
       <Sonner />
-    </>
+    </BrowserRouter>
   );
 };
 
 // Application Root Component with properly structured providers
 const App = () => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="light">
-        <TooltipProvider>
-          <AuthProvider>
-            <BrowserRouter>
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider defaultTheme="light">
+          <TooltipProvider>
+            <AuthProvider>
               <AppContent />
-            </BrowserRouter>
-          </AuthProvider>
-        </TooltipProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+            </AuthProvider>
+          </TooltipProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </React.StrictMode>
   );
 };
 
