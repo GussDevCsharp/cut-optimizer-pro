@@ -1,5 +1,27 @@
 
-// This file is now a re-export to maintain backward compatibility
-// All actual functionality has been moved to src/services/mercadoPago/
+// Re-export all services from the mercadoPago folder
 
-export * from './mercadoPago';
+export {
+  initMercadoPago,
+  getMercadoPagoInstance,
+  initCheckoutBricks,
+  createPaymentPreference,
+  createCheckoutPreference,
+  processCardPayment,
+  getInstallmentOptions,
+  formatCardNumber,
+  generatePixPayment,
+  generateBoletoPayment,
+  formatCPF,
+  validateCPF,
+  formatCurrency
+} from './mercadoPago';
+
+// Re-export types
+export type {
+  CustomerData,
+  CardData,
+  CheckoutBricksOptions,
+  ProductInfo,
+  InstallmentOption
+} from './mercadoPago/types';
