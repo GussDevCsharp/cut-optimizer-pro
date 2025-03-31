@@ -1,23 +1,19 @@
 
-import React from 'react';
-import { X } from 'lucide-react';
-import { 
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogClose
-} from "@/components/ui/dialog";
-import PaymentConfirmation from "./PaymentConfirmation";
-import ProductSummary from './components/ProductSummary';
-import PaymentMethodTabs from './components/PaymentMethodTabs';
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ProductSummary } from './components/ProductSummary';
+import { PaymentMethodTabs } from './components/PaymentMethodTabs';
 import { usePaymentState } from './hooks/usePaymentState';
+import { X } from 'lucide-react';
+import { SubscriptionPlan } from '@/integrations/supabase/schema';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-// Payment status types
-export type PaymentStatus = 'pending' | 'processing' | 'approved' | 'rejected' | 'error';
+// Define export types that can be used throughout the application
+export type PaymentMethod = 'card' | 'pix' | 'boleto';
+export type PaymentStatus = 'pending' | 'approved' | 'rejected' | 'error';
 
-// Product information type
 export interface ProductInfo {
   id: string;
   name: string;
@@ -29,77 +25,137 @@ export interface ProductInfo {
 interface CheckoutModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  product: ProductInfo;
-  onPaymentComplete?: (status: PaymentStatus, paymentId?: string) => void;
+  plans: SubscriptionPlan[];
+  selectedPlan: SubscriptionPlan | null;
+  onPlanChange: (planId: string) => void;
+  isLoadingPlans: boolean;
 }
 
-const CheckoutModal: React.FC<CheckoutModalProps> = ({ 
-  isOpen, 
-  onOpenChange, 
-  product,
-  onPaymentComplete 
+export const CheckoutModal: React.FC<CheckoutModalProps> = ({
+  isOpen,
+  onOpenChange,
+  plans,
+  selectedPlan,
+  onPlanChange,
+  isLoadingPlans
 }) => {
-  const {
-    paymentMethod,
-    setPaymentMethod,
-    paymentStatus,
-    isProcessing,
-    setIsProcessing,
-    paymentId,
-    handlePaymentComplete,
-    resetPaymentState
-  } = usePaymentState(isOpen, onPaymentComplete);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
+  const { paymentState, handlePaymentSuccess, handlePaymentRejected, handlePaymentPending, resetPaymentState } = usePaymentState();
 
-  // Reset state when modal closes
-  const handleOpenChange = (open: boolean) => {
-    if (!open) {
+  // Convert selected plan to ProductInfo format
+  const getProductInfo = (): ProductInfo | null => {
+    if (!selectedPlan) return null;
+    
+    return {
+      id: selectedPlan.id,
+      name: selectedPlan.name,
+      description: selectedPlan.description,
+      price: selectedPlan.price
+    };
+  };
+
+  const handleCloseDialog = () => {
+    // Only allow closing if not in the middle of a payment process
+    if (!paymentState.isProcessing) {
       resetPaymentState();
+      onOpenChange(false);
     }
-    onOpenChange(open);
+  };
+
+  const handleChangePaymentMethod = (method: PaymentMethod) => {
+    setPaymentMethod(method);
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden">
-        {/* Don't show close button during processing */}
-        {!isProcessing && (
-          <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+    <Dialog open={isOpen} onOpenChange={handleCloseDialog}>
+      <DialogContent className="sm:max-w-[600px] p-0">
+        {!paymentState.isComplete && (
+          <button
+            onClick={handleCloseDialog}
+            className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100 z-10"
+            disabled={paymentState.isProcessing}
+          >
             <X className="h-4 w-4" />
             <span className="sr-only">Fechar</span>
-          </DialogClose>
+          </button>
         )}
 
-        {/* Show product information */}
-        <ProductSummary product={product} />
-
-        {paymentStatus === 'pending' ? (
-          <div className="px-6 pb-6">
-            <DialogHeader className="pt-4 pb-2">
-              <DialogTitle>Escolha o método de pagamento</DialogTitle>
-              <DialogDescription>
-                Selecione a forma de pagamento que preferir.
-              </DialogDescription>
+        <div className="grid grid-cols-1 md:grid-cols-2">
+          {/* Product Summary Section */}
+          <div className="p-6 border-r border-border bg-muted/30">
+            <DialogHeader className="mb-4">
+              <DialogTitle>Escolha seu plano</DialogTitle>
             </DialogHeader>
 
-            <PaymentMethodTabs
-              product={product}
-              paymentMethod={paymentMethod}
-              setPaymentMethod={setPaymentMethod}
-              onProcessing={setIsProcessing}
-              onComplete={handlePaymentComplete}
-            />
+            {isLoadingPlans ? (
+              <div className="space-y-4">
+                <Skeleton className="h-8 w-full" />
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-40 w-full" />
+              </div>
+            ) : (
+              <>
+                <div className="mb-4">
+                  <Select
+                    value={selectedPlan?.id || ''}
+                    onValueChange={onPlanChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um plano" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {plans.map((plan) => (
+                        <SelectItem key={plan.id} value={plan.id}>
+                          {plan.name} - {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(plan.price)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {selectedPlan && (
+                  <ProductSummary product={getProductInfo() as ProductInfo} />
+                )}
+              </>
+            )}
           </div>
-        ) : (
-          <PaymentConfirmation 
-            status={paymentStatus} 
-            paymentMethod={paymentMethod}
-            paymentId={paymentId}
-            product={product}
-          />
-        )}
+
+          {/* Payment Method Section */}
+          <div className="p-6">
+            <DialogHeader className="mb-4">
+              <DialogTitle>Método de Pagamento</DialogTitle>
+            </DialogHeader>
+
+            {selectedPlan && getProductInfo() && (
+              <Tabs defaultValue="card" className="w-full" onValueChange={(value) => handleChangePaymentMethod(value as PaymentMethod)}>
+                <TabsList className="grid w-full grid-cols-3 mb-4">
+                  <TabsTrigger value="card">Cartão</TabsTrigger>
+                  <TabsTrigger value="pix">Pix</TabsTrigger>
+                  <TabsTrigger value="boleto">Boleto</TabsTrigger>
+                </TabsList>
+
+                <PaymentMethodTabs
+                  paymentMethod={paymentMethod}
+                  product={getProductInfo() as ProductInfo}
+                  onProcessing={(isProcessing) => {
+                    paymentState.setIsProcessing(isProcessing);
+                  }}
+                  onPaymentComplete={(status, paymentId) => {
+                    if (status === 'approved') {
+                      handlePaymentSuccess(paymentId);
+                    } else if (status === 'rejected') {
+                      handlePaymentRejected();
+                    } else if (status === 'pending') {
+                      handlePaymentPending();
+                    }
+                  }}
+                  paymentState={paymentState}
+                />
+              </Tabs>
+            )}
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
 };
-
-export default CheckoutModal;

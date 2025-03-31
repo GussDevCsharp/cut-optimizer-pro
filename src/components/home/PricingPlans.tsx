@@ -1,176 +1,135 @@
 
-import React from "react";
-import { CheckCircle2 } from "lucide-react";
-import CheckoutButton from "../checkout/CheckoutButton";
+import React, { useState, useEffect } from 'react';
+import { CheckCircle } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { fetchSubscriptionPlans } from '@/services/subscriptionService';
+import { SubscriptionPlan } from '@/integrations/supabase/schema';
+import UserRegistrationCheckout from '../checkout/UserRegistrationCheckout';
 
-export const PricingPlans = () => {
+interface UserCredentials {
+  name: string;
+  email: string;
+  password: string;
+}
+
+const PricingPlans: React.FC = () => {
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [userCredentials, setUserCredentials] = useState<UserCredentials>({
+    name: 'Usuário Teste',
+    email: 'usuario@teste.com', 
+    password: 'senha123'
+  });
+
+  useEffect(() => {
+    loadPlans();
+  }, []);
+
+  const loadPlans = async () => {
+    setIsLoading(true);
+    const subscriptionPlans = await fetchSubscriptionPlans();
+    setPlans(subscriptionPlans);
+    setIsLoading(false);
+  };
+
+  const handlePlanSelection = (planId: string) => {
+    setSelectedPlanId(planId);
+    setIsCheckoutOpen(true);
+  };
+
+  // For demo purposes - in production, you would collect these from a form
+  const setDemoCredentials = () => {
+    setUserCredentials({
+      name: 'Usuário Demo',
+      email: `user${Math.floor(Math.random() * 10000)}@example.com`,
+      password: 'Password123!'
+    });
+  };
+
+  // Format currency
+  const formatCurrency = (price: number): string => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(price);
+  };
+
   return (
-    <section id="pricing" className="py-16 md:py-24">
-      <div className="container px-4 md:px-6">
-        <div className="text-center space-y-4 mb-12">
-          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-            Planos que cabem no seu bolso
-          </h2>
-          <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
-            Escolha o plano ideal para o seu negócio e comece a economizar hoje mesmo
+    <section id="pricing" className="py-16 bg-muted/30">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold mb-4">Planos e Preços</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Escolha o plano ideal para suas necessidades e comece a otimizar seus projetos hoje mesmo.
           </p>
         </div>
-        
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          {/* Basic Plan */}
-          <div className="flex flex-col p-6 bg-card rounded-lg shadow-sm border border-border relative overflow-hidden">
-            <div className="text-center mb-6">
-              <h3 className="text-xl font-bold">Básico</h3>
-              <div className="mt-3">
-                <span className="text-3xl font-bold">R$29,90</span>
-                <span className="text-muted-foreground">/mês</span>
+
+        {isLoading ? (
+          <div className="flex justify-center py-12">
+            <div className="animate-pulse space-y-4">
+              <div className="h-12 w-64 bg-muted rounded"></div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="h-96 w-full bg-muted rounded"></div>
+                ))}
               </div>
-              <p className="text-sm text-muted-foreground mt-1">
-                Para profissionais individuais
-              </p>
             </div>
-            <ul className="space-y-3 mb-6 flex-1">
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
-                <span className="text-sm">1 projeto simultâneo</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
-                <span className="text-sm">Otimização básica</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
-                <span className="text-sm">Exportação em PDF</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
-                <span className="text-sm">1 usuário</span>
-              </li>
-            </ul>
-            <CheckoutButton 
-              productId="basic-monthly"
-              productName="Plano Básico Mensal"
-              productDescription="Acesso a 1 projeto simultâneo"
-              productPrice={29.90}
-              buttonText="Assinar agora"
-              buttonVariant="outline"
-              className="w-full"
-            />
-            <p className="text-xs text-center text-muted-foreground mt-3">
-              7 dias grátis, sem compromisso
-            </p>
           </div>
-          
-          {/* Pro Plan */}
-          <div className="flex flex-col p-6 bg-card rounded-lg shadow-md border-2 border-primary relative overflow-hidden">
-            <div className="absolute top-0 right-0">
-              <div className="bg-primary text-primary-foreground text-xs font-medium px-3 py-1 rounded-bl-lg">
-                Mais Popular
-              </div>
-            </div>
-            <div className="text-center mb-6">
-              <h3 className="text-xl font-bold">Profissional</h3>
-              <div className="mt-3">
-                <span className="text-3xl font-bold">R$49,90</span>
-                <span className="text-muted-foreground">/mês</span>
-              </div>
-              <p className="text-sm text-muted-foreground mt-1">
-                Ideal para pequenas marcenarias
-              </p>
-            </div>
-            <ul className="space-y-3 mb-6 flex-1">
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
-                <span className="text-sm">Até 3 projetos simultâneos</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
-                <span className="text-sm">Otimização avançada</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
-                <span className="text-sm">Exportação em PDF e Excel</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
-                <span className="text-sm">3 usuários</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
-                <span className="text-sm">Compartilhamento por email</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
-                <span className="text-sm">Suporte prioritário</span>
-              </li>
-            </ul>
-            <CheckoutButton 
-              productId="pro-monthly"
-              productName="Plano Profissional Mensal"
-              productDescription="Acesso a até 3 projetos simultâneos"
-              productPrice={49.90}
-              buttonText="Assinar agora"
-              buttonVariant="default"
-              className="w-full"
-            />
-            <p className="text-xs text-center text-muted-foreground mt-3">
-              7 dias grátis, sem compromisso
-            </p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {plans.map((plan) => (
+              <Card key={plan.id} className={`border-2 ${plan.name === 'Profissional' ? 'border-primary' : 'border-border'}`}>
+                <CardHeader>
+                  <CardTitle>{plan.name}</CardTitle>
+                  <CardDescription>{plan.description}</CardDescription>
+                  <div className="mt-4">
+                    <span className="text-3xl font-bold">{formatCurrency(plan.price)}</span>
+                    <span className="text-muted-foreground ml-2">/ {plan.duration_days} dias</span>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2">
+                    {plan.features.map((feature, index) => (
+                      <li key={index} className="flex items-start">
+                        <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+                <CardFooter>
+                  <Button 
+                    className="w-full" 
+                    variant={plan.name === 'Profissional' ? 'default' : 'outline'}
+                    onClick={() => {
+                      setDemoCredentials();
+                      handlePlanSelection(plan.id);
+                    }}
+                  >
+                    Selecionar Plano
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
           </div>
-          
-          {/* Business Plan */}
-          <div className="flex flex-col p-6 bg-card rounded-lg shadow-sm border border-border relative overflow-hidden">
-            <div className="text-center mb-6">
-              <h3 className="text-xl font-bold">Empresarial</h3>
-              <div className="mt-3">
-                <span className="text-3xl font-bold">R$129,00</span>
-                <span className="text-muted-foreground">/mês</span>
-              </div>
-              <p className="text-sm text-muted-foreground mt-1">
-                Para empresas e indústrias
-              </p>
-            </div>
-            <ul className="space-y-3 mb-6 flex-1">
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
-                <span className="text-sm">Até 6 projetos simultâneos</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
-                <span className="text-sm">Tudo do plano Profissional</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
-                <span className="text-sm">6 usuários</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
-                <span className="text-sm">Suporte dedicado</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
-                <span className="text-sm">Treinamento personalizado</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
-                <span className="text-sm">API para integração</span>
-              </li>
-            </ul>
-            <CheckoutButton 
-              productId="business-monthly"
-              productName="Plano Empresarial Mensal"
-              productDescription="Acesso a até 6 projetos simultâneos"
-              productPrice={129.00}
-              buttonText="Assinar agora"
-              buttonVariant="outline"
-              className="w-full"
-            />
-            <p className="text-xs text-center text-muted-foreground mt-3">
-              7 dias grátis, sem compromisso
-            </p>
-          </div>
-        </div>
+        )}
       </div>
+      
+      {selectedPlanId && (
+        <UserRegistrationCheckout
+          isOpen={isCheckoutOpen}
+          onOpenChange={setIsCheckoutOpen}
+          planId={selectedPlanId}
+          userCredentials={userCredentials}
+          onPaymentComplete={(status) => {
+            console.log("Payment status:", status);
+            // Additional logic after payment
+          }}
+        />
+      )}
     </section>
   );
 };

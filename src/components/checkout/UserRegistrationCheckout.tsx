@@ -1,22 +1,19 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { PaymentStatus } from './CheckoutModal';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Loader, CheckCircle, X } from 'lucide-react';
 import { createCheckoutPreference, initCheckoutBricks } from "@/services/mercadoPagoService";
+import { fetchSubscriptionPlanById, createUserSubscription, recordPayment } from '@/services/subscriptionService';
+import { SubscriptionPlan } from '@/integrations/supabase/schema';
+import CheckoutLoading from './checkout-button/CheckoutLoading';
 
 interface UserRegistrationCheckoutProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  product: {
-    id: string;
-    name: string;
-    description: string;
-    price: number;
-    image?: string;
-  };
+  planId: string;
   userCredentials: {
     name: string;
     email: string;
@@ -28,7 +25,7 @@ interface UserRegistrationCheckoutProps {
 const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
   isOpen,
   onOpenChange,
-  product,
+  planId,
   userCredentials,
   onPaymentComplete
 }) => {
@@ -38,16 +35,45 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus | null>(null);
   const [checkoutInitialized, setCheckoutInitialized] = useState(false);
+  const [plan, setPlan] = useState<SubscriptionPlan | null>(null);
 
-  React.useEffect(() => {
-    if (isOpen && !checkoutInitialized) {
+  useEffect(() => {
+    if (isOpen) {
+      loadPlanData();
+    }
+  }, [isOpen, planId]);
+
+  useEffect(() => {
+    if (isOpen && plan && !checkoutInitialized) {
       initializeCheckout();
     }
-  }, [isOpen]);
+  }, [isOpen, plan]);
+
+  const loadPlanData = async () => {
+    setIsLoading(true);
+    const subscriptionPlan = await fetchSubscriptionPlanById(planId);
+    setPlan(subscriptionPlan);
+    if (!subscriptionPlan) {
+      toast({
+        variant: "destructive",
+        title: "Plano não encontrado",
+        description: "Não foi possível carregar os detalhes do plano selecionado."
+      });
+      onOpenChange(false);
+    }
+  };
 
   const initializeCheckout = async () => {
-    setIsLoading(true);
+    if (!plan) return;
+
     try {
+      const product = {
+        id: plan.id,
+        name: plan.name,
+        description: plan.description,
+        price: plan.price,
+      };
+      
       const preference = await createCheckoutPreference(
         product,
         { name: userCredentials.name, email: userCredentials.email }
@@ -87,15 +113,32 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
     setPaymentStatus(status);
     
     // Only register the user if payment was successful
-    if (status === 'approved' && !isRegistering) {
+    if (status === 'approved' && !isRegistering && plan) {
       setIsRegistering(true);
       try {
         // Register the user with the provided credentials
-        await register(
+        const user = await register(
           userCredentials.name, 
           userCredentials.email, 
           userCredentials.password
         );
+        
+        if (user && user.id) {
+          // Create user subscription
+          await createUserSubscription(user.id, plan.id);
+          
+          // Record payment
+          if (paymentId) {
+            await recordPayment(
+              user.id,
+              plan.id,
+              plan.price,
+              'card', // Default to card, could be enhanced to track actual method
+              'approved',
+              paymentId
+            );
+          }
+        }
         
         toast({
           title: "Conta criada com sucesso!",
@@ -149,11 +192,23 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
           </button>
         )}
         
-        <div className="p-6 border-b">
-          <h3 className="text-lg font-semibold">{product.name}</h3>
-          <p className="mt-1 text-sm text-muted-foreground">{product.description}</p>
-          <p className="mt-2 text-xl font-bold">{formatCurrency(product.price)}</p>
-        </div>
+        {plan && (
+          <div className="p-6 border-b">
+            <h3 className="text-lg font-semibold">{plan.name}</h3>
+            <p className="mt-1 text-sm text-muted-foreground">{plan.description}</p>
+            <p className="mt-2 text-xl font-bold">{formatCurrency(plan.price)}</p>
+            <div className="mt-2">
+              <ul className="text-sm">
+                {plan.features.map((feature, idx) => (
+                  <li key={idx} className="flex items-center gap-2 mb-1">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
         
         <div className="p-6">
           {paymentStatus === 'approved' ? (
@@ -173,12 +228,7 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
               </p>
             </div>
           ) : isLoading ? (
-            <div className="flex flex-col items-center py-12">
-              <Loader className="h-8 w-8 text-primary animate-spin mb-4" />
-              <p className="text-center text-muted-foreground">
-                Inicializando o checkout...
-              </p>
-            </div>
+            <CheckoutLoading message="Preparando o checkout do plano..." />
           ) : (
             <div>
               <DialogHeader className="mb-4">
