@@ -29,9 +29,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return await loginWithEmail(email, password);
   };
 
-  // Updated to return the registerUser result instead of void
+  // Modified to return the expected type structure
   const register = async (name: string, email: string, password: string) => {
-    return await registerUser(name, email, password);
+    try {
+      const data = await registerUser(name, email, password);
+      return { user: data?.user || null, error: null };
+    } catch (error: any) {
+      return { user: null, error: error };
+    }
   };
 
   const resetPassword = async (email: string) => {
