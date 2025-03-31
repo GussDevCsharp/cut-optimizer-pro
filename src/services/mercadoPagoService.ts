@@ -1,4 +1,6 @@
+
 import { ProductInfo, PaymentStatus } from '@/components/checkout/CheckoutModal';
+import { toast } from '@/hooks/use-toast';
 
 // This would be your public key from Mercado Pago
 // In production, you would likely store this in an environment variable
@@ -27,10 +29,28 @@ export interface CardData {
   identificationNumber?: string;
 }
 
+// Checkout Bricks interfaces
+export interface CheckoutBricksOptions {
+  initialization: {
+    preferenceId: string;
+  };
+  callbacks: {
+    onReady?: () => void;
+    onError?: (error: any) => void;
+    onSubmit?: (formData: any) => void;
+  };
+  customization?: {
+    visual?: {
+      hidePaymentButton?: boolean;
+    };
+  };
+}
+
 // Define the window with Mercado Pago
 declare global {
   interface Window {
     MercadoPago?: any;
+    MercadoPagoCheckout?: any;
   }
 }
 
@@ -70,6 +90,114 @@ export const getMercadoPagoInstance = () => {
   return new window.MercadoPago(PUBLIC_KEY);
 };
 
+// Initialize Checkout Bricks
+export const initCheckoutBricks = async (
+  checkoutContainerId: string,
+  preferenceId: string,
+  onPaymentComplete?: (status: PaymentStatus, paymentId?: string) => void
+) => {
+  try {
+    // Initialize SDK
+    if (!window.MercadoPago) {
+      await initMercadoPago();
+    }
+    
+    const mp = new window.MercadoPago(PUBLIC_KEY);
+    
+    // Initialize the checkout
+    const bricksBuilder = mp.bricks();
+    
+    const renderCheckout = async () => {
+      await bricksBuilder.create(
+        'checkout',
+        checkoutContainerId,
+        {
+          initialization: {
+            preferenceId: preferenceId,
+          },
+          callbacks: {
+            onReady: () => {
+              console.log('Brick ready');
+            },
+            onSubmit: () => {
+              console.log('Payment submitted');
+            },
+            onError: (error: any) => {
+              console.error('Brick error:', error);
+              toast({
+                variant: "destructive",
+                title: "Erro no processamento do pagamento",
+                description: "Ocorreu um erro ao processar seu pagamento. Por favor, tente novamente.",
+              });
+              
+              if (onPaymentComplete) {
+                onPaymentComplete('error');
+              }
+            },
+            onPaymentMethodReceived: (paymentMethod: any) => {
+              console.log('Payment method received:', paymentMethod);
+            },
+            onPaymentStatusReceived: (payment: any) => {
+              console.log('Payment status received:', payment);
+              let status: PaymentStatus = 'pending';
+              
+              if (payment && payment.status) {
+                switch (payment.status) {
+                  case 'approved':
+                    status = 'approved';
+                    toast({
+                      title: "Pagamento aprovado!",
+                      description: "Seu pagamento foi processado com sucesso.",
+                    });
+                    break;
+                  case 'in_process':
+                  case 'pending':
+                    status = 'pending';
+                    toast({
+                      title: "Pagamento pendente",
+                      description: "Seu pagamento está sendo processado.",
+                    });
+                    break;
+                  case 'rejected':
+                    status = 'rejected';
+                    toast({
+                      variant: "destructive",
+                      title: "Pagamento rejeitado",
+                      description: "Seu pagamento foi rejeitado. Por favor, tente outro método de pagamento.",
+                    });
+                    break;
+                  default:
+                    status = 'error';
+                    toast({
+                      variant: "destructive",
+                      title: "Erro no pagamento",
+                      description: "Ocorreu um erro durante o processamento do pagamento.",
+                    });
+                }
+              }
+              
+              if (onPaymentComplete) {
+                onPaymentComplete(status, payment?.id);
+              }
+            },
+          }
+        }
+      );
+    };
+    
+    await renderCheckout();
+    return true;
+  } catch (error) {
+    console.error('Error initializing Checkout Bricks:', error);
+    toast({
+      variant: "destructive",
+      title: "Erro ao inicializar pagamento",
+      description: "Não foi possível inicializar o método de pagamento. Por favor, tente novamente mais tarde.",
+    });
+    return false;
+  }
+};
+
 // Create payment preference (would be called from your backend)
 // This is a mock function. In a real implementation, this would make a call to your backend
 export const createPaymentPreference = async (
@@ -88,63 +216,26 @@ export const createPaymentPreference = async (
   });
 };
 
-// Process card payment (mock implementation)
-export const processCardPayment = async (
+// Create a preference to use with Checkout Bricks
+export const createCheckoutPreference = async (
   product: ProductInfo,
-  cardData: CardData,
-  customer: CustomerData
-): Promise<{ status: PaymentStatus; paymentId?: string }> => {
-  // In a real implementation, this would tokenize the card and send to your backend
-  console.log('Processing card payment:', { product, cardData, customer });
+  customerData?: { name: string; email: string }
+): Promise<{ preferenceId: string }> => {
+  // In a real implementation, you would call your backend API
+  // For this example, we are simulating a successful response
+  console.log('Creating checkout preference for product:', product);
   
-  // Simulate API call delay
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      // Mock payment response
-      resolve({
-        status: 'approved',
-        paymentId: `MOCK_PAYMENT_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
-      });
-    }, 2000);
-  });
-};
-
-// Generate Pix payment (mock implementation)
-export const generatePixPayment = async (product: ProductInfo, customer: CustomerData) => {
-  console.log('Generating Pix payment:', { product, customer });
+  if (customerData) {
+    console.log('Customer data:', customerData);
+  }
   
-  // Simulate API call delay
   return new Promise((resolve) => {
+    // Simulate API call delay
     setTimeout(() => {
-      // Mock Pix response
       resolve({
-        status: 'pending',
-        paymentId: `MOCK_PIX_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-        qrCode: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADIAQMAAACXljzdAAAABlBMVEX///8AAABVwtN+AAABX0lEQVRYw+2YS47DMAxDfYFeoEfz0T2ajyYXqCXK+bWTTDB1UbctIOuxBEuUQtqypS3Df2REp6xtXzJPXi3N5DBx7rLQOa/lwZw1G8rWYyF/0qQtr4Y8mzMuW7/EceS9MR5EnUZz+3kwx01Dybs5VzZq++U6Z8Phuc6/Y1U4A9hsBPjL5mGPcNSsOf5suzgM35vj55hT+25OXDk+Rd9xPD00Z89L7eaIatuU7b05fgx0yGl7lhmDyw4j45KryFGzv2YWjDNuDJFrC+fNwRlUWYJjbxfOJuXQTBhnME6J2zPAMXNw2+LE4Dhv4UgsbMxpn6e5M47jdkF+86Jtbn4ezmCcYnW7jDzk6ONBC8eNx7k8cO5uE4fY0hyVE/Zws1rnPYcVnFhXD86bmXOqs2FNz67cGefGm26Mh1F2aK9aLhYfjtqWu3cLyiRmzOFamDN5tSTnVh2aWW3ptLFE5tSrNUdm+L/2AVJXvUVHpOd7AAAAAElFTkSuQmCC',
-        qrCodeBase64: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADIAQMAAACXljzdAAAABlBMVEX///8AAABVwtN+AAABX0lEQVRYw+2YS47DMAxDfYFeoEfz0T2ajyYXqCXK+bWTTDB1UbctIOuxBEuUQtqypS3Df2REp6xtXzJPXi3N5DBx7rLQOa/lwZw1G8rWYyF/0qQtr4Y8mzMuW7/EceS9MR5EnUZz+3kwx01Dybs5VzZq++U6Z8Phuc6/Y1U4A9hsBPjL5mGPcNSsOf5suzgM35vj55hT+25OXDk+Rd9xPD00Z89L7eaIatuU7b05fgx0yGl7lhmDyw4j45KryFGzv2YWjDNuDJFrC+fNwRlUWYJjbxfOJuXQTBhnME6J2zPAMXNw2+LE4Dhv4UgsbMxpn6e5M47jdkF+86Jtbn4ezmCcYnW7jDzk6ONBC8eNx7k8cO5uE4fY0hyVE/Zws1rnPYcVnFhXD86bmXOqs2FNz67cGefGm26Mh1F2aK9aLhYfjtqWu3cLyiRmzOFamDN5tSTnVh2aWW3ptLFE5tSrNUdm+L/2AVJXvUVHpOd7AAAAAElFTkSuQmCC',
-        qrCodeText: '00020126580014br.gov.bcb.pix0136.0ae94857-c1bd-4782-9682-45b579795e395204000053039865802BR5921Merchant Name Example6009SAO PAULO61080540900062070503***63044C2C',
-        expirationDate: new Date(Date.now() + 30 * 60000).toISOString(), // 30 minutes from now
+        preferenceId: `MOCK_BRICKS_PREFERENCE_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
       });
-    }, 1500);
-  });
-};
-
-// Generate Boleto payment (mock implementation)
-export const generateBoletoPayment = async (product: ProductInfo, customer: CustomerData) => {
-  console.log('Generating Boleto payment:', { product, customer });
-  
-  // Simulate API call delay
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      // Mock Boleto response
-      resolve({
-        status: 'pending',
-        paymentId: `MOCK_BOLETO_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-        boletoNumber: '34191.79001 01043.510047 91020.150008 9 89110000041270',
-        boletoUrl: 'https://www.mercadopago.com.br/sandbox',
-        expirationDate: new Date(Date.now() + 3 * 24 * 60 * 60000).toISOString(), // 3 days from now
-      });
-    }, 1500);
+    }, 1000);
   });
 };
 
