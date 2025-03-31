@@ -109,62 +109,64 @@ const ViewportHeightFix = () => {
 // Create a new QueryClient
 const queryClient = new QueryClient();
 
-// Fix: Wrap TooltipProvider properly inside a function component
-const AppContent = () => {
+// Component to render application routes with proper tooltip context
+const AppRoutes = () => {
   return (
-    <BrowserRouter>
-      <TooltipProvider>
-        <ViewportHeightFix />
-        <Routes>
-          <Route path="/home" element={<Home />} />
-          <Route path="/" element={<Home />} />
-          
-          <Route path="/login" element={<Login />} />
-          <Route path="/cadastro" element={<Register />} />
-          
-          <Route 
-            path="/dashboard" 
-            element={
-              <ProtectedRoute>
-                <DashboardWithTabs />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/app" 
-            element={
-              <ProtectedRoute>
-                <Index />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/testing" 
-            element={
-              <AdminRoute>
-                <Testing />
-              </AdminRoute>
-            } 
-          />
-          
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-        <Toaster />
-        <Sonner />
-      </TooltipProvider>
-    </BrowserRouter>
+    <Routes>
+      <Route path="/home" element={<Home />} />
+      <Route path="/" element={<Home />} />
+      
+      <Route path="/login" element={<Login />} />
+      <Route path="/cadastro" element={<Register />} />
+      
+      <Route 
+        path="/dashboard" 
+        element={
+          <ProtectedRoute>
+            <DashboardWithTabs />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/app" 
+        element={
+          <ProtectedRoute>
+            <Index />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/testing" 
+        element={
+          <AdminRoute>
+            <Testing />
+          </AdminRoute>
+        } 
+      />
+      
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
 };
 
 // Application Root Component with properly structured providers
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider defaultTheme="light">
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme="light">
+        <AuthProvider>
+          <BrowserRouter>
+            <ViewportHeightFix />
+            <TooltipProvider>
+              <AppRoutes />
+              <Toaster />
+              <Sonner />
+            </TooltipProvider>
+          </BrowserRouter>
+        </AuthProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
