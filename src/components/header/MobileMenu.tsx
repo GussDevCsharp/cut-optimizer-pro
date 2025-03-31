@@ -19,6 +19,10 @@ export const MobileMenu = ({
   onLogout 
 }: MobileMenuProps) => {
   const { user } = useAuth();
+  
+  // Get user name from metadata or fallback to email
+  const userName = user?.user_metadata?.name || (user?.email ? user.email.split('@')[0] : 'Usuário');
+  const userEmail = user?.email || '';
 
   return (
     <Sheet>
@@ -32,12 +36,12 @@ export const MobileMenu = ({
           <div className="flex items-center gap-3 mb-6">
             <Avatar>
               <AvatarFallback className="bg-primary text-primary-foreground">
-                {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                {userName ? userName.charAt(0).toUpperCase() : 'U'}
               </AvatarFallback>
             </Avatar>
             <div>
-              <p className="font-medium">{user?.name || 'Usuário'}</p>
-              <p className="text-sm text-muted-foreground">{user?.email}</p>
+              <p className="font-medium">{userName}</p>
+              <p className="text-sm text-muted-foreground">{userEmail}</p>
             </div>
           </div>
           

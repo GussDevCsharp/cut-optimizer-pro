@@ -1,6 +1,13 @@
 
 import { User } from '@supabase/supabase-js';
 
+// User type for authentication context
+export interface AuthUser {
+  id: string;
+  name: string;
+  email: string;
+}
+
 export interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;

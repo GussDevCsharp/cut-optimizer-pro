@@ -10,6 +10,7 @@ import { Loader2, Search, UserCheck, UserX } from 'lucide-react';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { getAllUsers } from '@/services/userManagementService';
 import { useAuth } from '@/context/AuthContext';
+import { UserData } from '@/components/checkout/user-registration/types';
 
 export function UserManagementPanel() {
   const { user } = useAuth();
@@ -40,7 +41,7 @@ export function UserManagementPanel() {
   }
   
   // Filter users based on search term and filters
-  const filteredUsers = users ? users.filter(user => {
+  const filteredUsers = users ? users.filter((user: UserData) => {
     // Search filter
     const matchesSearch = 
       user.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 

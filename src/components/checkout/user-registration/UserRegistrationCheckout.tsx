@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { registerUser } from "@/services/authService";
-import { createSubscription } from "@/services/subscriptionService";
+import { createUserSubscription } from "@/services/subscriptionService";
 import RegistrationSuccess from "./RegistrationSuccess";
 import CheckoutContainer from "./CheckoutContainer";
 import { UserCredentials, UserRegistrationCheckoutProps } from "./types";
@@ -18,7 +18,6 @@ const UserRegistrationCheckout = ({
   const [paymentId, setPaymentId] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
-  // When the dialog is opened, reset states
   useEffect(() => {
     if (isOpen) {
       setPaymentStatus("idle");
@@ -29,22 +28,18 @@ const UserRegistrationCheckout = ({
     }
   }, [isOpen]);
 
-  // Register the user
   const handleRegisterUser = async (credentials: UserCredentials) => {
     try {
       setRegistrationStatus("processing");
       
-      // Register the user
       const { name, email, password } = credentials;
       const result = await registerUser(name, email, password);
       
-      // Check if registration was successful
       if (result && result.user && result.user.id) {
         setUserId(result.user.id);
         setRegistrationStatus("completed");
         return result.user.id;
       } else {
-        // Handle registration failure
         setRegistrationStatus("failed");
         setErrorMessage("Falha ao criar conta de usuário");
         return null;
@@ -52,7 +47,6 @@ const UserRegistrationCheckout = ({
     } catch (error: any) {
       setRegistrationStatus("failed");
       
-      // Extract error message
       const message = error && error.message 
         ? error.message 
         : "Erro ao registrar usuário";
@@ -62,10 +56,8 @@ const UserRegistrationCheckout = ({
     }
   };
 
-  // Handle payment completion
   const handlePaymentComplete = async (status: string, payment_id?: string) => {
     try {
-      // If we don't have a userId, try to register the user first
       let userIdentifier = userId;
       if (!userIdentifier) {
         userIdentifier = await handleRegisterUser(userCredentials);
@@ -74,19 +66,15 @@ const UserRegistrationCheckout = ({
         }
       }
 
-      // Save payment ID if provided
       if (payment_id) {
         setPaymentId(payment_id);
       }
 
-      // Update payment status based on the response
       if (status === "approved") {
         setPaymentStatus("completed");
         
-        // Create subscription record in the database
-        await createSubscription(userIdentifier, planId, payment_id || "");
+        await createUserSubscription(userIdentifier, planId, payment_id || "");
         
-        // Notify parent component
         if (onPaymentComplete) {
           onPaymentComplete(status, payment_id);
         }
@@ -94,15 +82,12 @@ const UserRegistrationCheckout = ({
         setPaymentStatus("failed");
         setErrorMessage("Pagamento rejeitado. Por favor, tente novamente.");
         
-        // Notify parent component
         if (onPaymentComplete) {
           onPaymentComplete(status, payment_id);
         }
       } else {
-        // Handle pending status
         setPaymentStatus("processing");
         
-        // Notify parent component
         if (onPaymentComplete) {
           onPaymentComplete(status, payment_id);
         }
@@ -111,14 +96,12 @@ const UserRegistrationCheckout = ({
       setPaymentStatus("failed");
       setErrorMessage(error?.message || "Erro no processamento do pagamento");
       
-      // Notify parent component with error
       if (onPaymentComplete) {
         onPaymentComplete("error");
       }
     }
   };
 
-  // If registration has failed, show error
   if (registrationStatus === "failed") {
     return (
       <CheckoutContainer 
@@ -144,7 +127,6 @@ const UserRegistrationCheckout = ({
     );
   }
 
-  // If payment is completed, show success screen
   if (paymentStatus === "completed") {
     return (
       <CheckoutContainer
@@ -157,7 +139,6 @@ const UserRegistrationCheckout = ({
     );
   }
 
-  // Otherwise, show the checkout form
   return (
     <CheckoutContainer 
       isOpen={isOpen} 
@@ -165,16 +146,13 @@ const UserRegistrationCheckout = ({
       title="Complete sua compra"
     >
       <div className="p-6">
-        {/* Registration status info */}
         {registrationStatus === "processing" && (
           <div className="mb-4 text-sm text-amber-600">
             Criando sua conta...
           </div>
         )}
         
-        {/* Payment form */}
         <div className="space-y-6">
-          {/* Here you would integrate your payment form */}
           <button 
             className="w-full px-4 py-2 bg-primary text-white rounded-md"
             onClick={() => handlePaymentComplete("approved", "mock-payment-" + Date.now())}
@@ -192,7 +170,6 @@ const UserRegistrationCheckout = ({
           </button>
         </div>
         
-        {/* Error message */}
         {errorMessage && (
           <div className="mt-4 text-sm text-red-500">
             {errorMessage}

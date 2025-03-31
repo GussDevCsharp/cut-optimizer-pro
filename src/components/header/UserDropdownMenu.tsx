@@ -25,6 +25,9 @@ export const UserDropdownMenu = ({
   onLogout 
 }: UserDropdownMenuProps) => {
   const { user } = useAuth();
+  
+  // Get user name from metadata or fallback to email
+  const userName = user?.user_metadata?.name || (user?.email ? user.email.split('@')[0] : 'U');
 
   return (
     <DropdownMenu>
@@ -32,7 +35,7 @@ export const UserDropdownMenu = ({
         <Button variant="ghost" className="rounded-full h-10 w-10 p-0">
           <Avatar>
             <AvatarFallback className="bg-primary text-primary-foreground">
-              {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+              {userName ? userName.charAt(0).toUpperCase() : 'U'}
             </AvatarFallback>
           </Avatar>
         </Button>

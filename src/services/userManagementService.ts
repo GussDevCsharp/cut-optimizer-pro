@@ -1,6 +1,7 @@
 
 import { MASTER_ADMIN_EMAIL } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { UserData } from "@/components/checkout/user-registration/types";
 
 /**
  * Verifica se usuário é admin pelo email
@@ -26,7 +27,7 @@ export const hasFullDataAccess = (email: string): boolean => {
 /**
  * Obtém todos os usuários com informações de assinatura
  */
-export const getUsersWithSubscriptionInfo = async () => {
+export const getUsersWithSubscriptionInfo = async (): Promise<UserData[]> => {
   try {
     const { data, error } = await supabase
       .from('users')
@@ -50,7 +51,17 @@ export const getUsersWithSubscriptionInfo = async () => {
       .order('created_at', { ascending: false });
       
     if (error) throw error;
-    return data || [];
+    
+    // Map database results to UserData format
+    return (data || []).map(user => ({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      created_at: user.created_at,
+      isActive: true, // Users with subscriptions are considered active
+      planType: user.user_subscriptions?.[0]?.subscription_plans?.name || 'Básico',
+      expirationDate: user.user_subscriptions?.[0]?.expiration_date
+    }));
   } catch (error) {
     console.error("Error fetching users with subscription info:", error);
     return [];
@@ -60,7 +71,7 @@ export const getUsersWithSubscriptionInfo = async () => {
 /**
  * Obtém usuários sem assinatura
  */
-export const getUsersWithoutSubscription = async () => {
+export const getUsersWithoutSubscription = async (): Promise<UserData[]> => {
   try {
     const { data, error } = await supabase
       .from('users')
@@ -77,7 +88,16 @@ export const getUsersWithoutSubscription = async () => {
       .order('created_at', { ascending: false });
       
     if (error) throw error;
-    return data || [];
+    
+    // Map database results to UserData format
+    return (data || []).map(user => ({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      created_at: user.created_at,
+      isActive: false, // Users without subscriptions are considered inactive
+      planType: 'Nenhum',
+    }));
   } catch (error) {
     console.error("Error fetching users without subscription:", error);
     return [];
@@ -87,7 +107,7 @@ export const getUsersWithoutSubscription = async () => {
 /**
  * Obtém todos os usuários com informações de assinatura
  */
-export const getAllUsers = async () => {
+export const getAllUsers = async (): Promise<UserData[]> => {
   try {
     // Get users with active subscriptions
     const usersWithSubs = await getUsersWithSubscriptionInfo();
