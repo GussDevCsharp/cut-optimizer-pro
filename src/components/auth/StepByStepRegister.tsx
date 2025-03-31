@@ -1,36 +1,19 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
-import { Button } from "@/components/ui/button";
-import { Form } from "@/components/ui/form";
-import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { plans, PricingPlan } from "@/hooks/usePricingPlans";
+import { PricingPlan } from "@/hooks/usePricingPlans";
 import CheckoutModal from "@/components/checkout/CheckoutModal";
 import { PaymentStatus } from "@/components/checkout/CheckoutModal";
 import RegisterStepIndicator from './RegisterStepIndicator';
 import UserInfoStep from './UserInfoStep';
 import PlanSelectionStep from './PlanSelectionStep';
+import { useUserForm } from '@/hooks/useUserForm';
+import { useLeadManagement, UserFormValues } from '@/hooks/useLeadManagement';
+import { supabase } from '@/integrations/supabase/client';
 
-// Schema para validar os dados do usuário
-const userSchema = z.object({
-  name: z.string().min(2, { message: "Nome deve ter pelo menos 2 caracteres" }),
-  email: z.string().email({ message: "Email inválido" }),
-  address: z.string().min(5, { message: "Endereço deve ter pelo menos 5 caracteres" }),
-  password: z.string().min(6, { message: "Senha deve ter pelo menos 6 caracteres" }),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "As senhas não conferem",
-  path: ["confirmPassword"],
-});
-
-export type UserFormValues = z.infer<typeof userSchema>;
+export type { UserFormValues } from '@/hooks/useLeadManagement';
 
 export default function StepByStepRegister() {
   const [currentStep, setCurrentStep] = useState<'userInfo' | 'checkout'>('userInfo');
@@ -41,58 +24,8 @@ export default function StepByStepRegister() {
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  const form = useForm<UserFormValues>({
-    resolver: zodResolver(userSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      address: "",
-      password: "",
-      confirmPassword: "",
-    },
-  });
-
-  const saveLeadToDatabase = async (data: UserFormValues, planId: string) => {
-    try {
-      console.log('Saving lead to database:', { 
-        name: data.name, 
-        email: data.email, 
-        planId 
-      });
-      
-      // Save lead to database with more detailed error handling
-      const { data: leadData, error } = await supabase
-        .from('leads')
-        .insert({
-          name: data.name,
-          email: data.email,
-          address: data.address,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(), // Add updated_at timestamp
-          status: 'pending',
-          source: `plan_${planId}`
-        })
-        .select()
-        .single();
-      
-      if (error) {
-        console.error('Error saving lead:', error);
-        throw error;
-      }
-      
-      console.log('Lead saved successfully:', leadData);
-      toast.success('Dados salvos com sucesso!');
-      
-      return leadData.id;
-    } catch (error: any) {
-      console.error('Error saving lead:', error);
-      // Show detailed error message
-      toast.error('Erro ao salvar dados. Tente novamente.', {
-        description: error.message || 'Houve um problema ao salvar seus dados.'
-      });
-      return null;
-    }
-  };
+  const form = useUserForm();
+  const { saveLeadToDatabase } = useLeadManagement();
 
   const handleContinue = async (data: UserFormValues) => {
     if (!selectedPlan) {
@@ -104,7 +37,7 @@ export default function StepByStepRegister() {
     
     try {
       // Salvar como lead no banco de dados
-      const id = await saveLeadToDatabase(data, selectedPlan.id);
+      const id = await saveLeadToDatabase(data, `plan_${selectedPlan.id}`);
       
       if (id) {
         setLeadId(id);
@@ -216,40 +149,37 @@ export default function StepByStepRegister() {
     <div className="max-w-5xl mx-auto">
       <RegisterStepIndicator currentStep={currentStep} />
       
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleContinue)} className="space-y-6">
-          {currentStep === 'userInfo' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Coluna de informações do usuário */}
-              <UserInfoStep form={form} />
-              
-              {/* Coluna de seleção de planos */}
-              <PlanSelectionStep 
-                selectedPlan={selectedPlan} 
-                onSelectPlan={handlePlanSelect}
-              />
-            </div>
-          )}
-          
-          {currentStep === 'userInfo' && (
-            <div className="flex justify-center mt-8">
-              <Button 
-                type="submit" 
-                size="lg" 
-                disabled={!selectedPlan || isSubmitting}
-                className="w-full md:w-auto"
-              >
-                {isSubmitting ? (
-                  <>
-                    <span className="animate-spin mr-2">⚙️</span>
-                    Salvando...
-                  </>
-                ) : 'Continuar para pagamento'}
-              </Button>
-            </div>
-          )}
-        </form>
-      </Form>
+      <form onSubmit={form.handleSubmit(handleContinue)} className="space-y-6">
+        {currentStep === 'userInfo' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Coluna de informações do usuário */}
+            <UserInfoStep form={form} />
+            
+            {/* Coluna de seleção de planos */}
+            <PlanSelectionStep 
+              selectedPlan={selectedPlan} 
+              onSelectPlan={handlePlanSelect}
+            />
+          </div>
+        )}
+        
+        {currentStep === 'userInfo' && (
+          <div className="flex justify-center mt-8">
+            <button 
+              type="submit" 
+              className="bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-2 rounded-md w-full md:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={!selectedPlan || isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <span className="animate-spin mr-2">⚙️</span>
+                  Salvando...
+                </>
+              ) : 'Continuar para pagamento'}
+            </button>
+          </div>
+        )}
+      </form>
       
       {selectedPlan && (
         <CheckoutModal

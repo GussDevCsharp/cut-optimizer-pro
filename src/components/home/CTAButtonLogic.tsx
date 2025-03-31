@@ -2,8 +2,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PaymentStatus } from '../checkout/CheckoutModal';
-import { useLeadManagement, UserFormValues } from '@/hooks/useLeadManagement';
 import { useUserRegistration } from '@/hooks/useUserRegistration';
+import { useLeadManagement, UserFormValues } from '@/hooks/useLeadManagement';
 import { useUserForm } from '@/hooks/useUserForm';
 
 interface CTAButtonLogicProps {

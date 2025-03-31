@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { UserFormValues } from './StepByStepRegister';
+import { UserFormValues } from '@/hooks/useLeadManagement';
 
 interface UserInfoStepProps {
   form: UseFormReturn<UserFormValues>;

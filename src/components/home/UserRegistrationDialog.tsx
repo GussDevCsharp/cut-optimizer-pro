@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { UseFormReturn } from "react-hook-form";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { UserFormValues } from './CTAButtonLogic';
+import { UserFormValues } from "@/hooks/useLeadManagement";
 import AddressInput from './AddressInput';
 
 interface UserRegistrationDialogProps {
