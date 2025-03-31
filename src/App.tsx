@@ -109,52 +109,59 @@ const ViewportHeightFix = () => {
 // Create a new QueryClient
 const queryClient = new QueryClient();
 
+// Fix: Wrap TooltipProvider properly inside a function component
+const AppContent = () => {
+  return (
+    <BrowserRouter>
+      <TooltipProvider>
+        <ViewportHeightFix />
+        <Routes>
+          <Route path="/home" element={<Home />} />
+          <Route path="/" element={<Home />} />
+          
+          <Route path="/login" element={<Login />} />
+          <Route path="/cadastro" element={<Register />} />
+          
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute>
+                <DashboardWithTabs />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/app" 
+            element={
+              <ProtectedRoute>
+                <Index />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/testing" 
+            element={
+              <AdminRoute>
+                <Testing />
+              </AdminRoute>
+            } 
+          />
+          
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+        <Toaster />
+        <Sonner />
+      </TooltipProvider>
+    </BrowserRouter>
+  );
+};
+
 // Application Root Component with properly structured providers
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider defaultTheme="light">
       <AuthProvider>
-        <TooltipProvider>
-          <BrowserRouter>
-            <ViewportHeightFix />
-            <Routes>
-              <Route path="/home" element={<Home />} />
-              <Route path="/" element={<Home />} />
-              
-              <Route path="/login" element={<Login />} />
-              <Route path="/cadastro" element={<Register />} />
-              
-              <Route 
-                path="/dashboard" 
-                element={
-                  <ProtectedRoute>
-                    <DashboardWithTabs />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/app" 
-                element={
-                  <ProtectedRoute>
-                    <Index />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/testing" 
-                element={
-                  <AdminRoute>
-                    <Testing />
-                  </AdminRoute>
-                } 
-              />
-              
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            <Toaster />
-            <Sonner />
-          </BrowserRouter>
-        </TooltipProvider>
+        <AppContent />
       </AuthProvider>
     </ThemeProvider>
   </QueryClientProvider>

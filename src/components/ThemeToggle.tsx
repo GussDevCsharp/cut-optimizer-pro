@@ -94,7 +94,7 @@ export function ThemeToggle({
     return toggleButton;
   }
   
-  // Use the existing TooltipProvider from higher up in the component tree
+  // Use the Tooltip components directly, relying on the TooltipProvider from higher up
   return (
     <Tooltip>
       <TooltipTrigger asChild>
