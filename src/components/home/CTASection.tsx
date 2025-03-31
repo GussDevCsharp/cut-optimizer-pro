@@ -3,7 +3,7 @@ import React from 'react';
 import { CheckCircle2 } from 'lucide-react';
 import CTAButton from './CTAButton';
 
-const CTASection = () => {
+const CTASection: React.FC = () => {
   return (
     <section className="bg-gradient-to-r from-blue-600 to-indigo-700 py-16">
       <div className="container mx-auto px-4 text-center">

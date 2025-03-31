@@ -45,15 +45,6 @@ CREATE TABLE payment_history (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create system settings table for storing configurations
-CREATE TABLE IF NOT EXISTS system_settings (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  key TEXT NOT NULL UNIQUE,
-  settings JSONB NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
 -- Insert default subscription plans
 INSERT INTO subscription_plans (name, description, price, duration_days, features, is_active)
 VALUES 
@@ -93,20 +84,7 @@ CREATE POLICY payment_history_insert_policy ON payment_history
     SELECT 1 FROM profiles WHERE id = auth.uid() AND email = 'gustavo@softcomfortaleza.com.br'
   ));
 
--- Policies for system_settings
-CREATE POLICY system_settings_select_policy ON system_settings 
-  FOR SELECT USING (auth.role() = 'authenticated');
-
-CREATE POLICY system_settings_insert_update_policy ON system_settings 
-  USING (EXISTS (
-    SELECT 1 FROM profiles WHERE id = auth.uid() AND email = 'gustavo@softcomfortaleza.com.br'
-  ))
-  WITH CHECK (EXISTS (
-    SELECT 1 FROM profiles WHERE id = auth.uid() AND email = 'gustavo@softcomfortaleza.com.br'
-  ));
-
 -- Enable RLS on the tables
 ALTER TABLE subscription_plans ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_subscriptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE payment_history ENABLE ROW LEVEL SECURITY;
-ALTER TABLE system_settings ENABLE ROW LEVEL SECURITY;

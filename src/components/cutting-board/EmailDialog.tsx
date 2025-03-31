@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { MailWarning } from 'lucide-react';
 
 interface EmailDialogProps {
@@ -20,6 +20,7 @@ interface EmailDialogProps {
 export const EmailDialog = ({ onSendEmail }: EmailDialogProps) => {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
   
   // Check if email settings are configured
   const emailSettings = localStorage.getItem('emailSettings');

@@ -2,24 +2,20 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { RegisterForm, RegisterFormValues } from "@/components/auth/RegisterForm";
-import { toast } from "sonner";
-import CheckoutModal from "@/components/checkout/CheckoutModal";
-import { PaymentStatus } from "@/components/checkout/CheckoutModal";
-import { PricingPlan } from "@/hooks/usePricingPlans";
-import { supabase } from "@/integrations/supabase/client";
-import StepByStepRegister from "@/components/auth/StepByStepRegister";
+import PricingPlans from "@/components/home/PricingPlans";
 
 export default function Register() {
   const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
 
+  // Redirect to dashboard if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
       navigate("/dashboard");
     }
   }, [isAuthenticated, navigate]);
   
+  // Show loading state
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -31,6 +27,7 @@ export default function Register() {
     );
   }
   
+  // If already authenticated, don't render the register form
   if (isAuthenticated) {
     return null;
   }
@@ -59,13 +56,13 @@ export default function Register() {
       <main className="flex-1">
         <div className="container py-8">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold tracking-tight">Crie sua conta</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Escolha seu plano</h1>
             <p className="text-muted-foreground mt-2">
-              Complete seu cadastro para acessar todos os recursos da plataforma.
+              Selecione o plano ideal para o seu negócio e comece a otimizar seus projetos hoje mesmo.
             </p>
           </div>
 
-          <StepByStepRegister />
+          <PricingPlans />
         </div>
       </main>
 

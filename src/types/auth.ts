@@ -16,4 +16,6 @@ export interface AuthContextType {
   isAdmin: boolean;
   isMasterAdmin: boolean;
   hasMasterAccess: boolean;
+  hasActiveSubscription?: boolean;
+  subscriptionExpiryDate?: Date | null;
 }

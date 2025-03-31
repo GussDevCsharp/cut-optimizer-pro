@@ -5,11 +5,11 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LogIn } from "lucide-react";
-import { toast } from "sonner";
 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 
 const loginSchema = z.object({
@@ -28,6 +28,7 @@ interface LoginFormProps {
 export function LoginForm({ defaultEmail = "", onResetPasswordClick, onLoginFailure }: LoginFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
+  const { toast } = useToast();
   const navigate = useNavigate();
 
   const form = useForm<LoginFormValues>({
@@ -46,7 +47,9 @@ export function LoginForm({ defaultEmail = "", onResetPasswordClick, onLoginFail
     } catch (error: any) {
       const message = error.message || "Email ou senha incorretos. Tente novamente.";
       
-      toast.error("Erro ao fazer login", {
+      toast({
+        variant: "destructive",
+        title: "Erro ao fazer login",
         description: message,
       });
       

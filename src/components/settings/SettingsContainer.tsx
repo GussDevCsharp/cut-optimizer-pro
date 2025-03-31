@@ -11,8 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmailSettings } from './EmailSettings';
 import { MasterPanelManual } from './MasterPanelManual';
 import { UserManagementPanel } from './UserManagementPanel';
-import { MercadoPagoSettings } from './MercadoPagoSettings';
-import { Mail, User, FileText, Users, CreditCard } from 'lucide-react';
+import { Mail, User, FileText, Users, Database } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 interface SettingsContainerProps {
@@ -49,16 +48,10 @@ export function SettingsContainer({ open, onOpenChange }: SettingsContainerProps
               <span>Perfil</span>
             </TabsTrigger>
             {isMasterAdmin && (
-              <>
-                <TabsTrigger value="users" className="flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  <span>Usuários</span>
-                </TabsTrigger>
-                <TabsTrigger value="mercado-pago" className="flex items-center gap-2">
-                  <CreditCard className="h-4 w-4" />
-                  <span>Mercado Pago</span>
-                </TabsTrigger>
-              </>
+              <TabsTrigger value="users" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                <span>Usuários</span>
+              </TabsTrigger>
             )}
             <TabsTrigger value="manual" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
@@ -85,15 +78,9 @@ export function SettingsContainer({ open, onOpenChange }: SettingsContainerProps
           </TabsContent>
           
           {isMasterAdmin && (
-            <>
-              <TabsContent value="users">
-                <UserManagementPanel />
-              </TabsContent>
-              
-              <TabsContent value="mercado-pago">
-                <MercadoPagoSettings />
-              </TabsContent>
-            </>
+            <TabsContent value="users">
+              <UserManagementPanel />
+            </TabsContent>
           )}
           
           <TabsContent value="manual">

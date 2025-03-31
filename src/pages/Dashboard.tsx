@@ -4,10 +4,10 @@ import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { useAuth } from "@/context/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Briefcase, Package, BookOpen, Settings, CreditCard } from "lucide-react";
+import { Briefcase, Package, BookOpen, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { generateUserManual } from "@/utils/userManual";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 
 // Dashboard components
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -18,13 +18,13 @@ import { UserDropdownMenu } from "@/components/header/UserDropdownMenu";
 import { UserManagementPanel } from "@/components/settings/UserManagementPanel";
 import { EmailSettings } from "@/components/settings/EmailSettings";
 import { MasterPanelManual } from "@/components/settings/MasterPanelManual";
-import { MercadoPagoSettings } from "@/components/settings/MercadoPagoSettings";
 
 export default function Dashboard() {
   const { user, logout, isMasterAdmin } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState("projects");
+  const { toast } = useToast();
 
   // Listen for tab change events
   useEffect(() => {
@@ -48,14 +48,24 @@ export default function Dashboard() {
 
   const handleDownloadManual = async () => {
     try {
-      toast.loading("Gerando manual do usuário. Aguarde enquanto geramos o PDF.");
+      toast({
+        title: "Gerando manual do usuário",
+        description: "Aguarde enquanto geramos o manual em PDF.",
+      });
       
       await generateUserManual();
       
-      toast.success("Manual gerado com sucesso! O download deve começar automaticamente.");
+      toast({
+        title: "Manual gerado com sucesso!",
+        description: "O download do manual deve começar automaticamente.",
+      });
     } catch (error) {
       console.error("Error generating user manual:", error);
-      toast.error("Erro ao gerar manual. Não foi possível gerar o manual do usuário. Tente novamente.");
+      toast({
+        variant: "destructive",
+        title: "Erro ao gerar manual",
+        description: "Não foi possível gerar o manual do usuário. Tente novamente.",
+      });
     }
   };
 
@@ -145,10 +155,6 @@ export default function Dashboard() {
                   <TabsList className="mb-4">
                     <TabsTrigger value="email">Email</TabsTrigger>
                     <TabsTrigger value="users">Usuários</TabsTrigger>
-                    <TabsTrigger value="mercado-pago">
-                      <CreditCard className="h-4 w-4 mr-2" />
-                      Mercado Pago
-                    </TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="email">
@@ -157,10 +163,6 @@ export default function Dashboard() {
                   
                   <TabsContent value="users">
                     <UserManagementPanel />
-                  </TabsContent>
-                  
-                  <TabsContent value="mercado-pago">
-                    <MercadoPagoSettings />
                   </TabsContent>
                 </Tabs>
               </div>

@@ -14,7 +14,6 @@ import Testing from "./pages/Testing";
 import Home from "./pages/Home";
 import { useEffect } from "react";
 import { ThemeProvider } from "@/hooks/useTheme";
-import OfflineIndicator from "./components/OfflineIndicator";
 
 // Protected route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -85,16 +84,39 @@ const DashboardWithTabs = () => {
   return <Dashboard />;
 };
 
+// Mobile viewport height fix
+const ViewportHeightFix = () => {
+  useEffect(() => {
+    const setViewportHeight = () => {
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+    };
+
+    setViewportHeight();
+
+    window.addEventListener('resize', setViewportHeight);
+    window.addEventListener('orientationchange', setViewportHeight);
+
+    return () => {
+      window.removeEventListener('resize', setViewportHeight);
+      window.removeEventListener('orientationchange', setViewportHeight);
+    };
+  }, []);
+
+  return null;
+};
+
 // Create a new QueryClient
 const queryClient = new QueryClient();
 
 // Application Root Component with properly structured providers
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <BrowserRouter>
-      <ThemeProvider defaultTheme="light">
+    <ThemeProvider defaultTheme="light">
+      <AuthProvider>
         <TooltipProvider>
-          <AuthProvider>
+          <BrowserRouter>
+            <ViewportHeightFix />
             <Routes>
               <Route path="/home" element={<Home />} />
               <Route path="/" element={<Home />} />
@@ -130,12 +152,11 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
             <Toaster />
-            <OfflineIndicator />
             <Sonner />
-          </AuthProvider>
+          </BrowserRouter>
         </TooltipProvider>
-      </ThemeProvider>
-    </BrowserRouter>
+      </AuthProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 

@@ -1,5 +1,5 @@
 
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 import { Sheet, PlacedPiece } from '../hooks/useSheetData';
 import { generatePdf } from './pdf-generator';
 
@@ -10,8 +10,11 @@ export const useSharingService = (
   sheets: number[],
   projectName: string
 ) => {
+  const { toast } = useToast();
+
   const handleSharePdf = async () => {
-    toast("Preparando arquivo", {
+    toast({
+      title: "Preparando arquivo",
       description: "Gerando PDF para compartilhamento...",
     });
     
@@ -31,7 +34,8 @@ export const useSharingService = (
           files: [file]
         });
         
-        toast.success("Compartilhado", {
+        toast({
+          title: "Compartilhado",
           description: "Seu plano de corte foi compartilhado com sucesso.",
         });
       } else {
@@ -43,14 +47,17 @@ export const useSharingService = (
         a.click();
         URL.revokeObjectURL(url);
         
-        toast.success("Download iniciado", {
+        toast({
+          title: "Download iniciado",
           description: "O PDF foi gerado e está sendo baixado.",
         });
       }
     } catch (error) {
       console.error('Error sharing PDF:', error);
-      toast.error("Erro ao compartilhar", {
+      toast({
+        title: "Erro ao compartilhar",
         description: "Não foi possível gerar ou compartilhar o PDF.",
+        variant: "destructive",
       });
     }
   };

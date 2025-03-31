@@ -1,5 +1,5 @@
 
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 import { Sheet, PlacedPiece } from '../hooks/useSheetData';
 import { generatePdf } from './pdf-generator';
 
@@ -10,8 +10,11 @@ export const useEmailService = (
   sheets: number[],
   projectName: string
 ) => {
+  const { toast } = useToast();
+
   const handleEmailPdf = async (email: string): Promise<boolean> => {
-    toast("Preparando email", {
+    toast({
+      title: "Preparando email",
       description: "Gerando PDF para envio...",
     });
     
@@ -19,8 +22,10 @@ export const useEmailService = (
       // Get email settings from localStorage
       const emailSettingsString = localStorage.getItem('emailSettings');
       if (!emailSettingsString) {
-        toast.error("Configurações não encontradas", {
+        toast({
+          title: "Configurações não encontradas",
           description: "Configure suas credenciais de email nas configurações da conta.",
+          variant: "destructive",
         });
         return false;
       }

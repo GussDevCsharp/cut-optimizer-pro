@@ -145,69 +145,6 @@ export const cancelSubscription = async (subscriptionId: string): Promise<void> 
 };
 
 /**
- * Cancel a user's subscription (for admin use)
- */
-export const cancelUserSubscription = async (subscriptionId: string): Promise<void> => {
-  try {
-    const { error } = await supabase
-      .from('user_subscriptions')
-      .update({ 
-        status: 'canceled',
-        auto_renew: false,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', subscriptionId);
-      
-    if (error) throw error;
-  } catch (error) {
-    console.error("Error canceling user subscription:", error);
-    throw error;
-  }
-};
-
-/**
- * Extend a user's subscription (for admin use)
- */
-export const extendUserSubscription = async (subscriptionId: string, days: number): Promise<void> => {
-  try {
-    // First, get the current subscription to check its expiration date
-    const { data: subscription, error: fetchError } = await supabase
-      .from('user_subscriptions')
-      .select('expiration_date, status')
-      .eq('id', subscriptionId)
-      .single();
-      
-    if (fetchError) throw fetchError;
-    
-    // Calculate new expiration date
-    let baseDate = new Date();
-    
-    // If the subscription is still active and has a future expiration date, extend from that date
-    if (subscription.status === 'active' && new Date(subscription.expiration_date) > baseDate) {
-      baseDate = new Date(subscription.expiration_date);
-    }
-    
-    const newExpirationDate = new Date(baseDate);
-    newExpirationDate.setDate(newExpirationDate.getDate() + days);
-    
-    // Update the subscription
-    const { error } = await supabase
-      .from('user_subscriptions')
-      .update({ 
-        status: 'active',
-        expiration_date: newExpirationDate.toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', subscriptionId);
-      
-    if (error) throw error;
-  } catch (error) {
-    console.error("Error extending user subscription:", error);
-    throw error;
-  }
-};
-
-/**
  * Check if a user has an active subscription
  */
 export const hasActiveSubscription = async (userId: string): Promise<boolean> => {
@@ -277,7 +214,7 @@ export const getUsersWithSubscriptionInfo = async () => {
         email: profileData?.email,
         isActive: subscription.status === 'active' && new Date(subscription.expiration_date) > new Date(),
         planType: planData?.name,
-        expirationDate: subscription.expiration_date ? new Date(subscription.expiration_date) : null,
+        expirationDate: new Date(subscription.expiration_date),
         subscriptionId: subscription.id,
         autoRenew: subscription.auto_renew
       };

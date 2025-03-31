@@ -1,19 +1,19 @@
 
-import * as React from "react";
+import React, { createContext, useContext } from "react";
 import { AuthContextType } from "@/types/auth";
 import { useAuthState } from "@/hooks/useAuthState";
 import { loginWithEmail, registerUser, resetPasswordEmail, logout } from "@/services/authService";
 
-// Use the toast from sonner directly for notifications without hooks
-import { toast } from "sonner";
+// Use the toast from sonner directly to avoid circular dependencies
+// import { toast } from "@/hooks/use-toast";
 
-const AuthContext = React.createContext<AuthContextType | null>(null);
+const AuthContext = createContext<AuthContextType | null>(null);
 
 // Master admin email - centralized constant
 export const MASTER_ADMIN_EMAIL = "gustavo@softcomfortaleza.com.br";
 
 export const useAuth = () => {
-  const context = React.useContext(AuthContext);
+  const context = useContext(AuthContext);
   if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
