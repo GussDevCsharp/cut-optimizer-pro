@@ -4,7 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader, Copy, FileText, CheckCircle } from 'lucide-react';
-import { generateBoletoPayment, CustomerData, formatCPF, validateCPF } from "@/services/mercadoPagoService";
+import { 
+  generateBoletoPayment, 
+  CustomerData, 
+  formatCPF, 
+  validateCPF 
+} from "@/services/mercadoPagoService";
 import { ProductInfo, PaymentStatus } from "../CheckoutModal";
 
 interface BoletoPaymentProps {
