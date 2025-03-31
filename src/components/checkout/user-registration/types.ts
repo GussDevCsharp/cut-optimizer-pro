@@ -1,44 +1,16 @@
 
-import { PaymentStatus } from '../CheckoutModal';
-
+// User credentials for registration
 export interface UserCredentials {
   name: string;
   email: string;
   password: string;
 }
 
+// Props for the UserRegistrationCheckout component
 export interface UserRegistrationCheckoutProps {
   isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
+  onOpenChange: (isOpen: boolean) => void;
   planId: string;
   userCredentials: UserCredentials;
-  onPaymentComplete?: (status: PaymentStatus, paymentId?: string) => void;
-}
-
-export interface RegistrationSuccessProps {
-  isRegistering: boolean;
-}
-
-export interface PlanDisplayProps {
-  plan: {
-    id: string;
-    name: string;
-    description: string;
-    price: number;
-    features: string[];
-  } | null;
-}
-
-export interface CheckoutContainerProps {
-  plan: {
-    id: string;
-    name: string;
-    description: string;
-    price: number;
-  } | null;
-  customerInfo: {
-    name: string;
-    email: string;
-  };
-  onPaymentComplete: (status: PaymentStatus, paymentId?: string) => void;
+  onPaymentComplete?: (status: string, paymentId?: string) => void;
 }

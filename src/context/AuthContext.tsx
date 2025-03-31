@@ -29,6 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return await loginWithEmail(email, password);
   };
 
+  // Updated to return the registerUser result instead of void
   const register = async (name: string, email: string, password: string) => {
     return await registerUser(name, email, password);
   };

@@ -8,7 +8,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from 'react-router-dom';
-import UserRegistrationCheckout from '../checkout/UserRegistrationCheckout';
+import UserRegistrationCheckout from '../checkout/user-registration';
 
 interface CTAButtonProps {
   productId: string;

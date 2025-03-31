@@ -1,21 +1,16 @@
 
-export interface AuthUser {
-  id: string;
-  name: string;
-  email: string;
-}
+import { User } from '@supabase/supabase-js';
 
 export interface AuthContextType {
-  user: AuthUser | null;
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  resetPassword: (email: string) => Promise<void>;
+  user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   isAdmin: boolean;
   isMasterAdmin: boolean;
   hasMasterAccess: boolean;
-  hasActiveSubscription?: boolean;
-  subscriptionExpiryDate?: Date | null;
+  login: (email: string, password: string) => Promise<void>;
+  // Updated to return the result instead of void
+  register: (name: string, email: string, password: string) => Promise<any>;
+  logout: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
 }
