@@ -12,6 +12,10 @@ export const formatSupabaseUser = (supabaseUser: User): AuthUser => {
     id: supabaseUser.id,
     name: supabaseUser?.user_metadata?.name || supabaseUser.email?.split('@')[0] || '',
     email: supabaseUser.email || '',
+    app_metadata: supabaseUser.app_metadata,
+    user_metadata: supabaseUser.user_metadata,
+    aud: supabaseUser.aud,
+    created_at: supabaseUser.created_at
   };
 };
 

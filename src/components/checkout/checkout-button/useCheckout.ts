@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { PaymentStatus } from "../CheckoutModal";
 import { createCheckoutPreference, initCheckoutBricks } from "@/services/mercadoPagoService";
 import { useToast } from "@/hooks/use-toast";
+import { CustomerData } from "@/services/mercadoPago/types";
 
 interface ProductInfo {
   id: string;
@@ -10,11 +11,6 @@ interface ProductInfo {
   description: string;
   price: number;
   image?: string;
-}
-
-interface CustomerData {
-  name: string;
-  email: string;
 }
 
 export const useCheckout = (
@@ -41,7 +37,11 @@ export const useCheckout = (
           price: product.price,
           image: product.image
         },
-        customerData
+        customerData && {
+          ...customerData,
+          identificationType: customerData.identificationType || 'CPF',
+          identificationNumber: customerData.identificationNumber || '00000000000'
+        }
       );
       
       setPreferenceId(preference.preferenceId);

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { UserRegistrationCheckoutProps } from './types';
-import { fetchSubscriptionPlan, createUserSubscription } from "@/services/subscriptionService";
+import { fetchSubscriptionPlans, createUserSubscription } from "@/services/subscriptionService";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { SubscriptionPlan } from '@/integrations/supabase/schema';
@@ -35,9 +35,16 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
 
   const loadPlanDetails = async () => {
     try {
-      const planData = await fetchSubscriptionPlan(planId);
-      setPlan(planData);
-      setStep('checkout');
+      // Use fetchSubscriptionPlans instead of fetchSubscriptionPlan and filter by planId
+      const plans = await fetchSubscriptionPlans();
+      const selectedPlan = plans.find(p => p.id === planId) || null;
+      
+      if (selectedPlan) {
+        setPlan(selectedPlan);
+        setStep('checkout');
+      } else {
+        throw new Error("Plan not found");
+      }
     } catch (error) {
       console.error("Failed to load plan details:", error);
       toast({
@@ -125,7 +132,9 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
               }}
               customerInfo={{
                 name: userCredentials.name,
-                email: userCredentials.email
+                email: userCredentials.email,
+                identificationType: "CPF",
+                identificationNumber: "00000000000"
               }}
               onPaymentComplete={handlePaymentComplete}
             />

@@ -1,15 +1,13 @@
-
 import { PaymentStatus } from '@/components/checkout/CheckoutModal';
 
-// Interface for customer data
+// Re-export the types from the original file
 export interface CustomerData {
   name: string;
   email: string;
-  identificationType: string;
-  identificationNumber: string;
+  identificationType?: string;
+  identificationNumber?: string;
 }
 
-// Interface for credit card data
 export interface CardData {
   cardNumber: string;
   cardholderName: string;
@@ -23,7 +21,6 @@ export interface CardData {
   identificationNumber?: string;
 }
 
-// Checkout Bricks interfaces
 export interface CheckoutBricksOptions {
   initialization: {
     preferenceId: string;
@@ -40,7 +37,6 @@ export interface CheckoutBricksOptions {
   };
 }
 
-// Define the window with Mercado Pago
 declare global {
   interface Window {
     MercadoPago?: any;

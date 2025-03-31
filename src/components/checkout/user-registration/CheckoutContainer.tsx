@@ -34,7 +34,11 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
       
       const preference = await createCheckoutPreference(
         product,
-        customerInfo
+        customerInfo ? {
+          ...customerInfo,
+          identificationType: "CPF", // Default value
+          identificationNumber: "00000000000" // Default value
+        } : undefined
       );
       
       // Wait a bit for DOM to be ready
