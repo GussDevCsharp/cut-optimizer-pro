@@ -154,6 +154,7 @@ const CTAButton: React.FC<CTAButtonProps> = ({
                       <Input 
                         placeholder="******" 
                         type="password" 
+                        showPasswordToggle
                         {...field} 
                       />
                     </FormControl>
@@ -171,6 +172,7 @@ const CTAButton: React.FC<CTAButtonProps> = ({
                       <Input 
                         placeholder="******" 
                         type="password" 
+                        showPasswordToggle
                         {...field} 
                       />
                     </FormControl>
