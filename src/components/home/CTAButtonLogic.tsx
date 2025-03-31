@@ -37,6 +37,7 @@ const CTAButtonLogic = ({ productId, showCheckout }: CTAButtonLogicProps) => {
     password: string;
   } | null>(null);
   const [leadId, setLeadId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   
   const form = useForm<UserFormValues>({
@@ -52,6 +53,11 @@ const CTAButtonLogic = ({ productId, showCheckout }: CTAButtonLogicProps) => {
 
   const saveLeadToDatabase = async (data: UserFormValues) => {
     try {
+      console.log('Saving lead to database:', { 
+        name: data.name, 
+        email: data.email 
+      });
+      
       // Save lead to database
       const { data: leadData, error } = await supabase
         .from('leads')
@@ -60,12 +66,16 @@ const CTAButtonLogic = ({ productId, showCheckout }: CTAButtonLogicProps) => {
           email: data.email,
           address: data.address,
           created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
           status: 'pending'
         })
         .select()
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error saving lead:', error);
+        throw error;
+      }
       
       console.log('Lead saved successfully:', leadData);
       toast.success('Dados salvos com sucesso!');
@@ -79,22 +89,30 @@ const CTAButtonLogic = ({ productId, showCheckout }: CTAButtonLogicProps) => {
   };
 
   const onSubmit = async (data: UserFormValues) => {
-    // Save lead to database first
-    const id = await saveLeadToDatabase(data);
+    setIsSubmitting(true);
     
-    if (id) {
-      setLeadId(id);
+    try {
+      // Save lead to database first
+      const id = await saveLeadToDatabase(data);
       
-      // Only extract the needed fields for userCredentials
-      setUserCredentials({
-        name: data.name,
-        email: data.email,
-        address: data.address,
-        password: data.password
-      });
-      
-      setUserDialogOpen(false);
-      setCheckoutOpen(true);
+      if (id) {
+        setLeadId(id);
+        
+        // Only extract the needed fields for userCredentials
+        setUserCredentials({
+          name: data.name,
+          email: data.email,
+          address: data.address,
+          password: data.password
+        });
+        
+        setUserDialogOpen(false);
+        setCheckoutOpen(true);
+      }
+    } catch (error) {
+      console.error('Error in form submission:', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -111,12 +129,22 @@ const CTAButtonLogic = ({ productId, showCheckout }: CTAButtonLogicProps) => {
     
     if (status === 'approved' && userCredentials && leadId) {
       try {
+        console.log('Updating lead status:', leadId);
         // Update lead status
-        await supabase
+        const { error: updateError } = await supabase
           .from('leads')
-          .update({ status: 'converted', payment_id: paymentId })
+          .update({ 
+            status: 'converted', 
+            payment_id: paymentId,
+            updated_at: new Date().toISOString()
+          })
           .eq('id', leadId);
           
+        if (updateError) {
+          console.error('Error updating lead status:', updateError);
+          throw updateError;
+        }
+        
         // Register the user after successful payment
         const { data, error } = await supabase.auth.signUp({
           email: userCredentials.email,
@@ -174,6 +202,10 @@ const CTAButtonLogic = ({ productId, showCheckout }: CTAButtonLogicProps) => {
           description: error.message || "Por favor, tente novamente."
         });
       }
+    } else if (status === 'rejected' || status === 'error') {
+      toast.error("Falha no pagamento", {
+        description: "Houve um problema com seu pagamento. Por favor, tente novamente."
+      });
     }
   };
 
@@ -186,7 +218,8 @@ const CTAButtonLogic = ({ productId, showCheckout }: CTAButtonLogicProps) => {
     handleButtonClick,
     handlePaymentComplete,
     form,
-    onSubmit
+    onSubmit,
+    isSubmitting
   };
 };
 

@@ -13,13 +13,15 @@ interface UserRegistrationDialogProps {
   setUserDialogOpen: (open: boolean) => void;
   form: UseFormReturn<UserFormValues>;
   onSubmit: (data: UserFormValues) => void;
+  isSubmitting?: boolean;
 }
 
 const UserRegistrationDialog: React.FC<UserRegistrationDialogProps> = ({
   userDialogOpen,
   setUserDialogOpen,
   form,
-  onSubmit
+  onSubmit,
+  isSubmitting = false
 }) => {
   return (
     <Dialog open={userDialogOpen} onOpenChange={setUserDialogOpen}>
@@ -99,7 +101,9 @@ const UserRegistrationDialog: React.FC<UserRegistrationDialogProps> = ({
               )}
             />
             <DialogFooter>
-              <Button type="submit">Continuar para pagamento</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Salvando...' : 'Continuar para pagamento'}
+              </Button>
             </DialogFooter>
           </form>
         </Form>

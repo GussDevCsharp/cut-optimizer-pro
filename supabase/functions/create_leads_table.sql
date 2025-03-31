@@ -63,6 +63,14 @@ begin
           and profiles.is_admin = true
         )
       );
+      
+    -- Add policy for anon updates by ID
+    create policy "Leads can be updated by anyone with ID"
+      on public.leads
+      for update
+      to anon
+      using (true)
+      with check (true);
   else
     -- Add any missing columns to the existing table
     if not exists (
@@ -81,6 +89,20 @@ begin
       and column_name = 'source'
     ) then
       alter table public.leads add column source text;
+    end if;
+    
+    -- Check if update policy for anon users exists, if not add it
+    if not exists (
+      select from pg_policies
+      where tablename = 'leads'
+      and policyname = 'Leads can be updated by anyone with ID'
+    ) then
+      create policy "Leads can be updated by anyone with ID"
+        on public.leads
+        for update
+        to anon
+        using (true)
+        with check (true);
     end if;
   end if;
 end;

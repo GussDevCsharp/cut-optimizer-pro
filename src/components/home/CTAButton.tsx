@@ -37,7 +37,8 @@ const CTAButton: React.FC<CTAButtonProps> = ({
     userCredentials,
     handlePaymentComplete,
     form,
-    onSubmit
+    onSubmit,
+    isSubmitting
   } = CTAButtonLogic({ 
     productId, 
     showCheckout 
@@ -59,6 +60,7 @@ const CTAButton: React.FC<CTAButtonProps> = ({
         setUserDialogOpen={setUserDialogOpen}
         form={form}
         onSubmit={onSubmit}
+        isSubmitting={isSubmitting}
       />
       
       {userCredentials && (

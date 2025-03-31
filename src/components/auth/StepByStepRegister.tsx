@@ -37,6 +37,7 @@ export default function StepByStepRegister() {
   const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [leadId, setLeadId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
 
@@ -53,6 +54,12 @@ export default function StepByStepRegister() {
 
   const saveLeadToDatabase = async (data: UserFormValues, planId: string) => {
     try {
+      console.log('Saving lead to database:', { 
+        name: data.name, 
+        email: data.email, 
+        planId 
+      });
+      
       // Save lead to database
       const { data: leadData, error } = await supabase
         .from('leads')
@@ -67,7 +74,10 @@ export default function StepByStepRegister() {
         .select()
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error saving lead:', error);
+        throw error;
+      }
       
       console.log('Lead saved successfully:', leadData);
       toast.success('Dados salvos com sucesso!');
@@ -85,14 +95,23 @@ export default function StepByStepRegister() {
       toast.error('Selecione um plano para continuar');
       return;
     }
-
-    // Salvar como lead no banco de dados
-    const id = await saveLeadToDatabase(data, selectedPlan.id);
     
-    if (id) {
-      setLeadId(id);
-      setCurrentStep('checkout');
-      setCheckoutOpen(true);
+    setIsSubmitting(true);
+    
+    try {
+      // Salvar como lead no banco de dados
+      const id = await saveLeadToDatabase(data, selectedPlan.id);
+      
+      if (id) {
+        setLeadId(id);
+        setCurrentStep('checkout');
+        setCheckoutOpen(true);
+      }
+    } catch (error) {
+      console.error('Error saving lead:', error);
+      toast.error('Erro ao salvar dados. Tente novamente.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -107,22 +126,35 @@ export default function StepByStepRegister() {
       try {
         const formData = form.getValues();
         
+        console.log('Updating lead status:', leadId);
         // Update lead status
-        await supabase
+        const { error: updateError } = await supabase
           .from('leads')
-          .update({ status: 'converted', payment_id: paymentId })
+          .update({ 
+            status: 'converted', 
+            payment_id: paymentId,
+            updated_at: new Date().toISOString()
+          })
           .eq('id', leadId);
           
+        if (updateError) {
+          console.error('Error updating lead status:', updateError);
+          throw updateError;
+        }
+        
         console.log("Registering user after payment approval");
         await register(formData.name, formData.email, formData.password);
         
-        // Create profile for the user with address
+        // Get the newly registered user
         const { data: userData } = await supabase.auth.getUser();
+        
         if (userData.user) {
+          // Update profile with address
           const { error: profileError } = await supabase
             .from('profiles')
             .update({
-              address: formData.address
+              address: formData.address,
+              updated_at: new Date().toISOString()
             })
             .eq('id', userData.user.id);
             
@@ -130,8 +162,9 @@ export default function StepByStepRegister() {
             console.error("Error updating profile address:", profileError);
           }
           
+          console.log('Inserting transaction record');
           // Insert transaction record
-          await supabase
+          const { error: transactionError } = await supabase
             .from('transactions')
             .insert({
               user_id: userData.user.id,
@@ -143,6 +176,10 @@ export default function StepByStepRegister() {
               amount: selectedPlan?.price || 0,
               created_at: new Date().toISOString()
             });
+            
+          if (transactionError) {
+            console.error('Error inserting transaction:', transactionError);
+          }
         }
         
         toast.success("Cadastro concluído com sucesso!", {
@@ -159,6 +196,10 @@ export default function StepByStepRegister() {
           description: error.message || "Por favor, tente novamente."
         });
       }
+    } else if (status === 'rejected' || status === 'error') {
+      toast.error("Falha no pagamento", {
+        description: "Houve um problema com seu pagamento. Por favor, tente novamente."
+      });
     }
   };
 
@@ -186,10 +227,10 @@ export default function StepByStepRegister() {
               <Button 
                 type="submit" 
                 size="lg" 
-                disabled={!selectedPlan}
+                disabled={!selectedPlan || isSubmitting}
                 className="w-full md:w-auto"
               >
-                Continuar para pagamento
+                {isSubmitting ? 'Salvando...' : 'Continuar para pagamento'}
               </Button>
             </div>
           )}
