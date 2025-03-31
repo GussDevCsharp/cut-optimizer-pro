@@ -4,6 +4,7 @@ import { CheckoutContainerProps } from './types';
 import { createCheckoutPreference, initCheckoutBricks } from "@/services/mercadoPagoService";
 import { useToast } from "@/hooks/use-toast";
 import CheckoutLoading from '../checkout-button/CheckoutLoading';
+import { PaymentStatus } from '../CheckoutModal';
 
 const CheckoutContainer: React.FC<CheckoutContainerProps> = ({ 
   plan, 
@@ -41,7 +42,7 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
         const success = await initCheckoutBricks(
           'user-registration-checkout-container', 
           preference.preferenceId,
-          onPaymentComplete
+          onPaymentComplete as (status: PaymentStatus, paymentId?: string) => void
         );
         
         if (success) {

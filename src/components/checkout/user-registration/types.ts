@@ -1,5 +1,6 @@
 
 import { SubscriptionPlan } from "@/integrations/supabase/schema";
+import { PaymentStatus } from "../CheckoutModal";
 
 // User credentials for registration
 export interface UserCredentials {
@@ -30,10 +31,17 @@ export interface RegistrationSuccessProps {
 
 // Props for the CheckoutContainer component
 export interface CheckoutContainerProps {
-  isOpen: boolean;
-  onOpenChange: (isOpen: boolean) => void;
-  title: string;
-  children: React.ReactNode;
+  plan: {
+    id: string;
+    name: string;
+    description: string;
+    price: number;
+  } | null;
+  customerInfo?: {
+    name: string;
+    email: string;
+  };
+  onPaymentComplete?: (status: PaymentStatus, paymentId?: string) => void;
 }
 
 // Typed user data for user management

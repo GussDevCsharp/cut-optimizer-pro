@@ -1,182 +1,145 @@
-import { useState, useEffect } from "react";
-import { registerUser } from "@/services/authService";
-import { createUserSubscription } from "@/services/subscriptionService";
-import RegistrationSuccess from "./RegistrationSuccess";
-import CheckoutContainer from "./CheckoutContainer";
-import { UserCredentials, UserRegistrationCheckoutProps } from "./types";
 
-const UserRegistrationCheckout = ({
+import React, { useState, useEffect } from 'react';
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { UserRegistrationCheckoutProps } from './types';
+import { fetchSubscriptionPlan, createUserSubscription } from "@/services/subscriptionService";
+import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { SubscriptionPlan } from '@/integrations/supabase/schema';
+import PlanDisplay from './PlanDisplay';
+import CheckoutContainer from './CheckoutContainer';
+import RegistrationSuccess from './RegistrationSuccess';
+
+const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
   isOpen,
   onOpenChange,
   planId,
   userCredentials,
   onPaymentComplete
-}: UserRegistrationCheckoutProps) => {
-  const [paymentStatus, setPaymentStatus] = useState<"idle" | "processing" | "completed" | "failed">("idle");
-  const [registrationStatus, setRegistrationStatus] = useState<"idle" | "processing" | "completed" | "failed">("idle");
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [paymentId, setPaymentId] = useState<string | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
+}) => {
+  const [step, setStep] = useState<'loading' | 'checkout' | 'success'>('loading');
+  const [plan, setPlan] = useState<SubscriptionPlan | null>(null);
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState<string | null>(null);
+  const { register } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
-    if (isOpen) {
-      setPaymentStatus("idle");
-      setRegistrationStatus("idle");
-      setErrorMessage(null);
-      setPaymentId(null);
-      setUserId(null);
+    if (isOpen && planId) {
+      // Reset state when the dialog opens
+      setStep('loading');
+      setPaymentStatus(null);
+      loadPlanDetails();
     }
-  }, [isOpen]);
+  }, [isOpen, planId]);
 
-  const handleRegisterUser = async (credentials: UserCredentials) => {
+  const loadPlanDetails = async () => {
     try {
-      setRegistrationStatus("processing");
-      
-      const { name, email, password } = credentials;
-      const result = await registerUser(name, email, password);
-      
-      if (result && result.user && result.user.id) {
-        setUserId(result.user.id);
-        setRegistrationStatus("completed");
-        return result.user.id;
-      } else {
-        setRegistrationStatus("failed");
-        setErrorMessage("Falha ao criar conta de usuário");
-        return null;
-      }
-    } catch (error: any) {
-      setRegistrationStatus("failed");
-      
-      const message = error && error.message 
-        ? error.message 
-        : "Erro ao registrar usuário";
-        
-      setErrorMessage(message);
-      return null;
+      const planData = await fetchSubscriptionPlan(planId);
+      setPlan(planData);
+      setStep('checkout');
+    } catch (error) {
+      console.error("Failed to load plan details:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao carregar plano",
+        description: "Não foi possível carregar os detalhes do plano. Por favor, tente novamente."
+      });
+      onOpenChange(false);
     }
   };
 
-  const handlePaymentComplete = async (status: string, payment_id?: string) => {
-    try {
-      let userIdentifier = userId;
-      if (!userIdentifier) {
-        userIdentifier = await handleRegisterUser(userCredentials);
-        if (!userIdentifier) {
-          throw new Error("Falha ao criar conta de usuário");
-        }
-      }
-
-      if (payment_id) {
-        setPaymentId(payment_id);
-      }
-
-      if (status === "approved") {
-        setPaymentStatus("completed");
+  const handlePaymentComplete = async (status: string, paymentId?: string) => {
+    setPaymentStatus(status);
+    
+    if (status === 'approved' || status === 'pending') {
+      try {
+        setIsRegistering(true);
         
-        await createUserSubscription(userIdentifier, planId, payment_id || "");
+        // Register the user
+        const { user, error } = await register(
+          userCredentials.name,
+          userCredentials.email,
+          userCredentials.password
+        );
         
-        if (onPaymentComplete) {
-          onPaymentComplete(status, payment_id);
+        if (error) {
+          throw new Error(error.message);
         }
-      } else if (status === "rejected") {
-        setPaymentStatus("failed");
-        setErrorMessage("Pagamento rejeitado. Por favor, tente novamente.");
         
-        if (onPaymentComplete) {
-          onPaymentComplete(status, payment_id);
+        if (user) {
+          // Create the subscription
+          await createUserSubscription({
+            userId: user.id,
+            planId: planId,
+            paymentId: paymentId || `manual_${Date.now()}`,
+            status: status
+          });
+          
+          setStep('success');
         }
-      } else {
-        setPaymentStatus("processing");
-        
-        if (onPaymentComplete) {
-          onPaymentComplete(status, payment_id);
-        }
+      } catch (error) {
+        console.error("Registration or subscription creation failed:", error);
+        toast({
+          variant: "destructive",
+          title: "Erro no registro",
+          description: "Ocorreu um erro ao registrar sua conta. Por favor, tente novamente."
+        });
+      } finally {
+        setIsRegistering(false);
       }
-    } catch (error: any) {
-      setPaymentStatus("failed");
-      setErrorMessage(error?.message || "Erro no processamento do pagamento");
-      
-      if (onPaymentComplete) {
-        onPaymentComplete("error");
-      }
+    }
+    
+    // Call the parent callback if provided
+    if (onPaymentComplete) {
+      onPaymentComplete(status, paymentId);
     }
   };
 
-  if (registrationStatus === "failed") {
-    return (
-      <CheckoutContainer 
-        isOpen={isOpen} 
-        onOpenChange={onOpenChange}
-        title="Erro no registro"
-      >
-        <div className="p-6 text-center">
-          <div className="mb-4 text-red-500 font-semibold">
-            Ocorreu um erro ao registrar sua conta
-          </div>
-          <div className="text-sm text-muted-foreground mb-4">
-            {errorMessage || "Por favor, tente novamente mais tarde."}
-          </div>
-          <button 
-            className="px-4 py-2 bg-primary text-white rounded-md"
-            onClick={() => onOpenChange(false)}
-          >
-            Fechar
-          </button>
-        </div>
-      </CheckoutContainer>
-    );
-  }
-
-  if (paymentStatus === "completed") {
-    return (
-      <CheckoutContainer
-        isOpen={isOpen} 
-        onOpenChange={onOpenChange}
-        title="Pagamento concluído"
-      >
-        <RegistrationSuccess onClose={() => onOpenChange(false)} />
-      </CheckoutContainer>
-    );
-  }
+  const handleCloseDialog = (open: boolean) => {
+    // Only allow closing when not in the middle of registration
+    if (!isRegistering) {
+      onOpenChange(open);
+    }
+  };
 
   return (
-    <CheckoutContainer 
-      isOpen={isOpen} 
-      onOpenChange={onOpenChange}
-      title="Complete sua compra"
-    >
-      <div className="p-6">
-        {registrationStatus === "processing" && (
-          <div className="mb-4 text-sm text-amber-600">
-            Criando sua conta...
+    <Dialog open={isOpen} onOpenChange={handleCloseDialog}>
+      <DialogContent className="sm:max-w-[600px]">
+        {step === 'loading' && (
+          <div className="flex justify-center items-center py-8">
+            <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full"></div>
           </div>
         )}
         
-        <div className="space-y-6">
-          <button 
-            className="w-full px-4 py-2 bg-primary text-white rounded-md"
-            onClick={() => handlePaymentComplete("approved", "mock-payment-" + Date.now())}
-            disabled={paymentStatus === "processing"}
-          >
-            {paymentStatus === "processing" ? "Processando..." : "Simular pagamento bem-sucedido"}
-          </button>
-          
-          <button 
-            className="w-full px-4 py-2 bg-red-500 text-white rounded-md"
-            onClick={() => handlePaymentComplete("rejected")}
-            disabled={paymentStatus === "processing"}
-          >
-            Simular pagamento rejeitado
-          </button>
-        </div>
-        
-        {errorMessage && (
-          <div className="mt-4 text-sm text-red-500">
-            {errorMessage}
+        {step === 'checkout' && plan && (
+          <div className="space-y-6">
+            <PlanDisplay plan={plan} />
+            
+            <CheckoutContainer
+              plan={{
+                id: plan.id,
+                name: plan.name,
+                description: plan.description,
+                price: plan.price
+              }}
+              customerInfo={{
+                name: userCredentials.name,
+                email: userCredentials.email
+              }}
+              onPaymentComplete={handlePaymentComplete}
+            />
           </div>
         )}
-      </div>
-    </CheckoutContainer>
+        
+        {step === 'success' && (
+          <RegistrationSuccess 
+            onClose={() => onOpenChange(false)}
+            isRegistering={isRegistering}
+          />
+        )}
+      </DialogContent>
+    </Dialog>
   );
 };
 

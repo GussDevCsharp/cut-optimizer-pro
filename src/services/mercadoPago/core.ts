@@ -1,6 +1,6 @@
 
 import { toast } from '@/hooks/use-toast';
-import { ProductInfo, CheckoutBricksOptions } from './types';
+import { ProductInfo, CheckoutBricksOptions, CustomerData } from './types';
 import { PaymentStatus } from '@/components/checkout/CheckoutModal';
 
 // This would be your public key from Mercado Pago
@@ -173,7 +173,7 @@ export const createPaymentPreference = async (
 // Create a preference to use with Checkout Bricks
 export const createCheckoutPreference = async (
   product: ProductInfo,
-  customerData?: { name: string; email: string }
+  customerData?: CustomerData
 ): Promise<{ preferenceId: string }> => {
   // In a real implementation, you would call your backend API
   // For this example, we are simulating a successful response
