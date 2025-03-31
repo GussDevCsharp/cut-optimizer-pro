@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { UserRegistrationCheckoutProps } from './types';
-import { fetchSubscriptionPlans, createUserSubscription } from "@/services/subscriptionService";
+import { fetchSubscriptionPlans, createUserSubscriptionWithPayment } from "@/services/subscriptionService";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { SubscriptionPlan } from '@/integrations/supabase/schema';
@@ -76,7 +76,7 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
         
         if (user) {
           // Create the subscription
-          await createUserSubscription({
+          await createUserSubscriptionWithPayment({
             userId: user.id,
             planId: planId,
             paymentId: paymentId || `manual_${Date.now()}`,
@@ -132,9 +132,7 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
               }}
               customerInfo={{
                 name: userCredentials.name,
-                email: userCredentials.email,
-                identificationType: "CPF",
-                identificationNumber: "00000000000"
+                email: userCredentials.email
               }}
               onPaymentComplete={handlePaymentComplete}
             />

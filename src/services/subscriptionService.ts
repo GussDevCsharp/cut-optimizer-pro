@@ -138,3 +138,49 @@ export const createUserSubscription = async (
     return false;
   }
 };
+
+/**
+ * Creates a user subscription with payment info
+ */
+export const createUserSubscriptionWithPayment = async ({
+  userId,
+  planId,
+  paymentId,
+  status
+}: {
+  userId: string;
+  planId: string;
+  paymentId: string;
+  status: string;
+}) => {
+  try {
+    // First create the subscription
+    const subscriptionCreated = await createUserSubscription(userId, planId);
+    
+    if (!subscriptionCreated) {
+      throw new Error("Failed to create subscription");
+    }
+    
+    // Get plan details for payment recording
+    const plan = await fetchSubscriptionPlanById(planId);
+    
+    if (!plan) {
+      throw new Error("Plan not found");
+    }
+    
+    // Record the payment
+    await recordPayment(
+      userId,
+      planId,
+      plan.price,
+      'card', // Assuming card payment, could be made dynamic
+      status === 'approved' ? 'approved' : 'pending',
+      paymentId
+    );
+    
+    return true;
+  } catch (error: any) {
+    console.error("Error creating subscription with payment:", error);
+    return false;
+  }
+};

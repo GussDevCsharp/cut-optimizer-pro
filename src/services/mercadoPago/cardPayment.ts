@@ -66,13 +66,13 @@ export const getInstallmentOptions = (amount: number, maxInstallments = 12): Ins
   return options;
 };
 
-// Format card number
+// Format card number with spaces after every 4 digits
 export const formatCardNumber = (value: string): string => {
   const numbers = value.replace(/\D/g, '');
   return numbers.replace(/(\d{4})(\d{4})?(\d{4})?(\d{4})?/, '$1 $2 $3 $4').trim();
 };
 
-// Format currency
+// Format currency to Brazilian Real format
 export const formatCurrency = (value: number): string => {
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
