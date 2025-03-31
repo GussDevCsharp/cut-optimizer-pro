@@ -109,43 +109,48 @@ const ViewportHeightFix = () => {
 // Create a new QueryClient
 const queryClient = new QueryClient();
 
-// Component to render application routes with proper tooltip context
-const AppRoutes = () => {
+// Component to render application routes within the app context
+const AppContent = () => {
   return (
-    <Routes>
-      <Route path="/home" element={<Home />} />
-      <Route path="/" element={<Home />} />
-      
-      <Route path="/login" element={<Login />} />
-      <Route path="/cadastro" element={<Register />} />
-      
-      <Route 
-        path="/dashboard" 
-        element={
-          <ProtectedRoute>
-            <DashboardWithTabs />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/app" 
-        element={
-          <ProtectedRoute>
-            <Index />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/testing" 
-        element={
-          <AdminRoute>
-            <Testing />
-          </AdminRoute>
-        } 
-      />
-      
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <>
+      <ViewportHeightFix />
+      <Routes>
+        <Route path="/home" element={<Home />} />
+        <Route path="/" element={<Home />} />
+        
+        <Route path="/login" element={<Login />} />
+        <Route path="/cadastro" element={<Register />} />
+        
+        <Route 
+          path="/dashboard" 
+          element={
+            <ProtectedRoute>
+              <DashboardWithTabs />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/app" 
+          element={
+            <ProtectedRoute>
+              <Index />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/testing" 
+          element={
+            <AdminRoute>
+              <Testing />
+            </AdminRoute>
+          } 
+        />
+        
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      <Toaster />
+      <Sonner />
+    </>
   );
 };
 
@@ -154,16 +159,13 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light">
-        <AuthProvider>
-          <BrowserRouter>
-            <ViewportHeightFix />
-            <TooltipProvider>
-              <AppRoutes />
-              <Toaster />
-              <Sonner />
-            </TooltipProvider>
-          </BrowserRouter>
-        </AuthProvider>
+        <TooltipProvider>
+          <AuthProvider>
+            <BrowserRouter>
+              <AppContent />
+            </BrowserRouter>
+          </AuthProvider>
+        </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );
