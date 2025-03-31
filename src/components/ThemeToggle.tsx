@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { 
   Tooltip, 
   TooltipContent, 
-  TooltipProvider, 
   TooltipTrigger 
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
@@ -95,22 +94,20 @@ export function ThemeToggle({
     return toggleButton;
   }
   
-  // Make sure the TooltipProvider is properly wrapped around Tooltip component
+  // Use the existing TooltipProvider from higher up in the component tree
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          {toggleButton}
-        </TooltipTrigger>
-        <TooltipContent 
-          side="bottom" 
-          align="center"
-          className="font-medium transition-all duration-300 animate-in fade-in-50 data-[state=closed]:animate-out data-[state=closed]:fade-out-50"
-        >
-          <p>Mudar para tema {isDark ? 'claro' : 'escuro'}</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        {toggleButton}
+      </TooltipTrigger>
+      <TooltipContent 
+        side="bottom" 
+        align="center"
+        className="font-medium transition-all duration-300 animate-in fade-in-50 data-[state=closed]:animate-out data-[state=closed]:fade-out-50"
+      >
+        <p>Mudar para tema {isDark ? 'claro' : 'escuro'}</p>
+      </TooltipContent>
+    </Tooltip>
   );
 }
 

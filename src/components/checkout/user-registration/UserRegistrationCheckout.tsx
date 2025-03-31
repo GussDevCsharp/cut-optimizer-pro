@@ -55,20 +55,21 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
       setIsRegistering(true);
       try {
         // Register the user with the provided credentials
-        const { user, error } = await register(
+        const result = await register(
           userCredentials.name, 
           userCredentials.email, 
           userCredentials.password
         );
         
-        if (user && user.id) {
+        // Fix TS error by properly checking the result
+        if (result && 'user' in result && result.user && result.user.id) {
           // Create user subscription
-          await createUserSubscription(user.id, plan.id);
+          await createUserSubscription(result.user.id, plan.id);
           
           // Record payment
           if (paymentId) {
             await recordPayment(
-              user.id,
+              result.user.id,
               plan.id,
               plan.price,
               'card', // Default to card, could be enhanced to track actual method
@@ -81,8 +82,8 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
             title: "Conta criada com sucesso!",
             description: "Seu acesso à plataforma foi ativado.",
           });
-        } else if (error) {
-          throw new Error(error.message);
+        } else if (result && 'error' in result && result.error) {
+          throw new Error(result.error.message);
         }
       } catch (error: any) {
         toast({

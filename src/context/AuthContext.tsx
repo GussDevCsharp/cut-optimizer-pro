@@ -4,9 +4,6 @@ import { AuthContextType } from "@/types/auth";
 import { useAuthState } from "@/hooks/useAuthState";
 import { loginWithEmail, registerUser, resetPasswordEmail, logout } from "@/services/authService";
 
-// Use the toast from sonner directly to avoid circular dependencies
-// import { toast } from "@/hooks/use-toast";
-
 const AuthContext = createContext<AuthContextType | null>(null);
 
 // Master admin email - centralized constant
@@ -29,11 +26,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   } = useAuthState();
 
   const login = async (email: string, password: string) => {
-    await loginWithEmail(email, password);
+    return await loginWithEmail(email, password);
   };
 
   const register = async (name: string, email: string, password: string) => {
-    await registerUser(name, email, password);
+    return await registerUser(name, email, password);
   };
 
   const resetPassword = async (email: string) => {
