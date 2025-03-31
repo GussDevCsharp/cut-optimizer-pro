@@ -60,7 +60,7 @@ export default function StepByStepRegister() {
         planId 
       });
       
-      // Save lead to database
+      // Save lead to database with more detailed error handling
       const { data: leadData, error } = await supabase
         .from('leads')
         .insert({
@@ -68,6 +68,7 @@ export default function StepByStepRegister() {
           email: data.email,
           address: data.address,
           created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(), // Add updated_at timestamp
           status: 'pending',
           source: `plan_${planId}`
         })
@@ -85,7 +86,10 @@ export default function StepByStepRegister() {
       return leadData.id;
     } catch (error: any) {
       console.error('Error saving lead:', error);
-      toast.error('Erro ao salvar dados. Tente novamente.');
+      // Show detailed error message
+      toast.error('Erro ao salvar dados. Tente novamente.', {
+        description: error.message || 'Houve um problema ao salvar seus dados.'
+      });
       return null;
     }
   };
@@ -106,10 +110,15 @@ export default function StepByStepRegister() {
         setLeadId(id);
         setCurrentStep('checkout');
         setCheckoutOpen(true);
+      } else {
+        // If no ID was returned, something went wrong
+        throw new Error('Falha ao registrar seus dados. Por favor, tente novamente.');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving lead:', error);
-      toast.error('Erro ao salvar dados. Tente novamente.');
+      toast.error('Erro ao salvar dados. Tente novamente.', {
+        description: error.message || 'Houve um problema ao salvar seus dados.'
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -230,7 +239,12 @@ export default function StepByStepRegister() {
                 disabled={!selectedPlan || isSubmitting}
                 className="w-full md:w-auto"
               >
-                {isSubmitting ? 'Salvando...' : 'Continuar para pagamento'}
+                {isSubmitting ? (
+                  <>
+                    <span className="animate-spin mr-2">⚙️</span>
+                    Salvando...
+                  </>
+                ) : 'Continuar para pagamento'}
               </Button>
             </div>
           )}

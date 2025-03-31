@@ -33,7 +33,27 @@ begin
     -- Set up Row Level Security
     alter table public.leads enable row level security;
 
-    -- Create policies
+    -- Create policies for anon and authenticated users
+    create policy "Leads can be inserted by anyone"
+      on public.leads
+      for insert
+      to anon, authenticated
+      with check (true);
+      
+    create policy "Leads can be viewed by anyone with ID"
+      on public.leads
+      for select
+      to anon, authenticated
+      using (true);
+      
+    create policy "Leads can be updated by anyone with ID"
+      on public.leads
+      for update
+      to anon, authenticated
+      using (true)
+      with check (true);
+      
+    -- Create admin policies
     create policy "Leads are viewable by admins"
       on public.leads
       for select
@@ -45,12 +65,6 @@ begin
           and profiles.is_admin = true
         )
       );
-
-    create policy "Leads can be inserted by anyone"
-      on public.leads
-      for insert
-      to anon, authenticated
-      with check (true);
 
     create policy "Leads can be updated by admins"
       on public.leads
@@ -64,13 +78,6 @@ begin
         )
       );
       
-    -- Add policy for anon updates by ID
-    create policy "Leads can be updated by anyone with ID"
-      on public.leads
-      for update
-      to anon
-      using (true)
-      with check (true);
   else
     -- Add any missing columns to the existing table
     if not exists (
@@ -91,7 +98,19 @@ begin
       alter table public.leads add column source text;
     end if;
     
-    -- Check if update policy for anon users exists, if not add it
+    -- Check if policies for anonymous users exist, if not add them
+    if not exists (
+      select from pg_policies
+      where tablename = 'leads'
+      and policyname = 'Leads can be viewed by anyone with ID'
+    ) then
+      create policy "Leads can be viewed by anyone with ID"
+        on public.leads
+        for select
+        to anon, authenticated
+        using (true);
+    end if;
+    
     if not exists (
       select from pg_policies
       where tablename = 'leads'
@@ -100,7 +119,7 @@ begin
       create policy "Leads can be updated by anyone with ID"
         on public.leads
         for update
-        to anon
+        to anon, authenticated
         using (true)
         with check (true);
     end if;

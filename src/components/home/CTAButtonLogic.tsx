@@ -58,7 +58,7 @@ const CTAButtonLogic = ({ productId, showCheckout }: CTAButtonLogicProps) => {
         email: data.email 
       });
       
-      // Save lead to database
+      // Save lead to database with enhanced error handling
       const { data: leadData, error } = await supabase
         .from('leads')
         .insert({
@@ -66,7 +66,7 @@ const CTAButtonLogic = ({ productId, showCheckout }: CTAButtonLogicProps) => {
           email: data.email,
           address: data.address,
           created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(), // Add updated_at timestamp
           status: 'pending'
         })
         .select()
@@ -83,7 +83,9 @@ const CTAButtonLogic = ({ productId, showCheckout }: CTAButtonLogicProps) => {
       return leadData.id;
     } catch (error: any) {
       console.error('Error saving lead:', error);
-      toast.error('Erro ao salvar dados. Tente novamente.');
+      toast.error('Erro ao salvar dados. Tente novamente.', {
+        description: error.message || 'Houve um problema ao salvar seus dados.'
+      });
       return null;
     }
   };
