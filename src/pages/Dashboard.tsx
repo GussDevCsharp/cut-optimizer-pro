@@ -1,11 +1,10 @@
-
 // Import necessary components and hooks
 import React, { useEffect, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/context/AuthContext';
 import Layout from '@/components/Layout';
-import ProjectsTabContent from '@/components/dashboard/ProjectsTabContent';
-import MaterialsTabContent from '@/components/dashboard/MaterialsTabContent';
+import { ProjectsTabContent } from '@/components/dashboard/ProjectsTabContent';
+import { MaterialsTabContent } from '@/components/dashboard/MaterialsTabContent';
 import { SettingsContainer } from '@/components/settings/SettingsContainer';
 import { useNavigate } from 'react-router-dom';
 
@@ -90,7 +89,7 @@ const Dashboard = () => {
 
         {/* Settings Tab */}
         <TabsContent value="settings" className="space-y-6">
-          <SettingsContainer isAdmin={isAdmin} isMasterAdmin={isMasterAdmin} />
+          <SettingsContainer />
         </TabsContent>
       </Tabs>
     </Layout>

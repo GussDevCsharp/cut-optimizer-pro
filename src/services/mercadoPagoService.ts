@@ -1,6 +1,6 @@
 
 // Re-export all services from the mercadoPago folder
-
+// Import and re-export with explicit naming to avoid conflicts
 export {
   initMercadoPago,
   getMercadoPagoInstance,

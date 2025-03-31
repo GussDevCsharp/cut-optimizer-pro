@@ -1,5 +1,5 @@
 
-// Re-export everything from the individual modules
+// Re-export from the individual modules in a way that avoids conflicts
 export * from './pixPayment';
 export * from './boletoPayment';
 export * from './types';
