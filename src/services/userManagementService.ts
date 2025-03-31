@@ -1,124 +1,127 @@
 
-import { MASTER_ADMIN_EMAIL } from "@/context/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { UserData } from "@/components/checkout/user-registration/types";
+import { supabase } from "../integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+import { User } from "@supabase/supabase-js";
 
 /**
- * Verifica se usuário é admin pelo email
+ * Get all users from the database
  */
-export const isUserAdmin = (email: string): boolean => {
-  // Improved admin check - accepting multiple admin emails
-  const adminEmails = [
-    'admin@melhorcdorte.com.br',
-    'admin@exemplo.com',
-    MASTER_ADMIN_EMAIL // Using the centralized constant
-  ];
-  
-  return adminEmails.includes(email);
-};
-
-/**
- * Verifica se o usuário tem acesso total aos dados
- */
-export const hasFullDataAccess = (email: string): boolean => {
-  return email === MASTER_ADMIN_EMAIL;
-};
-
-/**
- * Obtém todos os usuários com informações de assinatura
- */
-export const getUsersWithSubscriptionInfo = async (): Promise<UserData[]> => {
+export const getAllUsers = async () => {
   try {
-    const { data, error } = await supabase
-      .from('users')
-      .select(`
-        id,
-        email,
-        name,
-        created_at,
-        user_subscriptions (
-          id,
-          plan_id,
-          status,
-          start_date,
-          expiration_date,
-          subscription_plans (
-            name,
-            price
-          )
-        )
-      `)
-      .order('created_at', { ascending: false });
-      
-    if (error) throw error;
+    // First get all auth users
+    const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
     
-    // Map database results to UserData format
-    return (data || []).map(user => ({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      created_at: user.created_at,
-      isActive: true, // Users with subscriptions are considered active
-      planType: user.user_subscriptions?.[0]?.subscription_plans?.name || 'Básico',
-      expirationDate: user.user_subscriptions?.[0]?.expiration_date
-    }));
+    if (authError) {
+      throw authError;
+    }
+    
+    // Get user profiles for additional information
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('*');
+    
+    if (profilesError) {
+      console.error("Error fetching profiles:", profilesError);
+    }
+    
+    // Get subscriptions information
+    const { data: subscriptions, error: subsError } = await supabase
+      .from('user_subscriptions')
+      .select('*')
+      .eq('status', 'active');
+    
+    if (subsError) {
+      console.error("Error fetching subscriptions:", subsError);
+    }
+    
+    // Merge the data
+    const users = authUsers?.users.map(user => {
+      const profile = profiles?.find(p => p.id === user.id);
+      const subscription = subscriptions?.find(s => s.user_id === user.id);
+      
+      return {
+        ...user,
+        profile,
+        subscription
+      };
+    });
+    
+    return users || [];
   } catch (error) {
-    console.error("Error fetching users with subscription info:", error);
+    console.error("Error fetching users:", error);
+    toast({
+      variant: "destructive",
+      title: "Erro ao obter usuários",
+      description: "Não foi possível listar os usuários do sistema."
+    });
     return [];
   }
 };
 
 /**
- * Obtém usuários sem assinatura
+ * Get a user's subscription plan
  */
-export const getUsersWithoutSubscription = async (): Promise<UserData[]> => {
+export const getUserSubscriptionPlan = async (userId: string) => {
   try {
-    const { data, error } = await supabase
-      .from('users')
-      .select(`
-        id,
-        email,
-        name,
-        created_at
-      `)
-      .not('id', 'in', supabase
-        .from('user_subscriptions')
-        .select('user_id')
-      )
-      .order('created_at', { ascending: false });
-      
-    if (error) throw error;
+    // Get active subscription for user
+    const { data: subscription, error: subError } = await supabase
+      .from('user_subscriptions')
+      .select('*, plan_id')
+      .eq('user_id', userId)
+      .eq('status', 'active')
+      .maybeSingle();
     
-    // Map database results to UserData format
-    return (data || []).map(user => ({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      created_at: user.created_at,
-      isActive: false, // Users without subscriptions are considered inactive
-      planType: 'Nenhum',
-    }));
+    if (subError) throw subError;
+    
+    if (!subscription) return null;
+    
+    // Get plan details
+    const { data: plan, error: planError } = await supabase
+      .from('subscription_plans')
+      .select('name, price')
+      .eq('id', subscription.plan_id)
+      .maybeSingle();
+    
+    if (planError) throw planError;
+    
+    if (!plan) return null;
+    
+    return {
+      ...subscription,
+      plan_name: plan.name,
+      plan_price: plan.price
+    };
   } catch (error) {
-    console.error("Error fetching users without subscription:", error);
-    return [];
+    console.error("Error fetching user subscription plan:", error);
+    return null;
   }
 };
 
 /**
- * Obtém todos os usuários com informações de assinatura
+ * Update user admin status
  */
-export const getAllUsers = async (): Promise<UserData[]> => {
+export const updateUserAdminStatus = async (userId: string, isAdmin: boolean) => {
   try {
-    // Get users with active subscriptions
-    const usersWithSubs = await getUsersWithSubscriptionInfo();
+    const { error } = await supabase
+      .from('profiles')
+      .update({ is_admin: isAdmin })
+      .eq('id', userId);
     
-    // Get users without subscriptions
-    const usersWithoutSubs = await getUsersWithoutSubscription();
+    if (error) throw error;
     
-    // Combine both lists
-    return [...usersWithSubs, ...usersWithoutSubs];
+    toast({
+      title: "Atualização bem-sucedida",
+      description: `Usuário ${isAdmin ? 'promovido a administrador' : 'removido como administrador'} com sucesso.`
+    });
+    
+    return true;
   } catch (error) {
-    console.error("Error fetching all users:", error);
-    throw error;
+    console.error("Error updating user admin status:", error);
+    toast({
+      variant: "destructive",
+      title: "Erro ao atualizar status",
+      description: "Não foi possível atualizar o status de administrador do usuário."
+    });
+    return false;
   }
 };

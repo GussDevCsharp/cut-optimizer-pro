@@ -5,7 +5,6 @@ import { SheetProvider, useSheetData } from '../hooks/useSheetData';
 import { useIsMobile } from '../hooks/use-mobile';
 import OfflineIndicator from './OfflineIndicator';
 import TopLoadingBar from './ui/top-loading-bar';
-import { ThemeProvider } from '@/hooks/useTheme';
 
 const LayoutContent = ({ children }: PropsWithChildren) => {
   const isMobile = useIsMobile();
@@ -36,11 +35,9 @@ const LayoutContent = ({ children }: PropsWithChildren) => {
 
 export const Layout = ({ children }: PropsWithChildren) => {
   return (
-    <ThemeProvider>
-      <SheetProvider>
-        <LayoutContent>{children}</LayoutContent>
-      </SheetProvider>
-    </ThemeProvider>
+    <SheetProvider>
+      <LayoutContent>{children}</LayoutContent>
+    </SheetProvider>
   );
 };
 
