@@ -46,16 +46,21 @@ export const useAuthState = () => {
     initializeAuth();
   }, []);
   
-  const handleSessionChange = (session: Session) => {
+  const handleSessionChange = async (session: Session) => {
     const supabaseUser = session.user;
     if (supabaseUser) {
       const authUser = formatSupabaseUser(supabaseUser);
       setUser(authUser);
       setIsAuthenticated(true);
       
-      // Verifica se o usuário é admin
-      const userIsAdmin = isUserAdmin(authUser.email);
-      setIsAdmin(userIsAdmin);
+      // Check if user is admin and update state
+      const checkAdminStatus = async () => {
+        const userIsAdmin = await isUserAdmin(authUser.email);
+        setIsAdmin(userIsAdmin);
+      };
+      
+      // Call the function instead of directly assigning the Promise
+      checkAdminStatus();
     }
   };
 

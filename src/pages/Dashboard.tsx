@@ -1,3 +1,4 @@
+
 // Import necessary components and hooks
 import React, { useEffect, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -79,12 +80,18 @@ const Dashboard = () => {
 
         {/* Projects Tab */}
         <TabsContent value="projects" className="space-y-6">
-          <ProjectsTabContent onNewProject={handleNewProject} />
+          <ProjectsTabContent 
+            userId={user?.id} 
+            isActiveTab={activeTab === 'projects'}
+          />
         </TabsContent>
 
         {/* Materials Tab */}
         <TabsContent value="materials" className="space-y-6">
-          <MaterialsTabContent />
+          <MaterialsTabContent 
+            userId={user?.id}
+            isActiveTab={activeTab === 'materials'} 
+          />
         </TabsContent>
 
         {/* Settings Tab */}
