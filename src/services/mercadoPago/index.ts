@@ -14,7 +14,8 @@ export {
 export { 
   processCardPayment, 
   getInstallmentOptions,
-  formatCardNumber
+  formatCardNumber,
+  formatCurrency
 } from './cardPayment';
 
 // Pix payment functions
@@ -24,7 +25,7 @@ export { generatePixPayment } from './pixPayment';
 export { generateBoletoPayment } from './boletoPayment';
 
 // Utility functions
-export { formatCPF, validateCPF, formatCurrency } from './utils';
+export { formatCPF, validateCPF } from './utils';
 
 // Types
 export type { 

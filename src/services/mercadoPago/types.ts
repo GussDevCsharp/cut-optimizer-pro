@@ -1,3 +1,4 @@
+
 import { PaymentStatus } from '@/components/checkout/CheckoutModal';
 
 // Re-export the types from the original file

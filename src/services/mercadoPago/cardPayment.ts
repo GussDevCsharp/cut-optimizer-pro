@@ -1,5 +1,5 @@
 
-import { CardData, CustomerData, ProductInfo } from './types';
+import { CardData, CustomerData, ProductInfo, InstallmentOption } from './types';
 import { PaymentStatus } from '@/components/checkout/CheckoutModal';
 
 // Process card payment
@@ -41,7 +41,7 @@ export const processCardPayment = async (
 };
 
 // Get installment options
-export const getInstallmentOptions = (amount: number, maxInstallments = 12) => {
+export const getInstallmentOptions = (amount: number, maxInstallments = 12): InstallmentOption[] => {
   const options = [];
   
   // Calculate installments with interest
