@@ -1,26 +1,10 @@
 
 import { useState } from 'react';
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from 'react-router-dom';
 import { PaymentStatus } from '../checkout/CheckoutModal';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-
-// Schema for validating user registration data
-const userSchema = z.object({
-  name: z.string().min(2, { message: "Nome deve ter pelo menos 2 caracteres" }),
-  email: z.string().email({ message: "Email inválido" }),
-  address: z.string().min(5, { message: "Endereço deve ter pelo menos 5 caracteres" }),
-  password: z.string().min(6, { message: "Senha deve ter pelo menos 6 caracteres" }),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "As senhas não conferem",
-  path: ["confirmPassword"],
-});
-
-export type UserFormValues = z.infer<typeof userSchema>;
+import { useLeadManagement, UserFormValues } from '@/hooks/useLeadManagement';
+import { useUserRegistration } from '@/hooks/useUserRegistration';
+import { useUserForm } from '@/hooks/useUserForm';
 
 interface CTAButtonLogicProps {
   productId: string;
@@ -40,55 +24,9 @@ const CTAButtonLogic = ({ productId, showCheckout }: CTAButtonLogicProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   
-  const form = useForm<UserFormValues>({
-    resolver: zodResolver(userSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      address: "",
-      password: "",
-      confirmPassword: "",
-    },
-  });
-
-  const saveLeadToDatabase = async (data: UserFormValues) => {
-    try {
-      console.log('Saving lead to database:', { 
-        name: data.name, 
-        email: data.email 
-      });
-      
-      // Save lead to database with enhanced error handling
-      const { data: leadData, error } = await supabase
-        .from('leads')
-        .insert({
-          name: data.name,
-          email: data.email,
-          address: data.address,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(), // Add updated_at timestamp
-          status: 'pending'
-        })
-        .select()
-        .single();
-      
-      if (error) {
-        console.error('Error saving lead:', error);
-        throw error;
-      }
-      
-      console.log('Lead saved successfully:', leadData);
-      toast.success('Dados salvos com sucesso!');
-      
-      return leadData.id;
-    } catch (error: any) {
-      console.error('Error saving lead:', error);
-      toast.error('Erro ao salvar dados. Tente novamente.', {
-        description: error.message || 'Houve um problema ao salvar seus dados.'
-      });
-      return null;
-    }
-  };
+  const form = useUserForm();
+  const { saveLeadToDatabase, updateLeadStatus } = useLeadManagement();
+  const { registerUserAfterPayment } = useUserRegistration();
 
   const onSubmit = async (data: UserFormValues) => {
     setIsSubmitting(true);
@@ -131,83 +69,19 @@ const CTAButtonLogic = ({ productId, showCheckout }: CTAButtonLogicProps) => {
     
     if (status === 'approved' && userCredentials && leadId) {
       try {
-        console.log('Updating lead status:', leadId);
-        // Update lead status
-        const { error: updateError } = await supabase
-          .from('leads')
-          .update({ 
-            status: 'converted', 
-            payment_id: paymentId,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', leadId);
-          
-        if (updateError) {
-          console.error('Error updating lead status:', updateError);
-          throw updateError;
-        }
+        // Update lead status to converted
+        await updateLeadStatus(leadId, 'converted', paymentId);
         
         // Register the user after successful payment
-        const { data, error } = await supabase.auth.signUp({
-          email: userCredentials.email,
-          password: userCredentials.password,
-          options: {
-            data: {
-              name: userCredentials.name,
-            },
-            emailRedirectTo: `${window.location.origin}/login`,
-          },
-        });
-        
-        if (error) throw error;
-        
-        // Create profile for the user
-        if (data.user) {
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .insert({
-              id: data.user.id,
-              full_name: userCredentials.name,
-              email: userCredentials.email,
-              address: userCredentials.address,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            });
-            
-          if (profileError) throw profileError;
-          
-          // Insert transaction record
-          await supabase
-            .from('transactions')
-            .insert({
-              user_id: data.user.id,
-              product_id: productId,
-              payment_id: paymentId || '',
-              payment_method: 'card',
-              payment_status: 'approved',
-              amount: 0, // This would be set properly in real implementation
-              created_at: new Date().toISOString()
-            });
-        }
-        
-        toast.success("Cadastro concluído com sucesso!", {
-          description: "Seu acesso à plataforma foi ativado."
-        });
-        
-        // Redirect to login page after successful registration
-        setTimeout(() => {
-          navigate('/login');
-        }, 3000);
+        await registerUserAfterPayment(userCredentials, productId, paymentId);
       } catch (error: any) {
-        console.error('Error registering user:', error);
-        toast.error("Erro ao cadastrar usuário", {
-          description: error.message || "Por favor, tente novamente."
-        });
+        console.error('Error in payment completion process:', error);
       }
     } else if (status === 'rejected' || status === 'error') {
-      toast.error("Falha no pagamento", {
-        description: "Houve um problema com seu pagamento. Por favor, tente novamente."
-      });
+      // Update lead status to canceled
+      if (leadId) {
+        await updateLeadStatus(leadId, 'canceled');
+      }
     }
   };
 
