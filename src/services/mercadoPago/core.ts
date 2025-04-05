@@ -12,7 +12,7 @@ const PUBLIC_KEY = 'TEST-8f683d0c-1025-48db-8f1e-dae8d7f94a15';
 export const initMercadoPago = async (): Promise<void> => {
   if (window.MercadoPago) return Promise.resolve();
   
-  return new Promise((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     try {
       // Create script element
       const script = document.createElement('script');

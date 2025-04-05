@@ -16,6 +16,10 @@ export interface CardData {
   securityCode: string;
   identificationType: string;
   identificationNumber: string;
+  // Adding missing properties for payment processing
+  issuer?: string;
+  installments?: number;
+  paymentMethodId?: string;
 }
 
 // Product info interface
