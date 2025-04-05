@@ -95,7 +95,7 @@ export const initCheckoutBricks = async (
           onSubmit: ({ selectedPaymentMethod, formData }) => {
             console.log('Payment submitted', selectedPaymentMethod, formData);
             // In a real integration, you would send this data to your backend
-            return new Promise((resolve) => {
+            return new Promise<void>((resolve) => {
               // For demo purposes, we'll just resolve immediately
               // In a real integration, you would post to your backend
               setTimeout(() => {
