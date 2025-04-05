@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
 import UserRegistrationDialog, { UserFormValues } from './UserRegistrationDialog';
+import { UserCredentials } from './types';
 import UserRegistrationCheckout from '../checkout/user-registration';
-import { ProductInfo, UserCredentials } from './types';
 
 interface CTAButtonProps {
   productId: string;

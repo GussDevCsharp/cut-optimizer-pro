@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { fetchSubscriptionPlans } from '@/services/subscriptionService';
 import { SubscriptionPlan } from '@/integrations/supabase/schema';
-import UserRegistrationCheckout from '../checkout/UserRegistrationCheckout';
+import UserRegistrationCheckout from '../checkout/user-registration';
 
 interface UserCredentials {
   name: string;
