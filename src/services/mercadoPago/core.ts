@@ -41,7 +41,9 @@ export const getMercadoPagoInstance = () => {
   if (!window.MercadoPago) {
     throw new Error('MercadoPago not initialized. Call initMercadoPago first.');
   }
-  return new window.MercadoPago(PUBLIC_KEY);
+  return new window.MercadoPago(PUBLIC_KEY, {
+    locale: 'pt'
+  });
 };
 
 // Initialize Checkout Bricks
@@ -56,93 +58,129 @@ export const initCheckoutBricks = async (
       await initMercadoPago();
     }
     
-    const mp = new window.MercadoPago(PUBLIC_KEY);
+    const mp = new window.MercadoPago(PUBLIC_KEY, {
+      locale: 'pt'
+    });
     
     // Initialize the checkout
     const bricksBuilder = mp.bricks();
     
-    const renderCheckout = async () => {
-      await bricksBuilder.create(
-        'checkout',
-        checkoutContainerId,
-        {
-          initialization: {
-            preferenceId: preferenceId,
+    const renderPaymentBrick = async () => {
+      const settings = {
+        initialization: {
+          preferenceId: preferenceId,
+          // We'll use the preferenceId to determine the amount in the backend
+        },
+        customization: {
+          visual: {
+            style: {
+              theme: 'default',
+            },
           },
-          callbacks: {
-            onReady: () => {
-              console.log('Brick ready');
-            },
-            onSubmit: () => {
-              console.log('Payment submitted');
-            },
-            onError: (error: any) => {
-              console.error('Brick error:', error);
-              toast({
-                variant: "destructive",
-                title: "Erro no processamento do pagamento",
-                description: "Ocorreu um erro ao processar seu pagamento. Por favor, tente novamente.",
-              });
-              
-              if (onPaymentComplete) {
-                onPaymentComplete('error');
+          paymentMethods: {
+            creditCard: 'all',
+            debitCard: 'all',
+            ticket: 'all',
+            bankTransfer: 'all',
+            atm: 'all',
+            onboarding_credits: 'all',
+            wallet_purchase: 'all',
+            maxInstallments: 12
+          },
+        },
+        callbacks: {
+          onReady: () => {
+            console.log('Brick ready');
+          },
+          onSubmit: ({ selectedPaymentMethod, formData }) => {
+            console.log('Payment submitted', selectedPaymentMethod, formData);
+            // In a real integration, you would send this data to your backend
+            return new Promise((resolve) => {
+              // For demo purposes, we'll just resolve immediately
+              // In a real integration, you would post to your backend
+              setTimeout(() => {
+                resolve();
+              }, 1000);
+            });
+          },
+          onError: (error: any) => {
+            console.error('Brick error:', error);
+            toast({
+              variant: "destructive",
+              title: "Erro no processamento do pagamento",
+              description: "Ocorreu um erro ao processar seu pagamento. Por favor, tente novamente.",
+            });
+            
+            if (onPaymentComplete) {
+              onPaymentComplete('error');
+            }
+          },
+          onPaymentMethodReceived: (paymentMethod: any) => {
+            console.log('Payment method received:', paymentMethod);
+          },
+          onPaymentStatusReceived: (payment: any) => {
+            console.log('Payment status received:', payment);
+            let status: PaymentStatus = 'pending';
+            
+            if (payment && payment.status) {
+              switch (payment.status) {
+                case 'approved':
+                  status = 'approved';
+                  toast({
+                    title: "Pagamento aprovado!",
+                    description: "Seu pagamento foi processado com sucesso.",
+                  });
+                  break;
+                case 'in_process':
+                case 'pending':
+                  status = 'pending';
+                  toast({
+                    title: "Pagamento pendente",
+                    description: "Seu pagamento está sendo processado.",
+                  });
+                  break;
+                case 'rejected':
+                  status = 'rejected';
+                  toast({
+                    variant: "destructive",
+                    title: "Pagamento rejeitado",
+                    description: "Seu pagamento foi rejeitado. Por favor, tente outro método de pagamento.",
+                  });
+                  break;
+                default:
+                  status = 'error';
+                  toast({
+                    variant: "destructive",
+                    title: "Erro no pagamento",
+                    description: "Ocorreu um erro durante o processamento do pagamento.",
+                  });
               }
-            },
-            onPaymentMethodReceived: (paymentMethod: any) => {
-              console.log('Payment method received:', paymentMethod);
-            },
-            onPaymentStatusReceived: (payment: any) => {
-              console.log('Payment status received:', payment);
-              let status: PaymentStatus = 'pending';
-              
-              if (payment && payment.status) {
-                switch (payment.status) {
-                  case 'approved':
-                    status = 'approved';
-                    toast({
-                      title: "Pagamento aprovado!",
-                      description: "Seu pagamento foi processado com sucesso.",
-                    });
-                    break;
-                  case 'in_process':
-                  case 'pending':
-                    status = 'pending';
-                    toast({
-                      title: "Pagamento pendente",
-                      description: "Seu pagamento está sendo processado.",
-                    });
-                    break;
-                  case 'rejected':
-                    status = 'rejected';
-                    toast({
-                      variant: "destructive",
-                      title: "Pagamento rejeitado",
-                      description: "Seu pagamento foi rejeitado. Por favor, tente outro método de pagamento.",
-                    });
-                    break;
-                  default:
-                    status = 'error';
-                    toast({
-                      variant: "destructive",
-                      title: "Erro no pagamento",
-                      description: "Ocorreu um erro durante o processamento do pagamento.",
-                    });
-                }
-              }
-              
-              if (onPaymentComplete) {
-                onPaymentComplete(status, payment?.id);
-              }
-            },
-          }
+            }
+            
+            if (onPaymentComplete) {
+              onPaymentComplete(status, payment?.id);
+            }
+          },
         }
-      );
+      };
+      
+      try {
+        window.paymentBrickController = await bricksBuilder.create(
+          "payment",
+          checkoutContainerId,
+          settings
+        );
+        return true;
+      } catch (error) {
+        console.error('Error creating Payment Brick:', error);
+        return false;
+      }
     };
     
-    await renderCheckout();
-    return true;
+    const success = await renderPaymentBrick();
+    return success;
   } catch (error) {
-    console.error('Error initializing Checkout Bricks:', error);
+    console.error('Error initializing Payment Brick:', error);
     toast({
       variant: "destructive",
       title: "Erro ao inicializar pagamento",
