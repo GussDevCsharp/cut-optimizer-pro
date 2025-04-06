@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -50,7 +50,7 @@ const DashboardWithTabs = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  useEffect(() => {
+  React.useEffect(() => {
     // Handle the settings tab parameter
     const searchParams = new URLSearchParams(location.search);
     const tab = searchParams.get('tab');
@@ -86,7 +86,7 @@ const DashboardWithTabs = () => {
 
 // Mobile viewport height fix
 const ViewportHeightFix = () => {
-  useEffect(() => {
+  React.useEffect(() => {
     const setViewportHeight = () => {
       const vh = window.innerHeight * 0.01;
       document.documentElement.style.setProperty('--vh', `${vh}px`);
