@@ -10,24 +10,9 @@ import PlanDisplay from './PlanDisplay';
 import CheckoutContainer from './CheckoutContainer';
 import RegistrationSuccess from './RegistrationSuccess';
 import { updateLeadStatus } from '@/services/leadService';
-import { Button } from '@/components/ui/button';
-import { CheckCircle } from 'lucide-react';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-
-// Schema para validar os dados do usuário
-const userSchema = z.object({
-  name: z.string().min(2, { message: "Nome deve ter pelo menos 2 caracteres" }),
-  email: z.string().email({ message: "Email inválido" }),
-  password: z.string().min(6, { message: "Senha deve ter pelo menos 6 caracteres" }),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "As senhas não conferem",
-  path: ["confirmPassword"],
-});
+import UserDataReviewForm from './UserDataReviewForm';
+import CheckoutLoading from './CheckoutLoading';
+import OrderSummary from './OrderSummary';
 
 const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
   isOpen,
@@ -40,19 +25,9 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
   const [plan, setPlan] = useState<SubscriptionPlan | null>(null);
   const [isRegistering, setIsRegistering] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<string | null>(null);
+  const [userData, setUserData] = useState(userCredentials);
   const { register } = useAuth();
   const { toast } = useToast();
-
-  // Inicializar o formulário com os dados do usuário
-  const form = useForm({
-    resolver: zodResolver(userSchema),
-    defaultValues: {
-      name: userCredentials.name,
-      email: userCredentials.email,
-      password: userCredentials.password,
-      confirmPassword: userCredentials.password,
-    },
-  });
 
   useEffect(() => {
     if (isOpen && planId) {
@@ -92,8 +67,8 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
     try {
       // Update lead status based on payment status
       const leadStatus = status === 'approved' ? 'converted' : 'lost';
-      if (userCredentials?.email) {
-        await updateLeadStatus(userCredentials.email, leadStatus);
+      if (userData?.email) {
+        await updateLeadStatus(userData.email, leadStatus);
         console.log(`Lead status updated to ${leadStatus}`);
       }
     } catch (error) {
@@ -105,14 +80,11 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
       try {
         setIsRegistering(true);
         
-        // Obter os dados atualizados do formulário
-        const formData = form.getValues();
-        
-        // Register the user
+        // Register the user with updated form data
         const { user, error } = await register(
-          formData.name,
-          formData.email,
-          formData.password
+          userData.name,
+          userData.email,
+          userData.password
         );
         
         if (error) {
@@ -148,8 +120,9 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
     }
   };
 
-  const handleProceedToPayment = (data: z.infer<typeof userSchema>) => {
-    // Prosseguir para o checkout com os dados atualizados
+  const handleProceedToPayment = (formData: typeof userData) => {
+    // Update user data with form values
+    setUserData(formData);
     setStep('checkout');
   };
 
@@ -160,22 +133,10 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
     }
   };
 
-  // Format currency function
-  const formatCurrency = (price: number): string => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(price);
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={handleCloseDialog}>
       <DialogContent className="sm:max-w-[600px]">
-        {step === 'loading' && (
-          <div className="flex justify-center items-center py-8">
-            <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full"></div>
-          </div>
-        )}
+        {step === 'loading' && <CheckoutLoading />}
         
         {step === 'review' && plan && (
           <div className="space-y-6">
@@ -186,102 +147,12 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
             
             <PlanDisplay plan={plan} />
             
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleProceedToPayment)} className="space-y-4">
-                <div className="border p-4 rounded-md space-y-3">
-                  <h3 className="text-lg font-medium">Seus dados</h3>
-                  
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nome</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Seu Nome" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input placeholder="seu@email.com" type="email" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Senha</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="******" 
-                            type="password" 
-                            showPasswordToggle
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="confirmPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Confirme a senha</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="******" 
-                            type="password" 
-                            showPasswordToggle
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
-                <div className="border p-4 rounded-md space-y-3">
-                  <h3 className="text-lg font-medium">Resumo do pedido</h3>
-                  
-                  <div className="flex justify-between items-center">
-                    <span>{plan.name}</span>
-                    <span>{formatCurrency(plan.price)}</span>
-                  </div>
-                  
-                  <div className="border-t pt-2 mt-2 flex justify-between items-center font-medium">
-                    <span>Total:</span>
-                    <span>{formatCurrency(plan.price)}</span>
-                  </div>
-                </div>
-                
-                <Button 
-                  type="submit"
-                  className="w-full"
-                  size="lg"
-                >
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  Prosseguir para pagamento
-                </Button>
-              </form>
-            </Form>
+            <UserDataReviewForm 
+              initialData={userData}
+              onSubmit={handleProceedToPayment}
+            />
+            
+            <OrderSummary plan={plan} />
           </div>
         )}
         
@@ -297,8 +168,8 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
                 price: plan.price
               }}
               customerInfo={{
-                name: form.getValues().name,
-                email: form.getValues().email
+                name: userData.name,
+                email: userData.email
               }}
               onPaymentComplete={handlePaymentComplete}
             />
