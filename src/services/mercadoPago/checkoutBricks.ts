@@ -21,13 +21,13 @@ export const initCheckoutBricks = async (
     console.log(`Initializing checkout brick in container: ${checkoutContainerId}`);
     
     // Add a delay to ensure the DOM is ready
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
     // Make sure the container exists
     const container = document.getElementById(checkoutContainerId);
     if (!container) {
       console.error(`Container with ID ${checkoutContainerId} not found. Current elements:`, 
-        document.querySelectorAll('div[id]'));
+        Array.from(document.querySelectorAll('div[id]')).map(el => el.id));
       return false;
     }
     

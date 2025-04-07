@@ -18,10 +18,10 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
 
   useEffect(() => {
     if (plan && !checkoutInitialized) {
-      // Small delay to ensure DOM is ready
+      // Increased delay to ensure DOM is fully ready
       const timer = setTimeout(() => {
         initializeCheckout();
-      }, 300);
+      }, 1000);
       return () => clearTimeout(timer);
     }
   }, [plan]);
@@ -50,6 +50,10 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
       
       // Wait a bit for DOM to be ready
       setTimeout(async () => {
+        // Check if DOM element exists first and log its state
+        const containerElement = document.getElementById('user-registration-checkout-container');
+        console.log("Container element exists:", !!containerElement, containerElement);
+        
         // Use the ref to ensure the container is properly referenced
         if (!checkoutContainerRef.current) {
           console.error("Checkout container ref not available in the DOM");
@@ -81,7 +85,7 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
           });
         }
         setIsLoading(false);
-      }, 1500); // Increased wait time to ensure DOM is fully ready
+      }, 2000); // Increased wait time to ensure DOM is fully ready
     } catch (error) {
       console.error("Failed to initialize checkout:", error);
       setIsLoading(false);
@@ -102,7 +106,7 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
       <div 
         id="user-registration-checkout-container" 
         ref={checkoutContainerRef}
-        className="min-h-[300px]"
+        className="min-h-[300px] border rounded-md p-4"
       ></div>
       {!checkoutInitialized && !isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/70">
