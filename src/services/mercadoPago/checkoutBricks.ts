@@ -52,57 +52,33 @@ export const initCheckoutBricks = async (
     
     console.log(`Creating payment brick...`);
     
-    // Define initialization object with correct types
-    // Create the initialization object with a type that allows for the payer property
-    const initialization: {
-      amount: number;
-      preferenceId: string;
-      payer?: {
-        firstName: string;
-        lastName: string;
-        email: string;
-      };
-    } = {
-      amount: amount,
-      preferenceId: preferenceId,
-    };
-    
-    // If we have customer info, add it to the payer property
-    if (customerInfo) {
-      initialization.payer = {
-        firstName: customerInfo.firstName || '',
-        lastName: customerInfo.lastName || '',
-        email: customerInfo.email || '',
-      };
-    }
-    
-    // Using the format from the example provided
-    const settings = {
-      initialization: initialization,
+    // Define initialization and customization based on the official documentation
+    const renderComponent = {
+      initialization: {
+        amount: amount,
+        preferenceId: preferenceId
+      },
       customization: {
         visual: {
-          style: {
-            theme: 'flat',
-          },
+          hidePaymentButton: false,
+          hideFormTitle: false
         },
         paymentMethods: {
+          maxInstallments: 12,
+          minInstallments: 1,
           creditCard: "all",
-          debitCard: "all",
-          ticket: "all",
-          bankTransfer: "all",
-          wallet_purchase: "all",
-          maxInstallments: 12
-        },
+          debitCard: "all"
+        }
       },
       callbacks: {
         onReady: () => {
           console.log('Brick ready');
         },
-        onSubmit: ({ selectedPaymentMethod, formData }: any) => {
-          // This would normally call your backend to process payment
-          // For our mock implementation, we'll resolve immediately
-          console.log('Payment submitted:', selectedPaymentMethod, formData);
+        onSubmit: (formData: any) => {
+          // This callback triggers when the user clicks on the payment button
+          console.log('Payment submitted:', formData);
           return new Promise((resolve) => {
+            // In a real implementation, you would send this data to your server
             setTimeout(() => {
               if (onComplete) {
                 onComplete('approved', `MOCK_PAYMENT_${Date.now()}`);
@@ -116,22 +92,34 @@ export const initCheckoutBricks = async (
           if (onComplete) {
             onComplete('error');
           }
-        },
-      },
+        }
+      }
     };
-    
+
+    // Add payer information if available
+    if (customerInfo && customerInfo.email) {
+      (renderComponent.initialization as any).payer = {
+        email: customerInfo.email
+      };
+
+      if (customerInfo.firstName) {
+        (renderComponent.initialization as any).payer.firstName = customerInfo.firstName;
+      }
+      
+      if (customerInfo.lastName) {
+        (renderComponent.initialization as any).payer.lastName = customerInfo.lastName;
+      }
+    }
+
     try {
       // Create the payment brick in the specified container
-      const paymentBrick = await bricksBuilder.create(
-        'payment',
-        containerId,
-        settings
-      );
+      // Using the render method as specified in the documentation
+      await bricksBuilder.create('payment', containerId, renderComponent);
       
       console.log('Payment brick created successfully');
       return true;
     } catch (error) {
-      console.error(error);
+      console.error('Error creating payment brick:', error);
       return false;
     }
   } catch (error) {
