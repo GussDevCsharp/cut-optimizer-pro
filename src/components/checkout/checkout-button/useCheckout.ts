@@ -52,6 +52,8 @@ export const useCheckout = (
           const success = await initCheckoutBricks(
             'checkout-container', 
             preference.preferenceId,
+            product.price,
+            undefined,
             handlePaymentComplete
           );
           

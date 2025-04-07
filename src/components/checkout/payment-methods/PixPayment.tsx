@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Loader2, CopyIcon, CheckCircle } from 'lucide-react';
-import { generatePixPayment, CustomerData } from "@/services/mercadoPagoService";
+import { generatePixPayment, CustomerData, formatCPF, convertToMPProductInfo } from "@/services/mercadoPagoService";
 import { ProductInfo, PaymentStatus } from "../CheckoutModal";
 import { useToast } from '@/hooks/use-toast';
 
@@ -27,15 +26,6 @@ const PixPayment: React.FC<PixPaymentProps> = ({ product, onProcessing, onComple
   } | null>(null);
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
-
-  // Format CPF input
-  const formatCPF = (value: string) => {
-    const digits = value.replace(/\D/g, '');
-    if (digits.length <= 3) return digits;
-    if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
-    if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
-    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9, 11)}`;
-  };
 
   const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCpf(formatCPF(e.target.value));
@@ -66,7 +56,17 @@ const PixPayment: React.FC<PixPaymentProps> = ({ product, onProcessing, onComple
         cpf
       };
       
-      const response = await generatePixPayment(product, customerData);
+      // Convert product to Mercado Pago format
+      const mpProduct = convertToMPProductInfo({
+        id: product.id,
+        title: product.name,
+        description: product.description || '',
+        unit_price: product.price,
+        name: product.name,
+        price: product.price
+      });
+      
+      const response = await generatePixPayment(mpProduct, customerData);
       
       setPixData({
         qrCode: response.qrCode || response.qr_code,
@@ -75,11 +75,11 @@ const PixPayment: React.FC<PixPaymentProps> = ({ product, onProcessing, onComple
         paymentId: response.paymentId || `pix_${Date.now()}`
       });
       
-      // Map status string to PaymentStatus enum
+      // Map status to PaymentStatus enum
       const status: PaymentStatus = 
         response.status === 'pending' ? 'pending' : 
         response.status === 'approved' ? 'approved' : 
-        response.status === 'rejected' ? 'rejected' : 'pending';
+        response.status === 'rejected' ? 'rejected' : 'error';
       
       onComplete(status, response.paymentId);
     } catch (error) {
@@ -108,7 +108,6 @@ const PixPayment: React.FC<PixPaymentProps> = ({ product, onProcessing, onComple
     }
   };
 
-  // Format expiration date for display
   const formatExpirationDate = (isoDate: string): string => {
     return new Date(isoDate).toLocaleString('pt-BR', {
       day: '2-digit',

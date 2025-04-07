@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { CheckoutContainerProps } from './types';
 import { createCheckoutPreference, initMercadoPago, initCheckoutBricks, convertToMPProductInfo } from "@/services/mercadoPagoService";
@@ -114,7 +113,7 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
           firstName: customerInfo.name.split(' ')[0],
           lastName: customerInfo.name.split(' ').slice(1).join(' '),
           identificationType: "CPF",
-          identificationNumber: customerInfo.cpf || "00000000000"
+          identificationNumber: "00000000000"
         } : undefined
       );
       
@@ -151,7 +150,11 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
               preference.preferenceId,
               plan.price,
               customerData,
-              onPaymentComplete as (status: PaymentStatus, paymentId?: string) => void
+              (status: PaymentStatus, paymentId?: string) => {
+                if (onPaymentComplete) {
+                  onPaymentComplete(status, paymentId);
+                }
+              }
             )
             .then(success => {
               if (success) {

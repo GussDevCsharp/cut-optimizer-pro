@@ -1,6 +1,5 @@
 // Utility functions for Mercado Pago integration
 import { ProductInfo as MPProductInfo } from './types';
-import { ProductInfo as CheckoutProductInfo } from '@/components/checkout/CheckoutModal';
 
 // Format CPF as user types (e.g. 123.456.789-00)
 export const formatCPF = (value: string): string => {
@@ -29,7 +28,7 @@ export const formatCurrency = (value: number): string => {
   }).format(value);
 };
 
-// Convert from CheckoutModal.ProductInfo to MercadoPago.ProductInfo
+// Convert from any product object to MercadoPago.ProductInfo
 export const convertToMPProductInfo = (product: any): MPProductInfo => {
   // Enhanced conversion ensuring all required fields are present
   return {

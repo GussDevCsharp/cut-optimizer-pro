@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FileText, Printer, Loader2, Download } from 'lucide-react';
-import { generateBoletoPayment, CustomerData, formatCPF } from "@/services/mercadoPagoService";
+import { generateBoletoPayment, CustomerData, formatCPF, convertToMPProductInfo } from "@/services/mercadoPagoService";
 import { ProductInfo, PaymentStatus } from "../CheckoutModal";
 import { useToast } from '@/hooks/use-toast';
 
@@ -55,7 +54,17 @@ const BoletoPayment: React.FC<BoletoPaymentProps> = ({ product, onProcessing, on
         cpf
       };
       
-      const response = await generateBoletoPayment(product, customerData);
+      // Convert product to Mercado Pago format
+      const mpProduct = convertToMPProductInfo({
+        id: product.id,
+        title: product.name,
+        description: product.description || '',
+        unit_price: product.price,
+        name: product.name,
+        price: product.price
+      });
+      
+      const response = await generateBoletoPayment(mpProduct, customerData);
       
       setBoletoData({
         boletoNumber: response.boletoNumber || response.barcode,
@@ -64,11 +73,11 @@ const BoletoPayment: React.FC<BoletoPaymentProps> = ({ product, onProcessing, on
         paymentId: response.paymentId || `boleto_${Date.now()}`
       });
       
-      // Map status string to PaymentStatus enum
+      // Map status to PaymentStatus enum
       const status: PaymentStatus = 
         response.status === 'pending' ? 'pending' : 
         response.status === 'approved' ? 'approved' : 
-        response.status === 'rejected' ? 'rejected' : 'pending';
+        response.status === 'rejected' ? 'rejected' : 'error';
       
       onComplete(status, response.paymentId);
     } catch (error) {
@@ -85,7 +94,6 @@ const BoletoPayment: React.FC<BoletoPaymentProps> = ({ product, onProcessing, on
     }
   };
 
-  // Format expiration date for display
   const formatExpirationDate = (isoDate: string): string => {
     return new Date(isoDate).toLocaleDateString('pt-BR', {
       day: '2-digit',
