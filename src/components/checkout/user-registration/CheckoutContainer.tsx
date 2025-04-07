@@ -6,17 +6,31 @@ import { useToast } from "@/hooks/use-toast";
 import CheckoutLoading from './CheckoutLoading';
 import { PaymentStatus } from '../CheckoutModal';
 import { registerLead } from '@/services/leadService';
+import UserCheckoutTab from './UserCheckoutTab';
 
 const CheckoutContainer: React.FC<CheckoutContainerProps> = ({ 
   plan, 
   customerInfo,
-  onPaymentComplete 
+  onPaymentComplete,
+  openInNewTab = true // New prop with default value true
 }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [checkoutInitialized, setCheckoutInitialized] = useState(false);
   const [leadRegistered, setLeadRegistered] = useState(false);
   const checkoutContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  
+  // If we're using external checkout, render the UserCheckoutTab component
+  if (openInNewTab && plan) {
+    return (
+      <UserCheckoutTab
+        planId={plan.id}
+        planName={plan.name}
+        planPrice={plan.price}
+        customerInfo={customerInfo}
+      />
+    );
+  }
   
   // Initialize Mercado Pago when the component is mounted
   useEffect(() => {

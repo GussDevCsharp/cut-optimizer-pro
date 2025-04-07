@@ -4,12 +4,14 @@ import OrderSummary from './OrderSummary';
 import UserDataReviewForm from './UserDataReviewForm';
 import CheckoutContainer from './CheckoutContainer';
 import CheckoutLoading from './CheckoutLoading';
+import UserCheckoutTab from './UserCheckoutTab';
 
 export {
   OrderSummary,
   UserDataReviewForm,
   CheckoutContainer,
-  CheckoutLoading
+  CheckoutLoading,
+  UserCheckoutTab
 };
 
 export default UserRegistrationCheckout;
