@@ -12,6 +12,22 @@ import RegistrationSuccess from './RegistrationSuccess';
 import { updateLeadStatus } from '@/services/leadService';
 import { Button } from '@/components/ui/button';
 import { CheckCircle } from 'lucide-react';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+// Schema para validar os dados do usuário
+const userSchema = z.object({
+  name: z.string().min(2, { message: "Nome deve ter pelo menos 2 caracteres" }),
+  email: z.string().email({ message: "Email inválido" }),
+  password: z.string().min(6, { message: "Senha deve ter pelo menos 6 caracteres" }),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "As senhas não conferem",
+  path: ["confirmPassword"],
+});
 
 const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
   isOpen,
@@ -26,6 +42,17 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
   const [paymentStatus, setPaymentStatus] = useState<string | null>(null);
   const { register } = useAuth();
   const { toast } = useToast();
+
+  // Inicializar o formulário com os dados do usuário
+  const form = useForm({
+    resolver: zodResolver(userSchema),
+    defaultValues: {
+      name: userCredentials.name,
+      email: userCredentials.email,
+      password: userCredentials.password,
+      confirmPassword: userCredentials.password,
+    },
+  });
 
   useEffect(() => {
     if (isOpen && planId) {
@@ -78,11 +105,14 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
       try {
         setIsRegistering(true);
         
+        // Obter os dados atualizados do formulário
+        const formData = form.getValues();
+        
         // Register the user
         const { user, error } = await register(
-          userCredentials.name,
-          userCredentials.email,
-          userCredentials.password
+          formData.name,
+          formData.email,
+          formData.password
         );
         
         if (error) {
@@ -118,7 +148,8 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
     }
   };
 
-  const handleProceedToPayment = () => {
+  const handleProceedToPayment = (data: z.infer<typeof userSchema>) => {
+    // Prosseguir para o checkout com os dados atualizados
     setStep('checkout');
   };
 
@@ -155,44 +186,102 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
             
             <PlanDisplay plan={plan} />
             
-            <div className="border p-4 rounded-md space-y-3">
-              <h3 className="text-lg font-medium">Seus dados</h3>
-              
-              <div className="grid grid-cols-[120px_1fr] gap-2">
-                <span className="text-muted-foreground">Nome:</span>
-                <span className="font-medium">{userCredentials.name}</span>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleProceedToPayment)} className="space-y-4">
+                <div className="border p-4 rounded-md space-y-3">
+                  <h3 className="text-lg font-medium">Seus dados</h3>
+                  
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nome</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Seu Nome" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input placeholder="seu@email.com" type="email" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Senha</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="******" 
+                            type="password" 
+                            showPasswordToggle
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="confirmPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Confirme a senha</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="******" 
+                            type="password" 
+                            showPasswordToggle
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
                 
-                <span className="text-muted-foreground">Email:</span>
-                <span className="font-medium">{userCredentials.email}</span>
-              </div>
-              
-              <p className="text-xs text-muted-foreground mt-2">
-                Uma senha será criada com os dados fornecidos. Você poderá alterá-la após o login.
-              </p>
-            </div>
-            
-            <div className="border p-4 rounded-md space-y-3">
-              <h3 className="text-lg font-medium">Resumo do pedido</h3>
-              
-              <div className="flex justify-between items-center">
-                <span>{plan.name}</span>
-                <span>{formatCurrency(plan.price)}</span>
-              </div>
-              
-              <div className="border-t pt-2 mt-2 flex justify-between items-center font-medium">
-                <span>Total:</span>
-                <span>{formatCurrency(plan.price)}</span>
-              </div>
-            </div>
-            
-            <Button 
-              onClick={handleProceedToPayment} 
-              className="w-full"
-              size="lg"
-            >
-              <CheckCircle className="mr-2 h-4 w-4" />
-              Prosseguir para pagamento
-            </Button>
+                <div className="border p-4 rounded-md space-y-3">
+                  <h3 className="text-lg font-medium">Resumo do pedido</h3>
+                  
+                  <div className="flex justify-between items-center">
+                    <span>{plan.name}</span>
+                    <span>{formatCurrency(plan.price)}</span>
+                  </div>
+                  
+                  <div className="border-t pt-2 mt-2 flex justify-between items-center font-medium">
+                    <span>Total:</span>
+                    <span>{formatCurrency(plan.price)}</span>
+                  </div>
+                </div>
+                
+                <Button 
+                  type="submit"
+                  className="w-full"
+                  size="lg"
+                >
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  Prosseguir para pagamento
+                </Button>
+              </form>
+            </Form>
           </div>
         )}
         
@@ -208,8 +297,8 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
                 price: plan.price
               }}
               customerInfo={{
-                name: userCredentials.name,
-                email: userCredentials.email
+                name: form.getValues().name,
+                email: form.getValues().email
               }}
               onPaymentComplete={handlePaymentComplete}
             />
