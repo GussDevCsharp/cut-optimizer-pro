@@ -1,21 +1,20 @@
 
-// Type definitions for Mercado Pago integration
-import { PaymentStatus } from '@/components/checkout/CheckoutModal';
+// Types for MercadoPago services
+
+export interface CustomerData {
+  name: string;
+  email: string;
+  identificationType?: string;
+  identificationNumber?: string;
+}
 
 export interface ProductInfo {
   id: string;
-  name: string;
+  title: string; // Changed from name to title to match Mercado Pago API
   description: string;
-  price: number;
-  image?: string;
-}
-
-export interface CustomerData {
-  name?: string;
-  email?: string;
-  identificationType?: string;
-  identificationNumber?: string;
-  cpf?: string; 
+  unit_price: number; // Changed from price to unit_price to match Mercado Pago API
+  quantity?: number;
+  currency_id?: string;
 }
 
 export interface CardData {
@@ -24,57 +23,50 @@ export interface CardData {
   expirationMonth: string;
   expirationYear: string;
   securityCode: string;
-  installments: number;
-  issuer?: string;
-  paymentMethodId?: string;
-  identificationType?: string;
-  identificationNumber?: string;
+  identificationType: string;
+  identificationNumber: string;
 }
 
 export interface CheckoutBricksOptions {
   initialization: {
-    preferenceId?: string;
-    amount?: number;
+    amount: number;
   };
   customization: {
-    visual: {
-      hideFormTitle?: boolean;
-      hidePaymentButton?: boolean;
+    paymentMethods: {
+      maxInstallments: number;
     };
-  };
-  callbacks: {
-    onReady: () => void;
-    onError: (error: any) => void;
-    onSubmit: (data: any) => Promise<void>;
   };
 }
 
 export interface InstallmentOption {
   installments: number;
+  installmentRate: number;
+  discountRate: number;
+  referencedPaymentTypeId?: string;
   installmentAmount: number;
   totalAmount: number;
-  interestRate: number;
-  label?: string;
+  paymentMethodId: string;
 }
+
+export interface PixPaymentResponse {
+  id: string;
+  qr_code_base64: string;
+  qr_code: string;
+  status: string;
+  transaction_amount: number;
+}
+
+export interface BoletoPaymentResponse {
+  id: string;
+  barcode: string;
+  external_resource_url: string;
+  status: string;
+  transaction_amount: number;
+}
+
+export type PaymentStatus = 'approved' | 'pending' | 'rejected' | 'error';
 
 export interface CheckoutResponse {
   status: PaymentStatus;
   paymentId?: string;
-}
-
-export interface PixPaymentResponse {
-  status: PaymentStatus;
-  paymentId: string;
-  qrCode: string;
-  qrCodeBase64: string;
-  qrCodeText: string;
-  expirationDate: string;
-}
-
-export interface BoletoPaymentResponse {
-  status: PaymentStatus;
-  paymentId: string;
-  boletoNumber: string;
-  boletoUrl: string;
-  expirationDate: string;
 }

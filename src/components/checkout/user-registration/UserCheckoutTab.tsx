@@ -45,9 +45,11 @@ const UserCheckoutTab: React.FC<UserCheckoutTabProps> = ({
         // Create checkout preference
         const product = {
           id: planId,
-          name: planName,
+          title: planName, // Changed from name to title
           description: `Assinatura do plano ${planName}`,
-          price: planPrice,
+          unit_price: planPrice, // Changed from price to unit_price
+          quantity: 1, // Adding quantity parameter
+          currency_id: "BRL" // Adding currency parameter
         };
 
         const preference = await createCheckoutPreference(
@@ -60,7 +62,8 @@ const UserCheckoutTab: React.FC<UserCheckoutTabProps> = ({
         );
 
         // Open the Mercado Pago checkout URL in a new tab
-        const checkoutUrl = `https://www.mercadopago.com.br/checkout/v1/redirect?preference-id=${preference.preferenceId}`;
+        // Using the correct URL format for Mercado Pago v1 checkout
+        const checkoutUrl = `https://www.mercadopago.com.br/checkout/v1/redirect?pref_id=${preference.preferenceId}`;
         window.open(checkoutUrl, '_blank');
       } catch (error) {
         console.error("Failed to open checkout:", error);

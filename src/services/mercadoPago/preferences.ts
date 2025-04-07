@@ -22,7 +22,7 @@ export const createPaymentPreference = async (
 
 // Create a preference to use with Checkout Bricks
 export const createCheckoutPreference = async (
-  product: ProductInfo,
+  product: any, // Updated to accept the Mercado Pago product format
   customerData?: CustomerData
 ): Promise<{ preferenceId: string }> => {
   // In a real implementation, you would call your backend API
@@ -33,11 +33,13 @@ export const createCheckoutPreference = async (
     console.log('Customer data:', customerData);
   }
   
+  // In a real implementation, you would create a proper Mercado Pago preference
+  // with items, payer information, back_urls, etc.
   return new Promise((resolve) => {
     // Simulate API call delay
     setTimeout(() => {
       resolve({
-        preferenceId: `MOCK_BRICKS_PREFERENCE_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
+        preferenceId: `TEST-123456789-${Date.now()}`
       });
     }, 1000);
   });
