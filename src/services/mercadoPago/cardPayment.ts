@@ -31,12 +31,12 @@ export const getInstallmentOptions = (amount: number): InstallmentOption[] => {
   for (let i = 1; i <= 12; i++) {
     const interestRate = i <= 3 ? 0 : 1.5 * (i - 3); // 0% for up to 3 installments, then 1.5% per additional installment
     const totalAmount = amount * (1 + interestRate / 100);
-    const installmentAmount = totalAmount / i;
+    const installment_amount = totalAmount / i;
     
     let label = `${i}x de ${new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL'
-    }).format(installmentAmount)}`;
+    }).format(installment_amount)}`;
     
     if (i <= 3) {
       label += ' sem juros';
@@ -49,13 +49,12 @@ export const getInstallmentOptions = (amount: number): InstallmentOption[] => {
     
     options.push({
       installments: i,
-      installmentAmount,
-      totalAmount,
-      interestRate,
+      installment_amount,
+      total_amount: totalAmount,
+      payment_method_id: 'visa',
+      payment_type_id: 'credit_card',
       label,
-      installmentRate: interestRate,
-      discountRate: 0,
-      paymentMethodId: 'visa'
+      interestRate
     });
   }
   

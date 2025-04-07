@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +9,8 @@ import {
   formatCPF, 
   validateCPF,
   BoletoPaymentResponse,
-  convertToMPProductInfo
+  convertToMPProductInfo,
+  PaymentStatus as MPPaymentStatus
 } from "@/services/mercadoPagoService";
 import { ProductInfo, PaymentStatus } from "../CheckoutModal";
 
@@ -29,13 +29,11 @@ const BoletoPayment: React.FC<BoletoPaymentProps> = ({ product, onProcessing, on
   const [paymentData, setPaymentData] = useState<BoletoPaymentResponse | null>(null);
   const [copiedToClipboard, setCopiedToClipboard] = useState(false);
 
-  // Format CPF as the user types
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formattedCpf = formatCPF(e.target.value);
     setCpf(formattedCpf);
   };
 
-  // Validate all fields before submission
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
     
@@ -54,7 +52,6 @@ const BoletoPayment: React.FC<BoletoPaymentProps> = ({ product, onProcessing, on
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -67,19 +64,26 @@ const BoletoPayment: React.FC<BoletoPaymentProps> = ({ product, onProcessing, on
       const customerData: CustomerData = {
         name,
         email,
-        cpf,
         identificationType: 'CPF',
-        identificationNumber: cpf.replace(/\D/g, '')
+        identificationNumber: cpf.replace(/\D/g, ''),
+        cpf
       };
       
-      // Convert product to Mercado Pago format
       const mpProduct = convertToMPProductInfo(product);
       
-      // Call the service to generate a Boleto payment
       const response = await generateBoletoPayment(mpProduct, customerData);
       
       setPaymentData(response);
-      onComplete(response.status, response.paymentId);
+      
+      const statusMapping: Record<string, PaymentStatus> = {
+        'pending': 'pending',
+        'approved': 'approved',
+        'rejected': 'rejected',
+        'in_process': 'pending',
+        'error': 'error'
+      };
+      
+      onComplete(statusMapping[response.status] || 'pending', response.paymentId);
     } catch (error) {
       console.error('Error generating Boleto payment:', error);
       onComplete('error');
@@ -89,7 +93,6 @@ const BoletoPayment: React.FC<BoletoPaymentProps> = ({ product, onProcessing, on
     }
   };
 
-  // Handle copy to clipboard
   const copyToClipboard = () => {
     if (paymentData?.boletoNumber) {
       navigator.clipboard.writeText(paymentData.boletoNumber)
@@ -103,12 +106,10 @@ const BoletoPayment: React.FC<BoletoPaymentProps> = ({ product, onProcessing, on
     }
   };
 
-  // Format expiration date
   const formatExpirationDate = (isoDate: string): string => {
     return new Date(isoDate).toLocaleDateString('pt-BR');
   };
 
-  // If payment data is available, show boleto information
   if (paymentData) {
     return (
       <div className="flex flex-col py-4">
@@ -165,7 +166,6 @@ const BoletoPayment: React.FC<BoletoPaymentProps> = ({ product, onProcessing, on
     );
   }
 
-  // Show form to collect customer data
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">

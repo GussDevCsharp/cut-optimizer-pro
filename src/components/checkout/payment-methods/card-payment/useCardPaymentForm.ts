@@ -7,7 +7,8 @@ import {
   processCardPayment,
   CustomerData,
   CardData,
-  convertToMPProductInfo
+  convertToMPProductInfo,
+  PaymentStatus as MPPaymentStatus
 } from "@/services/mercadoPagoService";
 import { ProductInfo, PaymentStatus } from "../../CheckoutModal";
 
@@ -117,9 +118,9 @@ export const useCardPaymentForm = ({ product, onProcessing, onComplete }: UseCar
       const customerData: CustomerData = {
         name: formState.name,
         email: formState.email,
-        cpf: formState.cpf,
         identificationType: 'CPF',
-        identificationNumber: formState.cpf.replace(/\D/g, '')
+        identificationNumber: formState.cpf.replace(/\D/g, ''),
+        cpf: formState.cpf
       };
       
       const cardData: CardData = {
@@ -130,7 +131,6 @@ export const useCardPaymentForm = ({ product, onProcessing, onComplete }: UseCar
         securityCode: formState.securityCode,
         installments: parseInt(formState.installments, 10),
         issuer: 'visa', // This would normally be detected by Mercado Pago
-        paymentMethodId: 'visa', // This would normally be detected by Mercado Pago
         identificationType: 'CPF',
         identificationNumber: formState.cpf.replace(/\D/g, '')
       };
@@ -141,7 +141,16 @@ export const useCardPaymentForm = ({ product, onProcessing, onComplete }: UseCar
       // Call the service to process the card payment
       const response = await processCardPayment(mpProduct, cardData, customerData);
       
-      onComplete(response.status, response.paymentId);
+      // Map the payment status from MP to the component's expected format
+      const statusMapping: Record<MPPaymentStatus, PaymentStatus> = {
+        'pending': 'pending',
+        'approved': 'approved',
+        'rejected': 'rejected',
+        'in_process': 'pending',
+        'error': 'error'
+      };
+      
+      onComplete(statusMapping[response.status], response.paymentId);
     } catch (error) {
       console.error('Error processing card payment:', error);
       onComplete('error');

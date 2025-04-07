@@ -12,7 +12,6 @@ export const generateBoletoPayment = async (
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve({
-        id: `boleto_${Date.now()}`,
         barcode: '34191.79001 01043.510047 91020.150008 9 83960026000',
         external_resource_url: 'https://www.mercadopago.com.br/payments/123456789/pdf',
         status: 'pending',

@@ -1,3 +1,4 @@
+
 // Type definitions for Mercado Pago integration
 
 // Product information structure
@@ -33,6 +34,8 @@ export interface CardData {
   securityCode: string;
   installments?: number;
   issuer?: string;
+  identificationType?: string;
+  identificationNumber?: string;
 }
 
 // Checkout Bricks configuration
@@ -69,24 +72,30 @@ export interface InstallmentOption {
 
 // PIX payment response
 export interface PixPaymentResponse {
+  id?: string;
   qr_code: string;
+  qr_code_base64?: string;
   qrCodeText?: string;
   qrCode?: string;
   status: string;
   paymentId?: string;
   expirationDate?: string;
   transactionId?: string;
+  transaction_amount?: number;
 }
 
 // Boleto payment response
 export interface BoletoPaymentResponse {
+  id?: string;
   barcode: string;
+  external_resource_url?: string;
   boletoNumber?: string;
   boletoUrl?: string;
   status: string;
   paymentId?: string;
   expirationDate?: string;
   transactionId?: string;
+  transaction_amount?: number;
 }
 
 // Checkout response
@@ -95,5 +104,5 @@ export interface CheckoutResponse {
   paymentId?: string;
 }
 
-// Payment status enum
+// Payment status enum - Make this consistent with CheckoutModal.PaymentStatus
 export type PaymentStatus = 'pending' | 'approved' | 'rejected' | 'error' | 'in_process';

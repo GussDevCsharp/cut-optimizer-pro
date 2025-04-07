@@ -10,7 +10,8 @@ import {
   formatCPF, 
   validateCPF,
   PixPaymentResponse,
-  convertToMPProductInfo
+  convertToMPProductInfo,
+  PaymentStatus as MPPaymentStatus
 } from "@/services/mercadoPagoService";
 import { ProductInfo, PaymentStatus } from "../CheckoutModal";
 
@@ -67,9 +68,9 @@ const PixPayment: React.FC<PixPaymentProps> = ({ product, onProcessing, onComple
       const customerData: CustomerData = {
         name,
         email,
-        cpf,
         identificationType: 'CPF',
-        identificationNumber: cpf.replace(/\D/g, '')
+        identificationNumber: cpf.replace(/\D/g, ''),
+        cpf
       };
       
       // Convert product to Mercado Pago format
@@ -79,7 +80,15 @@ const PixPayment: React.FC<PixPaymentProps> = ({ product, onProcessing, onComple
       const response = await generatePixPayment(mpProduct, customerData);
       
       setPaymentData(response);
-      onComplete(response.status, response.paymentId);
+      // Map the payment status correctly
+      const statusMapping: Record<string, PaymentStatus> = {
+        'pending': 'pending',
+        'approved': 'approved',
+        'rejected': 'rejected',
+        'in_process': 'pending',
+        'error': 'error'
+      };
+      onComplete(statusMapping[response.status] || 'pending', response.paymentId);
     } catch (error) {
       console.error('Error generating Pix payment:', error);
       onComplete('error');
