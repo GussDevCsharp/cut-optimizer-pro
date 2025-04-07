@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { CheckoutContainerProps } from './types';
-import { createCheckoutPreference, initCheckoutBricks } from "@/services/mercadoPagoService";
+import { createCheckoutPreference, initMercadoPago, initCheckoutBricks } from "@/services/mercadoPagoService";
 import { useToast } from "@/hooks/use-toast";
 import CheckoutLoading from '../checkout-button/CheckoutLoading';
 import { PaymentStatus } from '../CheckoutModal';
@@ -15,6 +15,21 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
   const [checkoutInitialized, setCheckoutInitialized] = useState(false);
   const checkoutContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  
+  // Inicializa o Mercado Pago quando o componente é montado
+  useEffect(() => {
+    // Inicializamos o SDK do Mercado Pago logo no início
+    const initMP = async () => {
+      try {
+        await initMercadoPago();
+        console.log("MercadoPago SDK initialized");
+      } catch (error) {
+        console.error("Failed to initialize MercadoPago SDK:", error);
+      }
+    };
+    
+    initMP();
+  }, []);
   
   // Quando o componente é montado, garantimos que o ref esteja disponível
   useEffect(() => {
@@ -30,11 +45,11 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
       // Após o render, iniciamos o checkout com um delay suficiente
       const timer = setTimeout(() => {
         initializeCheckout();
-      }, 3000); // Aumentando o delay para 3 segundos para garantir que o DOM está pronto
+      }, 1000); // Reduzindo para 1 segundo para ser mais responsivo
       
       return () => clearTimeout(timer);
     }
-  }, [plan]);
+  }, [plan, checkoutInitialized]);
 
   const initializeCheckout = async () => {
     if (!plan) return;
@@ -59,42 +74,55 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
       
       console.log("Preference created successfully:", preference.preferenceId);
       
-      // Verificamos se o elemento existe no DOM antes de inicializar
-      const containerElement = document.getElementById('user-registration-checkout-container');
-      console.log("Container exists in DOM:", !!containerElement);
+      // Verificamos várias vezes se o elemento existe no DOM antes de inicializar
+      const maxAttempts = 5;
+      let currentAttempt = 0;
       
-      if (!containerElement) {
-        console.error("Container not found in DOM. Will attempt to retry initialization.");
-        toast({
-          variant: "destructive",
-          title: "Erro ao inicializar pagamento",
-          description: "Elemento de checkout não encontrado. Por favor, tente novamente."
-        });
-        return;
-      }
+      const attemptInitialization = () => {
+        currentAttempt++;
+        const containerElement = document.getElementById('user-registration-checkout-container');
+        console.log(`Attempt ${currentAttempt}: Container exists in DOM:`, !!containerElement);
+        
+        if (containerElement) {
+          // Log dimensions to ensure the element is visible
+          const width = containerElement.offsetWidth;
+          const height = containerElement.offsetHeight;
+          console.log("Container dimensions:", width, "x", height);
+          
+          if (width > 0 && height > 0) {
+            // Inicializar Mercado Pago Bricks
+            console.log("Initializing Bricks with preference:", preference.preferenceId);
+            initCheckoutBricks(
+              'user-registration-checkout-container', 
+              preference.preferenceId,
+              onPaymentComplete as (status: PaymentStatus, paymentId?: string) => void
+            )
+            .then(success => {
+              if (success) {
+                console.log("Checkout Bricks initialized successfully");
+                setCheckoutInitialized(true);
+              } else {
+                handleInitializationError("Failed to initialize Checkout Bricks");
+              }
+            })
+            .catch(error => {
+              handleInitializationError(`Error initializing Checkout Bricks: ${error}`);
+            });
+          } else {
+            handleInitializationError("Container has zero dimensions");
+          }
+        } else if (currentAttempt < maxAttempts) {
+          // Tentar novamente após um curto intervalo
+          console.log(`Container not found, retrying in 500ms (attempt ${currentAttempt}/${maxAttempts})`);
+          setTimeout(attemptInitialization, 500);
+        } else {
+          handleInitializationError("Container not found after maximum attempts");
+        }
+      };
       
-      // Log dimensions to ensure the element is visible
-      console.log("Container dimensions:", containerElement.offsetWidth, "x", containerElement.offsetHeight);
+      // Inicia as tentativas de inicialização
+      attemptInitialization();
       
-      // Inicializar Mercado Pago Bricks
-      console.log("Initializing Bricks with preference:", preference.preferenceId);
-      const success = await initCheckoutBricks(
-        'user-registration-checkout-container', 
-        preference.preferenceId,
-        onPaymentComplete as (status: PaymentStatus, paymentId?: string) => void
-      );
-      
-      if (success) {
-        console.log("Checkout Bricks initialized successfully");
-        setCheckoutInitialized(true);
-      } else {
-        console.error("Failed to initialize Checkout Bricks");
-        toast({
-          variant: "destructive",
-          title: "Erro ao inicializar pagamento",
-          description: "Não foi possível carregar o checkout. Por favor, tente novamente."
-        });
-      }
     } catch (error) {
       console.error("Failed to initialize checkout:", error);
       toast({
@@ -103,6 +131,15 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
         description: "Ocorreu um erro ao preparar o checkout. Por favor, tente novamente."
       });
     }
+  };
+  
+  const handleInitializationError = (message: string) => {
+    console.error(message);
+    toast({
+      variant: "destructive",
+      title: "Erro ao inicializar pagamento",
+      description: "Não foi possível inicializar o checkout. Por favor, tente novamente."
+    });
   };
 
   return (
@@ -113,7 +150,7 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
         <div 
           id="user-registration-checkout-container" 
           ref={checkoutContainerRef}
-          className="min-h-[300px] border-2 border-primary/30 rounded-md p-4 bg-white"
+          className="min-h-[400px] border-2 border-primary rounded-md p-4 bg-white"
           style={{ width: '100%', minHeight: '400px' }}
           data-testid="checkout-container"
         ></div>
