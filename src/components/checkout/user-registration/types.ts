@@ -26,3 +26,32 @@ export interface UserDataReviewFormProps {
   onDataChange?: (data: UserCredentials) => void;
   disabled?: boolean;
 }
+
+// Adding the missing interfaces:
+export interface PlanDisplayProps {
+  plan: SubscriptionPlan | null;
+}
+
+export interface RegistrationSuccessProps {
+  isRegistering: boolean;
+  onClose?: () => void;
+}
+
+export interface UserRegistrationCheckoutProps {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  planId: string;
+  userCredentials: UserCredentials;
+  onPaymentComplete?: (status: string, paymentId?: string) => void;
+}
+
+// For UserManagementPanel.tsx
+export interface UserData {
+  id: string;
+  name: string;
+  email: string;
+  role?: string;
+  status?: 'active' | 'inactive' | 'pending';
+  lastLogin?: string;
+  createdAt?: string;
+}

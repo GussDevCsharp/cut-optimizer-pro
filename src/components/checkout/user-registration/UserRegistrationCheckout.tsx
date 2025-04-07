@@ -161,12 +161,7 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
             <PlanDisplay plan={plan} />
             
             <CheckoutContainer
-              plan={{
-                id: plan.id,
-                name: plan.name,
-                description: plan.description,
-                price: plan.price
-              }}
+              plan={plan}
               customerInfo={{
                 name: userData.name,
                 email: userData.email
