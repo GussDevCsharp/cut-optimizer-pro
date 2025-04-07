@@ -1,3 +1,4 @@
+
 import { toast } from '@/hooks/use-toast';
 import { ProductInfo, CheckoutBricksOptions, CustomerData } from './types';
 import { PaymentStatus } from '@/components/checkout/CheckoutModal';
@@ -19,7 +20,8 @@ export const initMercadoPago = async (): Promise<void> => {
       script.type = 'text/javascript';
       script.onload = () => {
         if (window.MercadoPago) {
-          window.MercadoPago.setPublishableKey(PUBLIC_KEY);
+          // Note: MercadoPago v2 SDK doesn't have setPublishableKey method
+          // It's instantiated with the key instead
           console.log("MercadoPago SDK loaded successfully");
           resolve();
         } else {
@@ -61,6 +63,19 @@ export const initCheckoutBricks = async (
     
     console.log(`Initializing checkout brick in container: ${checkoutContainerId}`);
     
+    // Add a delay to ensure the DOM is ready
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Make sure the container exists
+    const container = document.getElementById(checkoutContainerId);
+    if (!container) {
+      console.error(`Container with ID ${checkoutContainerId} not found. Current elements:`, 
+        document.querySelectorAll('div[id]'));
+      return false;
+    }
+    
+    console.log(`Container found with dimensions: ${container.offsetWidth}x${container.offsetHeight}`);
+    
     const mp = new window.MercadoPago(PUBLIC_KEY, {
       locale: 'pt'
     });
@@ -69,13 +84,6 @@ export const initCheckoutBricks = async (
     const bricksBuilder = mp.bricks();
     
     const renderPaymentBrick = async () => {
-      // Make sure the container exists
-      const container = document.getElementById(checkoutContainerId);
-      if (!container) {
-        console.error(`Container with ID ${checkoutContainerId} not found`);
-        return false;
-      }
-      
       console.log(`Container found, rendering payment brick with preference: ${preferenceId}`);
       
       const settings = {

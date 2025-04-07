@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { CheckoutContainerProps } from './types';
 import { createCheckoutPreference, initCheckoutBricks } from "@/services/mercadoPagoService";
 import { useToast } from "@/hooks/use-toast";
@@ -13,11 +13,16 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [checkoutInitialized, setCheckoutInitialized] = useState(false);
+  const checkoutContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     if (plan && !checkoutInitialized) {
-      initializeCheckout();
+      // Small delay to ensure DOM is ready
+      const timer = setTimeout(() => {
+        initializeCheckout();
+      }, 300);
+      return () => clearTimeout(timer);
     }
   }, [plan]);
 
@@ -45,10 +50,9 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
       
       // Wait a bit for DOM to be ready
       setTimeout(async () => {
-        // Ensure the container is present in the DOM
-        const checkoutContainer = document.getElementById('user-registration-checkout-container');
-        if (!checkoutContainer) {
-          console.error("Checkout container not found in the DOM");
+        // Use the ref to ensure the container is properly referenced
+        if (!checkoutContainerRef.current) {
+          console.error("Checkout container ref not available in the DOM");
           toast({
             variant: "destructive",
             title: "Erro ao inicializar pagamento",
@@ -77,7 +81,7 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
           });
         }
         setIsLoading(false);
-      }, 1000); // Aumentando o tempo de espera para garantir que o DOM esteja pronto
+      }, 1500); // Increased wait time to ensure DOM is fully ready
     } catch (error) {
       console.error("Failed to initialize checkout:", error);
       setIsLoading(false);
@@ -95,7 +99,11 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
 
   return (
     <div className="relative">
-      <div id="user-registration-checkout-container" className="min-h-[300px]"></div>
+      <div 
+        id="user-registration-checkout-container" 
+        ref={checkoutContainerRef}
+        className="min-h-[300px]"
+      ></div>
       {!checkoutInitialized && !isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/70">
           <button 
