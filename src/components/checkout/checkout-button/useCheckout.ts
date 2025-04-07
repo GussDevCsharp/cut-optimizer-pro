@@ -1,7 +1,6 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { PaymentStatus } from "../CheckoutModal";
-import { createCheckoutPreference, initCheckoutBricks } from "@/services/mercadoPagoService";
+import { createCheckoutPreference, initCheckoutBricks, convertToMPProductInfo } from "@/services/mercadoPagoService";
 import { useToast } from "@/hooks/use-toast";
 import { CustomerData } from "@/services/mercadoPago/types";
 
@@ -30,13 +29,14 @@ export const useCheckout = (
     try {
       // Get preference ID
       const preference = await createCheckoutPreference(
-        {
+        convertToMPProductInfo({
           id: product.id,
-          name: product.name,
+          title: product.name,
           description: product.description,
-          price: product.price,
-          image: product.image
-        },
+          unit_price: product.price,
+          // Keep image if available
+          ...(product.image && { image: product.image })
+        }),
         customerData && {
           ...customerData,
           identificationType: customerData.identificationType || 'CPF',

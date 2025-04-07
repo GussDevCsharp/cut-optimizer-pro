@@ -45,8 +45,10 @@ const UserCheckoutTab: React.FC<UserCheckoutTabProps> = ({
         // Create checkout preference
         const product = {
           id: planId,
+          title: planName,
           name: planName,
           description: `Assinatura do plano ${planName}`,
+          unit_price: planPrice,
           price: planPrice,
         };
 
@@ -65,8 +67,8 @@ const UserCheckoutTab: React.FC<UserCheckoutTabProps> = ({
 
         // Open the Mercado Pago checkout URL in a new tab
         if (preference && preference.preferenceId) {
-          // Use the correct URL format for Mercado Pago checkout
-          const checkoutUrl = `https://www.mercadopago.com/br/checkout/v1/redirect?pref_id=${preference.preferenceId}`;
+          // Use the correct URL format for Mercado Pago checkout in Brazil
+          const checkoutUrl = `https://www.mercadopago.com.br/checkout/v1/redirect?pref_id=${preference.preferenceId}`;
           window.open(checkoutUrl, '_blank');
         } else {
           throw new Error("Failed to get preference ID");

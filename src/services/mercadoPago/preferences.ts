@@ -1,6 +1,7 @@
 
 // Preference creation functionality
 import { ProductInfo, CustomerData } from './types';
+import { convertToMPProductInfo } from './utils';
 
 // Create payment preference (would be called from your backend)
 // This is a mock function. In a real implementation, this would make a call to your backend
@@ -20,9 +21,9 @@ export const createPaymentPreference = async (
   });
 };
 
-// Create a preference to use with Checkout Bricks
+// Create a preference to use with Checkout Bricks or Standard Checkout
 export const createCheckoutPreference = async (
-  product: ProductInfo, // Using the proper ProductInfo type
+  product: ProductInfo,
   customerData?: CustomerData
 ): Promise<{ preferenceId: string }> => {
   // In a real implementation, you would call your backend API
@@ -33,15 +34,18 @@ export const createCheckoutPreference = async (
     console.log('Customer data:', customerData);
   }
   
-  // Ensure we're using the right fields
+  // Ensure we're using the proper format expected by Mercado Pago API
+  const standardizedProduct = convertToMPProductInfo(product);
+  
+  // Create preference data object in the format Mercado Pago expects
   const preferenceData = {
     items: [{
-      id: product.id,
-      title: product.title || product.name || '',
-      description: product.description || '',
-      unit_price: product.unit_price || product.price || 0,
-      quantity: product.quantity || 1,
-      currency_id: product.currency_id || 'BRL'
+      id: standardizedProduct.id,
+      title: standardizedProduct.title,
+      description: standardizedProduct.description || '',
+      unit_price: standardizedProduct.unit_price,
+      quantity: standardizedProduct.quantity || 1,
+      currency_id: standardizedProduct.currency_id || 'BRL'
     }],
     payer: customerData ? {
       name: customerData.name,
@@ -50,7 +54,13 @@ export const createCheckoutPreference = async (
         type: customerData.identificationType,
         number: customerData.identificationNumber
       }
-    } : undefined
+    } : undefined,
+    back_urls: {
+      success: window.location.origin + "/payment-success",
+      failure: window.location.origin + "/payment-failure",
+      pending: window.location.origin + "/payment-pending"
+    },
+    auto_return: "approved"
   };
   
   console.log('Creating preference with data:', preferenceData);

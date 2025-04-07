@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { CheckoutContainerProps } from './types';
-import { createCheckoutPreference, initMercadoPago, initCheckoutBricks } from "@/services/mercadoPagoService";
+import { createCheckoutPreference, initMercadoPago, initCheckoutBricks, convertToMPProductInfo } from "@/services/mercadoPagoService";
 import { useToast } from "@/hooks/use-toast";
 import CheckoutLoading from './CheckoutLoading';
 import { PaymentStatus } from '../CheckoutModal';
@@ -96,15 +96,19 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
     
     try {
       console.log("Creating checkout preference...");
-      const product = {
+      
+      // Convert plan to proper Mercado Pago product format
+      const mpProduct = convertToMPProductInfo({
         id: plan.id,
+        title: plan.name,
         name: plan.name,
-        description: plan.description,
-        price: plan.price,
-      };
+        description: plan.description || `Assinatura do plano ${plan.name}`,
+        unit_price: plan.price,
+        price: plan.price
+      });
       
       const preference = await createCheckoutPreference(
-        product,
+        mpProduct,
         customerInfo ? {
           ...customerInfo,
           identificationType: "CPF", // Default value

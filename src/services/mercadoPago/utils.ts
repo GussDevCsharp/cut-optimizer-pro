@@ -31,15 +31,17 @@ export const formatCurrency = (value: number): string => {
 
 // Convert from CheckoutModal.ProductInfo to MercadoPago.ProductInfo
 export const convertToMPProductInfo = (product: any): MPProductInfo => {
+  // Enhanced conversion ensuring all required fields are present
   return {
     id: product.id,
-    title: product.name || product.title,
+    title: product.name || product.title || '',
     description: product.description || '',
     unit_price: product.price || product.unit_price || 0,
     quantity: product.quantity || 1,
     currency_id: product.currency_id || 'BRL',
     // Keep original fields for backward compatibility
-    name: product.name || product.title,
-    price: product.price || product.unit_price || 0
+    name: product.name || product.title || '',
+    price: product.price || product.unit_price || 0,
+    image: product.image
   };
 };

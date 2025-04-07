@@ -1,92 +1,99 @@
+// Type definitions for Mercado Pago integration
 
-// Types for MercadoPago services
+// Product information structure
+export interface ProductInfo {
+  id: string;
+  title: string;          // Required by Mercado Pago API
+  description?: string;
+  unit_price: number;     // Required by Mercado Pago API
+  quantity?: number;
+  currency_id?: string;
+  // Keep compatibility with existing code
+  name?: string;
+  price?: number;
+  image?: string;
+}
 
+// Customer data structure
 export interface CustomerData {
   name: string;
   email: string;
-  cpf?: string; // Added cpf field
-  identificationType?: string;
-  identificationNumber?: string;
+  identificationType: string;
+  identificationNumber: string;
+  // For legacy support
+  cpf?: string;
 }
 
-export interface ProductInfo {
-  id: string;
-  title: string; 
-  description: string;
-  unit_price: number;
-  quantity?: number;
-  currency_id?: string;
-  // Add fields from CheckoutModal.ProductInfo for compatibility
-  name?: string;
-  price?: number;
-}
-
+// Card payment data
 export interface CardData {
   cardNumber: string;
   cardholderName: string;
   expirationMonth: string;
   expirationYear: string;
   securityCode: string;
-  identificationType: string;
-  identificationNumber: string;
-  installments?: number; // Added installments field
+  installments?: number;
   issuer?: string;
-  paymentMethodId?: string;
 }
 
+// Checkout Bricks configuration
 export interface CheckoutBricksOptions {
   initialization: {
     amount: number;
   };
-  customization: {
-    paymentMethods: {
-      maxInstallments: number;
+  callbacks: {
+    onReady: () => void;
+    onError: (error: any) => void;
+    onSubmit: (cardFormData: any) => void;
+  };
+  locale?: string;
+  customization?: {
+    visual: {
+      style: {
+        theme: string;
+      };
     };
   };
 }
 
+// Installments option returned by API
 export interface InstallmentOption {
   installments: number;
-  installmentRate: number;
-  discountRate: number;
-  referencedPaymentTypeId?: string;
-  installmentAmount: number;
-  totalAmount: number;
-  paymentMethodId: string;
-  interestRate?: number; // Added interestRate field
-  label?: string; // Added label field
+  installment_amount: number;
+  total_amount: number;
+  payment_method_id: string;
+  payment_type_id: string;
+  payment_method_option_id?: string;
+  label?: string;
+  interestRate?: number;
 }
 
+// PIX payment response
 export interface PixPaymentResponse {
-  id: string;
-  qr_code_base64: string;
   qr_code: string;
-  status: PaymentStatus;
-  transaction_amount: number;
-  // Add fields needed by the components
-  paymentId?: string;
-  qrCode?: string;
   qrCodeText?: string;
-  qrCodeBase64?: string;
+  qrCode?: string;
+  status: string;
+  paymentId?: string;
   expirationDate?: string;
+  transactionId?: string;
 }
 
+// Boleto payment response
 export interface BoletoPaymentResponse {
-  id: string;
   barcode: string;
-  external_resource_url: string;
-  status: PaymentStatus;
-  transaction_amount: number;
-  // Add fields needed by the components
-  paymentId?: string;
   boletoNumber?: string;
   boletoUrl?: string;
+  status: string;
+  paymentId?: string;
   expirationDate?: string;
+  transactionId?: string;
 }
 
-export type PaymentStatus = 'approved' | 'pending' | 'rejected' | 'error';
-
+// Checkout response
 export interface CheckoutResponse {
   status: PaymentStatus;
   paymentId?: string;
 }
+
+// Payment status enum
+export type PaymentStatus = 'pending' | 'approved' | 'rejected' | 'error' | 'in_process';
