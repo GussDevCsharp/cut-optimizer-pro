@@ -1,3 +1,4 @@
+
 // Type definitions for Mercado Pago integration
 import { PaymentStatus } from '@/components/checkout/CheckoutModal';
 
@@ -14,7 +15,7 @@ export interface CustomerData {
   email?: string;
   identificationType?: string;
   identificationNumber?: string;
-  cpf?: string; // Existing field
+  cpf?: string; 
 }
 
 export interface CardData {
@@ -53,7 +54,7 @@ export interface InstallmentOption {
   installmentAmount: number;
   totalAmount: number;
   interestRate: number;
-  label?: string; // Added label for display
+  label?: string;
 }
 
 export interface CheckoutResponse {
@@ -61,7 +62,6 @@ export interface CheckoutResponse {
   paymentId?: string;
 }
 
-// Add interfaces for Pix and Boleto responses
 export interface PixPaymentResponse {
   status: PaymentStatus;
   paymentId: string;

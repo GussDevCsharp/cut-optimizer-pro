@@ -24,8 +24,7 @@ export type {
   CheckoutBricksOptions,
   ProductInfo,
   InstallmentOption,
-  PixPaymentResponse,  // Added this export
-  BoletoPaymentResponse,  // Added this export
+  PixPaymentResponse,
+  BoletoPaymentResponse,
   CheckoutResponse
 } from './mercadoPago/types';
-

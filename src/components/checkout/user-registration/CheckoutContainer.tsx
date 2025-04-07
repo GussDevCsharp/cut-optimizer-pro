@@ -3,9 +3,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { CheckoutContainerProps } from './types';
 import { createCheckoutPreference, initMercadoPago, initCheckoutBricks } from "@/services/mercadoPagoService";
 import { useToast } from "@/hooks/use-toast";
-import CheckoutLoading from '../checkout-button/CheckoutLoading';
+import CheckoutLoading from './CheckoutLoading';
 import { PaymentStatus } from '../CheckoutModal';
-import { registerLead } from '@/services/leadService'; // Import the new lead service
+import { registerLead } from '@/services/leadService';
 
 const CheckoutContainer: React.FC<CheckoutContainerProps> = ({ 
   plan, 
@@ -171,7 +171,7 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
   return (
     <div className="relative">
       {isLoading ? (
-        <CheckoutLoading message="Preparando o checkout do plano..." />
+        <CheckoutLoading />
       ) : (
         <div 
           id="user-registration-checkout-container" 

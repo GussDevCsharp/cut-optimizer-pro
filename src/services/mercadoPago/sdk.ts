@@ -44,6 +44,6 @@ export const getMercadoPagoInstance = () => {
     throw new Error('MercadoPago not initialized. Call initMercadoPago first.');
   }
   return new window.MercadoPago(PUBLIC_KEY, {
-    locale: 'pt'
+    locale: 'pt-BR'
   });
 };
