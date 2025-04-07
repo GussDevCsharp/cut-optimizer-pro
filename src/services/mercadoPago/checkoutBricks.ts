@@ -52,12 +52,24 @@ export const initCheckoutBricks = async (
     
     console.log(`Creating payment brick...`);
     
+    // Define initialization object with correct types
+    const initialization = {
+      amount: amount,
+      preferenceId: preferenceId,
+    };
+    
+    // If we have customer info, add it to a separate payer object
+    if (customerInfo) {
+      initialization.payer = {
+        firstName: customerInfo.firstName || '',
+        lastName: customerInfo.lastName || '',
+        email: customerInfo.email || '',
+      };
+    }
+    
     // Using the format from the example provided
     const settings = {
-      initialization: {
-        amount: amount,
-        preferenceId: preferenceId,
-      },
+      initialization: initialization,
       customization: {
         visual: {
           style: {
@@ -98,15 +110,6 @@ export const initCheckoutBricks = async (
         },
       },
     };
-    
-    // If we have customer info, add it to the initialization
-    if (customerInfo) {
-      settings.initialization.payer = {
-        firstName: customerInfo.firstName || '',
-        lastName: customerInfo.lastName || '',
-        email: customerInfo.email || '',
-      };
-    }
     
     try {
       // Create the payment brick in the specified container
