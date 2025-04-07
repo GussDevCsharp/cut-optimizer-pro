@@ -53,12 +53,21 @@ export const initCheckoutBricks = async (
     console.log(`Creating payment brick...`);
     
     // Define initialization object with correct types
-    const initialization = {
+    // Create the initialization object with a type that allows for the payer property
+    const initialization: {
+      amount: number;
+      preferenceId: string;
+      payer?: {
+        firstName: string;
+        lastName: string;
+        email: string;
+      };
+    } = {
       amount: amount,
       preferenceId: preferenceId,
     };
     
-    // If we have customer info, add it to a separate payer object
+    // If we have customer info, add it to the payer property
     if (customerInfo) {
       initialization.payer = {
         firstName: customerInfo.firstName || '',
