@@ -1,4 +1,3 @@
-
 // Type definitions for Mercado Pago integration
 import { PaymentStatus } from '@/components/checkout/CheckoutModal';
 
@@ -15,7 +14,7 @@ export interface CustomerData {
   email?: string;
   identificationType?: string;
   identificationNumber?: string;
-  cpf?: string; // Add CPF field to allow direct access
+  cpf?: string; // Existing field
 }
 
 export interface CardData {
