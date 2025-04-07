@@ -9,7 +9,9 @@ import { SubscriptionPlan } from '@/integrations/supabase/schema';
 import PlanDisplay from './PlanDisplay';
 import CheckoutContainer from './CheckoutContainer';
 import RegistrationSuccess from './RegistrationSuccess';
-import { updateLeadStatus } from '@/services/leadService'; // Import the lead service
+import { updateLeadStatus } from '@/services/leadService';
+import { Button } from '@/components/ui/button';
+import { CheckCircle } from 'lucide-react';
 
 const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
   isOpen,
@@ -18,7 +20,7 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
   userCredentials,
   onPaymentComplete
 }) => {
-  const [step, setStep] = useState<'loading' | 'checkout' | 'success'>('loading');
+  const [step, setStep] = useState<'loading' | 'review' | 'checkout' | 'success'>('loading');
   const [plan, setPlan] = useState<SubscriptionPlan | null>(null);
   const [isRegistering, setIsRegistering] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<string | null>(null);
@@ -42,7 +44,7 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
       
       if (selectedPlan) {
         setPlan(selectedPlan);
-        setStep('checkout');
+        setStep('review');
       } else {
         throw new Error("Plan not found");
       }
@@ -116,11 +118,23 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
     }
   };
 
+  const handleProceedToPayment = () => {
+    setStep('checkout');
+  };
+
   const handleCloseDialog = (open: boolean) => {
     // Only allow closing when not in the middle of registration
     if (!isRegistering) {
       onOpenChange(open);
     }
+  };
+
+  // Format currency function
+  const formatCurrency = (price: number): string => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(price);
   };
 
   return (
@@ -129,6 +143,56 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
         {step === 'loading' && (
           <div className="flex justify-center items-center py-8">
             <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full"></div>
+          </div>
+        )}
+        
+        {step === 'review' && plan && (
+          <div className="space-y-6">
+            <div className="text-center mb-4">
+              <h2 className="text-xl font-semibold">Revisar sua compra</h2>
+              <p className="text-sm text-muted-foreground">Confirme seus dados e o plano selecionado</p>
+            </div>
+            
+            <PlanDisplay plan={plan} />
+            
+            <div className="border p-4 rounded-md space-y-3">
+              <h3 className="text-lg font-medium">Seus dados</h3>
+              
+              <div className="grid grid-cols-[120px_1fr] gap-2">
+                <span className="text-muted-foreground">Nome:</span>
+                <span className="font-medium">{userCredentials.name}</span>
+                
+                <span className="text-muted-foreground">Email:</span>
+                <span className="font-medium">{userCredentials.email}</span>
+              </div>
+              
+              <p className="text-xs text-muted-foreground mt-2">
+                Uma senha será criada com os dados fornecidos. Você poderá alterá-la após o login.
+              </p>
+            </div>
+            
+            <div className="border p-4 rounded-md space-y-3">
+              <h3 className="text-lg font-medium">Resumo do pedido</h3>
+              
+              <div className="flex justify-between items-center">
+                <span>{plan.name}</span>
+                <span>{formatCurrency(plan.price)}</span>
+              </div>
+              
+              <div className="border-t pt-2 mt-2 flex justify-between items-center font-medium">
+                <span>Total:</span>
+                <span>{formatCurrency(plan.price)}</span>
+              </div>
+            </div>
+            
+            <Button 
+              onClick={handleProceedToPayment} 
+              className="w-full"
+              size="lg"
+            >
+              <CheckCircle className="mr-2 h-4 w-4" />
+              Prosseguir para pagamento
+            </Button>
           </div>
         )}
         
