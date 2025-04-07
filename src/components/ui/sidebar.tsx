@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -119,7 +120,7 @@ export function Sidebar({
     <div
       className={cn(
         "flex flex-col h-full bg-background border-r",
-        isMobile ? "fixed inset-y-0 left-0 z-50 w-72 shadow-lg transform transition-transform duration-200 ease-in-out",
+        isMobile ? "fixed inset-y-0 left-0 z-50 w-72 shadow-lg transform transition-transform duration-200 ease-in-out" : "",
         !isOpen && isMobile ? "-translate-x-full" : "translate-x-0",
         className
       )}

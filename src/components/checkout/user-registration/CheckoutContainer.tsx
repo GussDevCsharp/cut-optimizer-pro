@@ -41,8 +41,24 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
         } : undefined
       );
       
+      console.log("Preference created successfully:", preference.preferenceId);
+      
       // Wait a bit for DOM to be ready
       setTimeout(async () => {
+        // Ensure the container is present in the DOM
+        const checkoutContainer = document.getElementById('user-registration-checkout-container');
+        if (!checkoutContainer) {
+          console.error("Checkout container not found in the DOM");
+          toast({
+            variant: "destructive",
+            title: "Erro ao inicializar pagamento",
+            description: "Elemento de checkout não encontrado. Por favor, tente novamente."
+          });
+          setIsLoading(false);
+          return;
+        }
+        
+        console.log("Initializing Bricks with preference:", preference.preferenceId);
         const success = await initCheckoutBricks(
           'user-registration-checkout-container', 
           preference.preferenceId,
@@ -50,8 +66,10 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
         );
         
         if (success) {
+          console.log("Checkout Bricks initialized successfully");
           setCheckoutInitialized(true);
         } else {
+          console.error("Failed to initialize Checkout Bricks");
           toast({
             variant: "destructive",
             title: "Erro ao inicializar pagamento",
@@ -59,7 +77,7 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
           });
         }
         setIsLoading(false);
-      }, 500);
+      }, 1000); // Aumentando o tempo de espera para garantir que o DOM esteja pronto
     } catch (error) {
       console.error("Failed to initialize checkout:", error);
       setIsLoading(false);
@@ -76,8 +94,18 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
   }
 
   return (
-    <div>
+    <div className="relative">
       <div id="user-registration-checkout-container" className="min-h-[300px]"></div>
+      {!checkoutInitialized && !isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-background/70">
+          <button 
+            onClick={() => initializeCheckout()}
+            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
+          >
+            Tentar novamente
+          </button>
+        </div>
+      )}
     </div>
   );
 };

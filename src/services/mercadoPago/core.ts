@@ -1,4 +1,3 @@
-
 import { toast } from '@/hooks/use-toast';
 import { ProductInfo, CheckoutBricksOptions, CustomerData } from './types';
 import { PaymentStatus } from '@/components/checkout/CheckoutModal';
@@ -21,6 +20,7 @@ export const initMercadoPago = async (): Promise<void> => {
       script.onload = () => {
         if (window.MercadoPago) {
           window.MercadoPago.setPublishableKey(PUBLIC_KEY);
+          console.log("MercadoPago SDK loaded successfully");
           resolve();
         } else {
           reject(new Error('MercadoPago SDK failed to load'));
@@ -55,8 +55,11 @@ export const initCheckoutBricks = async (
   try {
     // Initialize SDK
     if (!window.MercadoPago) {
+      console.log("MercadoPago not initialized, initializing now...");
       await initMercadoPago();
     }
+    
+    console.log(`Initializing checkout brick in container: ${checkoutContainerId}`);
     
     const mp = new window.MercadoPago(PUBLIC_KEY, {
       locale: 'pt'
@@ -66,6 +69,15 @@ export const initCheckoutBricks = async (
     const bricksBuilder = mp.bricks();
     
     const renderPaymentBrick = async () => {
+      // Make sure the container exists
+      const container = document.getElementById(checkoutContainerId);
+      if (!container) {
+        console.error(`Container with ID ${checkoutContainerId} not found`);
+        return false;
+      }
+      
+      console.log(`Container found, rendering payment brick with preference: ${preferenceId}`);
+      
       const settings = {
         initialization: {
           preferenceId: preferenceId,
@@ -76,6 +88,8 @@ export const initCheckoutBricks = async (
             style: {
               theme: 'default',
             },
+            hideFormTitle: true,
+            hidePaymentButton: false
           },
           paymentMethods: {
             creditCard: 'all',
@@ -83,7 +97,6 @@ export const initCheckoutBricks = async (
             ticket: 'all',
             bankTransfer: 'all',
             atm: 'all',
-            onboarding_credits: 'all',
             wallet_purchase: 'all',
             maxInstallments: 12
           },
@@ -165,11 +178,13 @@ export const initCheckoutBricks = async (
       };
       
       try {
+        console.log("Creating payment brick...");
         window.paymentBrickController = await bricksBuilder.create(
           "payment",
           checkoutContainerId,
           settings
         );
+        console.log("Payment brick created successfully");
         return true;
       } catch (error) {
         console.error('Error creating Payment Brick:', error);

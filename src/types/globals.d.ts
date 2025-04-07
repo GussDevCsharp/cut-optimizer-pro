@@ -1,4 +1,5 @@
 
 interface Window {
-  XLSX: any;
+  MercadoPago: any;
+  paymentBrickController: any;
 }
