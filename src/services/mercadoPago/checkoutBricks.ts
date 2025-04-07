@@ -21,17 +21,37 @@ export const initCheckoutBricks = async (
     console.log(`Initializing checkout brick in container: ${checkoutContainerId}`);
     
     // Add a delay to ensure the DOM is ready
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 1500));
     
     // Make sure the container exists
     const container = document.getElementById(checkoutContainerId);
     if (!container) {
       console.error(`Container with ID ${checkoutContainerId} not found. Current elements:`, 
         Array.from(document.querySelectorAll('div[id]')).map(el => el.id));
-      return false;
+      
+      // Try again after a short delay as a last attempt
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      const containerRetry = document.getElementById(checkoutContainerId);
+      if (!containerRetry) {
+        console.error("Container still not found after retry");
+        return false;
+      }
+      console.log("Container found on retry attempt");
     }
     
-    console.log(`Container found with dimensions: ${container.offsetWidth}x${container.offsetHeight}`);
+    // Double check that container exists and has dimensions
+    const finalContainer = document.getElementById(checkoutContainerId);
+    if (finalContainer) {
+      console.log(`Container found with dimensions: ${finalContainer.offsetWidth}x${finalContainer.offsetHeight}`);
+      
+      if (finalContainer.offsetWidth === 0 || finalContainer.offsetHeight === 0) {
+        console.error("Container has zero dimensions, setting minimum dimensions");
+        finalContainer.style.minHeight = "300px";
+        finalContainer.style.minWidth = "100%";
+      }
+    } else {
+      return false;
+    }
     
     const mp = new window.MercadoPago(PUBLIC_KEY, {
       locale: 'pt'
