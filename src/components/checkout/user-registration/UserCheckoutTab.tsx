@@ -23,7 +23,7 @@ const UserCheckoutTab: React.FC<UserCheckoutTabProps> = ({
   const { toast } = useToast();
 
   useEffect(() => {
-    const openCheckoutInNewTab = async () => {
+    const openCheckout = async () => {
       try {
         // Register lead first
         if (customerInfo) {
@@ -65,11 +65,10 @@ const UserCheckoutTab: React.FC<UserCheckoutTabProps> = ({
           } : undefined
         );
 
-        // Open the Mercado Pago checkout URL in a new tab
+        // Redirect to the Mercado Pago checkout in the same tab
         if (preference && preference.preferenceId) {
-          // Use the correct URL format for Mercado Pago checkout in Brazil
           const checkoutUrl = `https://www.mercadopago.com.br/checkout/v1/redirect?pref_id=${preference.preferenceId}`;
-          window.open(checkoutUrl, '_blank');
+          window.location.href = checkoutUrl;
         } else {
           throw new Error("Failed to get preference ID");
         }
@@ -83,7 +82,7 @@ const UserCheckoutTab: React.FC<UserCheckoutTabProps> = ({
       }
     };
 
-    openCheckoutInNewTab();
+    openCheckout();
   }, [planId, planName, planPrice, customerInfo, toast]);
 
   return (

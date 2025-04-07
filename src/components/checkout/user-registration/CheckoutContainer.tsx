@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { CheckoutContainerProps } from './types';
 import { createCheckoutPreference, initMercadoPago, initCheckoutBricks, convertToMPProductInfo } from "@/services/mercadoPagoService";
@@ -11,7 +12,7 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
   plan, 
   customerInfo,
   onPaymentComplete,
-  openInNewTab = true // New prop with default value true
+  openInNewTab = false // Changed default to false to open in same tab
 }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [checkoutInitialized, setCheckoutInitialized] = useState(false);

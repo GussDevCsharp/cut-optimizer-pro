@@ -33,9 +33,9 @@ export const convertToMPProductInfo = (product: any): MPProductInfo => {
   // Enhanced conversion ensuring all required fields are present
   return {
     id: product.id,
-    title: product.name || product.title || '',
+    title: product.title || product.name || '',
     description: product.description || '',
-    unit_price: product.price || product.unit_price || 0,
+    unit_price: product.unit_price || product.price || 0,
     quantity: product.quantity || 1,
     currency_id: product.currency_id || 'BRL',
     // Keep original fields for backward compatibility

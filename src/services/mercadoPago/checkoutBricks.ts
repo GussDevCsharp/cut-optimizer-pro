@@ -68,9 +68,10 @@ export const initCheckoutBricks = async (
     const renderPaymentBrick = async () => {
       console.log(`Rendering payment brick with preference: ${preferenceId}`);
       
+      // Using the format from the example provided
       const settings = {
         initialization: {
-          amount: amount, // Montante total a pagar
+          amount: amount,
           preferenceId: preferenceId,
           payer: customerInfo ? {
             firstName: customerInfo.firstName || "",
@@ -81,7 +82,7 @@ export const initCheckoutBricks = async (
         customization: {
           visual: {
             style: {
-              theme: 'flat',  // Use o tema flat como no exemplo
+              theme: 'flat',
             },
             hideFormTitle: true,
             hidePaymentButton: false
