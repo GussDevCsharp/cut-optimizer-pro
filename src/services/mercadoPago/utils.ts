@@ -1,3 +1,4 @@
+
 // Utility functions for Mercado Pago integration
 import { ProductInfo as MPProductInfo } from './types';
 
@@ -30,17 +31,23 @@ export const formatCurrency = (value: number): string => {
 
 // Convert from any product object to MercadoPago.ProductInfo
 export const convertToMPProductInfo = (product: any): MPProductInfo => {
-  // Enhanced conversion ensuring all required fields are present
-  return {
-    id: product.id,
+  // Ensure product has all required fields for MercadoPago
+  const productInfo: MPProductInfo = {
+    id: product.id || `prod-${Date.now()}`,
     title: product.title || product.name || '',
-    description: product.description || '',
+    description: product.description || `Produto: ${product.title || product.name || 'Sem descrição'}`,
     unit_price: product.unit_price || product.price || 0,
     quantity: product.quantity || 1,
     currency_id: product.currency_id || 'BRL',
     // Keep original fields for backward compatibility
     name: product.name || product.title || '',
     price: product.price || product.unit_price || 0,
-    image: product.image
   };
+  
+  // Add image if available
+  if (product.image) {
+    productInfo.image = product.image;
+  }
+  
+  return productInfo;
 };

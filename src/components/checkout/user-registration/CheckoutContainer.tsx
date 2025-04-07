@@ -110,7 +110,8 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
       const preference = await createCheckoutPreference(
         mpProduct,
         customerInfo ? {
-          ...customerInfo,
+          name: customerInfo.name,
+          email: customerInfo.email,
           firstName: customerInfo.name.split(' ')[0],
           lastName: customerInfo.name.split(' ').slice(1).join(' '),
           identificationType: "CPF",
@@ -120,7 +121,7 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
       
       console.log("Preference created successfully:", preference.preferenceId);
       
-      // Verificamos várias vezes se o elemento existe no DOM antes de inicializar
+      // Verify if the element exists in the DOM before initializing
       const maxAttempts = 5;
       let currentAttempt = 0;
       
@@ -136,10 +137,10 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
           console.log("Container dimensions:", width, "x", height);
           
           if (width > 0 && height > 0) {
-            // Inicializar Mercado Pago Bricks
+            // Initialize Mercado Pago Bricks
             console.log("Initializing Bricks with preference:", preference.preferenceId);
             
-            // Preparar as informações do cliente no formato esperado
+            // Prepare customer data in the expected format
             const customerData = customerInfo ? {
               firstName: customerInfo.name.split(' ')[0],
               lastName: customerInfo.name.split(' ').slice(1).join(' '),
@@ -172,7 +173,7 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
             handleInitializationError("Container has zero dimensions");
           }
         } else if (currentAttempt < maxAttempts) {
-          // Tentar novamente após um curto intervalo
+          // Try again after a short delay
           console.log(`Container not found, retrying in 500ms (attempt ${currentAttempt}/${maxAttempts})`);
           setTimeout(attemptInitialization, 500);
         } else {
@@ -180,7 +181,7 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
         }
       };
       
-      // Inicia as tentativas de inicialização
+      // Start the initialization attempts
       attemptInitialization();
       
     } catch (error) {
