@@ -22,7 +22,7 @@ export const createPaymentPreference = async (
 
 // Create a preference to use with Checkout Bricks
 export const createCheckoutPreference = async (
-  product: any, // Updated to accept the Mercado Pago product format
+  product: ProductInfo, // Using the proper ProductInfo type
   customerData?: CustomerData
 ): Promise<{ preferenceId: string }> => {
   // In a real implementation, you would call your backend API
@@ -33,13 +33,36 @@ export const createCheckoutPreference = async (
     console.log('Customer data:', customerData);
   }
   
-  // In a real implementation, you would create a proper Mercado Pago preference
-  // with items, payer information, back_urls, etc.
+  // Ensure we're using the right fields
+  const preferenceData = {
+    items: [{
+      id: product.id,
+      title: product.title || product.name || '',
+      description: product.description || '',
+      unit_price: product.unit_price || product.price || 0,
+      quantity: product.quantity || 1,
+      currency_id: product.currency_id || 'BRL'
+    }],
+    payer: customerData ? {
+      name: customerData.name,
+      email: customerData.email,
+      identification: {
+        type: customerData.identificationType,
+        number: customerData.identificationNumber
+      }
+    } : undefined
+  };
+  
+  console.log('Creating preference with data:', preferenceData);
+  
+  // In a real implementation, this would be a call to your API
   return new Promise((resolve) => {
     // Simulate API call delay
     setTimeout(() => {
+      const preferenceId = `TEST-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      console.log(`Created mock preference ID: ${preferenceId}`);
       resolve({
-        preferenceId: `TEST-123456789-${Date.now()}`
+        preferenceId
       });
     }, 1000);
   });

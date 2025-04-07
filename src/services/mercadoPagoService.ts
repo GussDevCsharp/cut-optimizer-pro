@@ -4,6 +4,7 @@
 export {
   initMercadoPago,
   getMercadoPagoInstance,
+  PUBLIC_KEY,
   initCheckoutBricks,
   createPaymentPreference,
   createCheckoutPreference,

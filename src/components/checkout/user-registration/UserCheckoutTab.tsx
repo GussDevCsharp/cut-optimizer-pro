@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { createCheckoutPreference } from '@/services/mercadoPagoService';
+import { createCheckoutPreference, convertToMPProductInfo } from '@/services/mercadoPagoService';
 import { useToast } from "@/hooks/use-toast";
 import { registerLead } from '@/services/leadService';
 
@@ -45,26 +45,32 @@ const UserCheckoutTab: React.FC<UserCheckoutTabProps> = ({
         // Create checkout preference
         const product = {
           id: planId,
-          title: planName, // Changed from name to title
+          name: planName,
           description: `Assinatura do plano ${planName}`,
-          unit_price: planPrice, // Changed from price to unit_price
-          quantity: 1, // Adding quantity parameter
-          currency_id: "BRL" // Adding currency parameter
+          price: planPrice,
         };
 
+        // Convert to Mercado Pago product format
+        const mpProduct = convertToMPProductInfo(product);
+        
         const preference = await createCheckoutPreference(
-          product,
+          mpProduct,
           customerInfo ? {
-            ...customerInfo,
+            name: customerInfo.name,
+            email: customerInfo.email,
             identificationType: "CPF",
             identificationNumber: "00000000000"
           } : undefined
         );
 
         // Open the Mercado Pago checkout URL in a new tab
-        // Using the correct URL format for Mercado Pago v1 checkout
-        const checkoutUrl = `https://www.mercadopago.com.br/checkout/v1/redirect?pref_id=${preference.preferenceId}`;
-        window.open(checkoutUrl, '_blank');
+        if (preference && preference.preferenceId) {
+          // Use the correct URL format for Mercado Pago checkout
+          const checkoutUrl = `https://www.mercadopago.com/br/checkout/v1/redirect?pref_id=${preference.preferenceId}`;
+          window.open(checkoutUrl, '_blank');
+        } else {
+          throw new Error("Failed to get preference ID");
+        }
       } catch (error) {
         console.error("Failed to open checkout:", error);
         toast({
