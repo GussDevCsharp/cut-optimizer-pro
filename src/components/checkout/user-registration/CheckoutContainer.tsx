@@ -5,6 +5,7 @@ import { createCheckoutPreference, initMercadoPago, initCheckoutBricks } from "@
 import { useToast } from "@/hooks/use-toast";
 import CheckoutLoading from '../checkout-button/CheckoutLoading';
 import { PaymentStatus } from '../CheckoutModal';
+import { registerLead } from '@/services/leadService'; // Import the new lead service
 
 const CheckoutContainer: React.FC<CheckoutContainerProps> = ({ 
   plan, 
@@ -13,12 +14,12 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [checkoutInitialized, setCheckoutInitialized] = useState(false);
+  const [leadRegistered, setLeadRegistered] = useState(false);
   const checkoutContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   
-  // Inicializa o Mercado Pago quando o componente é montado
+  // Initialize Mercado Pago when the component is mounted
   useEffect(() => {
-    // Inicializamos o SDK do Mercado Pago logo no início
     const initMP = async () => {
       try {
         await initMercadoPago();
@@ -31,7 +32,32 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
     initMP();
   }, []);
   
-  // Quando o componente é montado, garantimos que o ref esteja disponível
+  // Register lead when customer info is available
+  useEffect(() => {
+    if (customerInfo && !leadRegistered && plan) {
+      const registerUserAsLead = async () => {
+        try {
+          console.log("Registering lead:", customerInfo);
+          await registerLead({
+            name: customerInfo.name,
+            email: customerInfo.email,
+            plan_id: plan.id,
+            plan_name: plan.name,
+            price: plan.price
+          });
+          setLeadRegistered(true);
+          console.log("Lead registered successfully");
+        } catch (error) {
+          console.error("Failed to register lead:", error);
+          // Continue with checkout even if lead registration fails
+        }
+      };
+      
+      registerUserAsLead();
+    }
+  }, [customerInfo, leadRegistered, plan]);
+  
+  // When the component is mounted, we ensure that the ref is available
   useEffect(() => {
     console.log("CheckoutContainer mounted, ref is:", !!checkoutContainerRef.current);
   }, []);
@@ -39,13 +65,13 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
   useEffect(() => {
     if (plan && !checkoutInitialized) {
       console.log("Starting checkout initialization process");
-      // Primeiro, garantimos que o elemento será renderizado imediatamente
+      // First, make sure the element will be rendered immediately
       setIsLoading(false);
       
-      // Após o render, iniciamos o checkout com um delay suficiente
+      // After rendering, start the checkout with sufficient delay
       const timer = setTimeout(() => {
         initializeCheckout();
-      }, 1000); // Reduzindo para 1 segundo para ser mais responsivo
+      }, 1000);
       
       return () => clearTimeout(timer);
     }

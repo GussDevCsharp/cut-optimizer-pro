@@ -9,6 +9,7 @@ import { SubscriptionPlan } from '@/integrations/supabase/schema';
 import PlanDisplay from './PlanDisplay';
 import CheckoutContainer from './CheckoutContainer';
 import RegistrationSuccess from './RegistrationSuccess';
+import { updateLeadStatus } from '@/services/leadService'; // Import the lead service
 
 const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
   isOpen,
@@ -58,6 +59,18 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
 
   const handlePaymentComplete = async (status: string, paymentId?: string) => {
     setPaymentStatus(status);
+    
+    try {
+      // Update lead status based on payment status
+      const leadStatus = status === 'approved' ? 'converted' : 'lost';
+      if (userCredentials?.email) {
+        await updateLeadStatus(userCredentials.email, leadStatus);
+        console.log(`Lead status updated to ${leadStatus}`);
+      }
+    } catch (error) {
+      console.error("Failed to update lead status:", error);
+      // Continue even if lead update fails
+    }
     
     if (status === 'approved' || status === 'pending') {
       try {
