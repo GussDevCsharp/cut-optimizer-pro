@@ -135,7 +135,7 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleCloseDialog}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[800px] p-4">
         {step === 'loading' && <CheckoutLoading />}
         
         {step === 'review' && plan && (
@@ -145,29 +145,38 @@ const UserRegistrationCheckout: React.FC<UserRegistrationCheckoutProps> = ({
               <p className="text-sm text-muted-foreground">Confirme seus dados e o plano selecionado</p>
             </div>
             
-            <PlanDisplay plan={plan} />
-            
-            <UserDataReviewForm 
-              initialData={userData}
-              onSubmit={handleProceedToPayment}
-            />
-            
-            <OrderSummary plan={plan} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <PlanDisplay plan={plan} />
+                <OrderSummary plan={plan} />
+              </div>
+              
+              <div>
+                <UserDataReviewForm 
+                  initialData={userData}
+                  onSubmit={handleProceedToPayment}
+                />
+              </div>
+            </div>
           </div>
         )}
         
         {step === 'checkout' && plan && (
-          <div className="space-y-6">
-            <PlanDisplay plan={plan} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <PlanDisplay plan={plan} />
+            </div>
             
-            <CheckoutContainer
-              plan={plan}
-              customerInfo={{
-                name: userData.name,
-                email: userData.email
-              }}
-              onPaymentComplete={handlePaymentComplete}
-            />
+            <div>
+              <CheckoutContainer
+                plan={plan}
+                customerInfo={{
+                  name: userData.name,
+                  email: userData.email
+                }}
+                onPaymentComplete={handlePaymentComplete}
+              />
+            </div>
           </div>
         )}
         

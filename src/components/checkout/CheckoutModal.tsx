@@ -74,7 +74,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleCloseDialog}>
-      <DialogContent className="sm:max-w-[600px] p-0">
+      <DialogContent className="sm:max-w-[800px] p-0">
         {!paymentStatus || paymentStatus === 'pending' ? (
           <button
             onClick={handleCloseDialog}
