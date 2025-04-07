@@ -1,232 +1,137 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import { CheckoutContainerProps } from './types';
-import { createCheckoutPreference, initMercadoPago, initCheckoutBricks, convertToMPProductInfo } from "@/services/mercadoPagoService";
-import { useToast } from "@/hooks/use-toast";
+import React, { useEffect, useRef, useState } from 'react';
+import { SubscriptionPlan } from '@/integrations/supabase/schema';
 import CheckoutLoading from './CheckoutLoading';
-import { PaymentStatus } from '../CheckoutModal';
-import { registerLead } from '@/services/leadService';
-import UserCheckoutTab from './UserCheckoutTab';
+import { createCheckoutPreference, initCheckoutBricks } from '@/services/mercadoPagoService';
+import { useToast } from '@/hooks/use-toast';
 
-const CheckoutContainer: React.FC<CheckoutContainerProps> = ({ 
-  plan, 
+interface CheckoutContainerProps {
+  plan: SubscriptionPlan | null;
+  customerInfo?: {
+    name: string;
+    email: string;
+  };
+  onPaymentComplete?: (status: string, paymentId?: string) => void;
+}
+
+const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
+  plan,
   customerInfo,
-  onPaymentComplete,
-  openInNewTab = false // Changed default to false to open in same tab
+  onPaymentComplete
 }) => {
   const [isLoading, setIsLoading] = useState(true);
-  const [checkoutInitialized, setCheckoutInitialized] = useState(false);
-  const [leadRegistered, setLeadRegistered] = useState(false);
-  const checkoutContainerRef = useRef<HTMLDivElement>(null);
+  const [preferenceId, setPreferenceId] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   
-  // If we're using external checkout, render the UserCheckoutTab component
-  if (openInNewTab && plan) {
-    return (
-      <UserCheckoutTab
-        planId={plan.id}
-        planName={plan.name}
-        planPrice={plan.price}
-        customerInfo={customerInfo}
-      />
-    );
-  }
-  
-  // Initialize Mercado Pago when the component is mounted
   useEffect(() => {
-    const initMP = async () => {
-      try {
-        await initMercadoPago();
-        console.log("MercadoPago SDK initialized");
-      } catch (error) {
-        console.error("Failed to initialize MercadoPago SDK:", error);
+    const initializeCheckout = async () => {
+      setIsLoading(true);
+      
+      if (!plan) {
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: "Plano não selecionado"
+        });
+        setIsLoading(false);
+        return;
       }
-    };
-    
-    initMP();
-  }, []);
-  
-  // Register lead when customer info is available
-  useEffect(() => {
-    if (customerInfo && !leadRegistered && plan) {
-      const registerUserAsLead = async () => {
-        try {
-          console.log("Registering lead:", customerInfo);
-          await registerLead({
+      
+      console.log("Starting checkout initialization process");
+      
+      try {
+        // Create checkout preference
+        console.log("Creating checkout preference...");
+        const preference = await createCheckoutPreference(
+          {
+            id: plan.id,
+            title: plan.name,
+            description: plan.description,
+            unit_price: plan.price,
+            quantity: 1,
+            currency_id: "BRL"
+          },
+          customerInfo ? {
             name: customerInfo.name,
             email: customerInfo.email,
-            plan_id: plan.id,
-            plan_name: plan.name,
-            price: plan.price
-          });
-          setLeadRegistered(true);
-          console.log("Lead registered successfully");
-        } catch (error) {
-          console.error("Failed to register lead:", error);
-          // Continue with checkout even if lead registration fails
-        }
-      };
-      
-      registerUserAsLead();
-    }
-  }, [customerInfo, leadRegistered, plan]);
-  
-  // When the component is mounted, we ensure that the ref is available
-  useEffect(() => {
-    console.log("CheckoutContainer mounted, ref is:", !!checkoutContainerRef.current);
-  }, []);
-
-  useEffect(() => {
-    if (plan && !checkoutInitialized) {
-      console.log("Starting checkout initialization process");
-      // First, make sure the element will be rendered immediately
-      setIsLoading(false);
-      
-      // After rendering, start the checkout with sufficient delay
-      const timer = setTimeout(() => {
-        initializeCheckout();
-      }, 1000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [plan, checkoutInitialized]);
-
-  const initializeCheckout = async () => {
-    if (!plan) return;
-    
-    try {
-      console.log("Creating checkout preference...");
-      
-      // Convert plan to proper Mercado Pago product format
-      const mpProduct = convertToMPProductInfo({
-        id: plan.id,
-        title: plan.name,
-        name: plan.name,
-        description: plan.description || `Assinatura do plano ${plan.name}`,
-        unit_price: plan.price,
-        price: plan.price
-      });
-      
-      const preference = await createCheckoutPreference(
-        mpProduct,
-        customerInfo ? {
-          name: customerInfo.name,
-          email: customerInfo.email,
-          firstName: customerInfo.name.split(' ')[0],
-          lastName: customerInfo.name.split(' ').slice(1).join(' '),
-          identificationType: "CPF",
-          identificationNumber: "00000000000"
-        } : undefined
-      );
-      
-      console.log("Preference created successfully:", preference.preferenceId);
-      
-      // Verify if the element exists in the DOM before initializing
-      const maxAttempts = 5;
-      let currentAttempt = 0;
-      
-      const attemptInitialization = () => {
-        currentAttempt++;
-        const containerElement = document.getElementById('user-registration-checkout-container');
-        console.log(`Attempt ${currentAttempt}: Container exists in DOM:`, !!containerElement);
+            firstName: customerInfo.name.split(' ')[0],
+            lastName: customerInfo.name.split(' ').slice(1).join(' '),
+            identificationType: "CPF",
+            identificationNumber: "00000000000"
+          } : undefined
+        );
         
-        if (containerElement) {
-          // Log dimensions to ensure the element is visible
-          const width = containerElement.offsetWidth;
-          const height = containerElement.offsetHeight;
-          console.log("Container dimensions:", width, "x", height);
+        console.log("Preference created successfully:", preference.preferenceId);
+        setPreferenceId(preference.preferenceId);
+        
+        // Initialize the brick
+        if (containerRef.current) {
+          console.log("Attempt 1: Container exists in DOM:", !!containerRef.current);
+          console.log("Container dimensions:", containerRef.current.offsetWidth, "x", containerRef.current.offsetHeight);
           
-          if (width > 0 && height > 0) {
-            // Initialize Mercado Pago Bricks
-            console.log("Initializing Bricks with preference:", preference.preferenceId);
-            
-            // Prepare customer data in the expected format
-            const customerData = customerInfo ? {
+          // Initialize the checkout brick
+          console.log("Initializing Bricks with preference:", preference.preferenceId);
+          const success = await initCheckoutBricks(
+            'user-registration-checkout-container',
+            preference.preferenceId,
+            plan.price,
+            customerInfo ? {
               firstName: customerInfo.name.split(' ')[0],
               lastName: customerInfo.name.split(' ').slice(1).join(' '),
               email: customerInfo.email
-            } : undefined;
-            
-            initCheckoutBricks(
-              'user-registration-checkout-container', 
-              preference.preferenceId,
-              plan.price,
-              customerData,
-              (status: PaymentStatus, paymentId?: string) => {
-                if (onPaymentComplete) {
-                  onPaymentComplete(status, paymentId);
-                }
+            } : undefined,
+            (status, paymentId) => {
+              if (onPaymentComplete) {
+                onPaymentComplete(status, paymentId);
               }
-            )
-            .then(success => {
-              if (success) {
-                console.log("Checkout Bricks initialized successfully");
-                setCheckoutInitialized(true);
-              } else {
-                handleInitializationError("Failed to initialize Checkout Bricks");
-              }
-            })
-            .catch(error => {
-              handleInitializationError(`Error initializing Checkout Bricks: ${error}`);
+            }
+          );
+          
+          console.log("Checkout Bricks initialized successfully");
+          if (!success) {
+            toast({
+              variant: "destructive",
+              title: "Erro",
+              description: "Não foi possível inicializar o checkout"
             });
-          } else {
-            handleInitializationError("Container has zero dimensions");
           }
-        } else if (currentAttempt < maxAttempts) {
-          // Try again after a short delay
-          console.log(`Container not found, retrying in 500ms (attempt ${currentAttempt}/${maxAttempts})`);
-          setTimeout(attemptInitialization, 500);
         } else {
-          handleInitializationError("Container not found after maximum attempts");
+          console.error("Container ref is null");
+          toast({
+            variant: "destructive",
+            title: "Erro",
+            description: "Container de checkout não encontrado"
+          });
         }
-      };
-      
-      // Start the initialization attempts
-      attemptInitialization();
-      
-    } catch (error) {
-      console.error("Failed to initialize checkout:", error);
-      toast({
-        variant: "destructive",
-        title: "Erro ao inicializar checkout",
-        description: "Ocorreu um erro ao preparar o checkout. Por favor, tente novamente."
-      });
-    }
-  };
+      } catch (error) {
+        console.error("Error initializing checkout:", error);
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: "Ocorreu um erro ao inicializar o checkout"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    // Use setTimeout to ensure the DOM is fully rendered
+    const timer = setTimeout(() => {
+      initializeCheckout();
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [plan, customerInfo, onPaymentComplete, toast]);
   
-  const handleInitializationError = (message: string) => {
-    console.error(message);
-    toast({
-      variant: "destructive",
-      title: "Erro ao inicializar pagamento",
-      description: "Não foi possível inicializar o checkout. Por favor, tente novamente."
-    });
-  };
-
   return (
     <div className="relative">
-      {isLoading ? (
-        <CheckoutLoading />
-      ) : (
-        <div 
-          id="user-registration-checkout-container" 
-          ref={checkoutContainerRef}
-          className="min-h-[400px] border-2 border-primary rounded-md p-4 bg-white"
-          style={{ width: '100%', minHeight: '400px' }}
-          data-testid="checkout-container"
-        ></div>
-      )}
-      
-      {!checkoutInitialized && !isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-background/70">
-          <button 
-            onClick={() => initializeCheckout()}
-            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
-          >
-            Tentar novamente
-          </button>
-        </div>
-      )}
+      {isLoading && <CheckoutLoading message="Carregando checkout..." />}
+      <div 
+        id="user-registration-checkout-container" 
+        className="min-h-[400px]"
+        ref={containerRef}
+      ></div>
     </div>
   );
 };

@@ -1,74 +1,69 @@
 
 // MercadoPago SDK initialization
-import { PaymentStatus } from '../mercadoPago/types';
 
-// Public key for MercadoPago - in a real application, this would be stored in an environment variable
-export const PUBLIC_KEY = 'TEST-743d9b96-571d-4f27-8d36-a3c40fb4a489';
+// Use a testing public key for development
+export const PUBLIC_KEY = 'TEST-2e3e0f19-990a-4323-b2b6-85c7e1684917';
 
-let mercadoPagoInstance: any = null;
+let mp: any = null;
 
-// Initialize MercadoPago SDK
-export const initMercadoPago = async (): Promise<boolean> => {
+export const getMercadoPagoInstance = async () => {
+  if (mp) {
+    console.log("MercadoPago SDK already loaded");
+    return mp;
+  }
+
   try {
-    // Check if the SDK is already loaded
-    if (window.MercadoPago) {
-      console.log('MercadoPago SDK already loaded');
-      return true;
-    }
-
-    return new Promise((resolve) => {
-      // Create script element
-      const script = document.createElement('script');
-      script.src = 'https://sdk.mercadopago.com/js/v2';
-      script.async = true;
-      
-      // Handle script load event
-      script.onload = () => {
-        console.log('MercadoPago SDK loaded successfully');
-        resolve(true);
-      };
-      
-      // Handle script error event
-      script.onerror = () => {
-        console.error('Failed to load MercadoPago SDK');
-        resolve(false);
-      };
-      
-      // Add script to document
-      document.head.appendChild(script);
-    });
+    // Load the SDK dynamically
+    await loadMercadoPagoSDK();
+    
+    // Initialize the SDK with the public key
+    mp = new window.MercadoPago(PUBLIC_KEY);
+    console.log("MercadoPago SDK initialized");
+    return mp;
   } catch (error) {
-    console.error('Error initializing MercadoPago SDK:', error);
+    console.error("Error initializing MercadoPago SDK:", error);
+    return null;
+  }
+};
+
+export const initMercadoPago = async () => {
+  try {
+    await loadMercadoPagoSDK();
+    window.MercadoPago(PUBLIC_KEY);
+    console.log("MercadoPago SDK loaded successfully");
+    return true;
+  } catch (error) {
+    console.error("Error loading MercadoPago SDK:", error);
     return false;
   }
 };
 
-// Get an instance of MercadoPago
-export const getMercadoPagoInstance = async (): Promise<any> => {
-  if (mercadoPagoInstance) {
-    return mercadoPagoInstance;
-  }
-  
-  // Make sure SDK is loaded
-  const isInitialized = await initMercadoPago();
-  if (!isInitialized) {
-    console.error('MercadoPago SDK is not initialized');
-    return null;
-  }
-  
-  try {
-    // Create a new MercadoPago instance
+// Helper function to load the SDK script
+const loadMercadoPagoSDK = () => {
+  return new Promise<void>((resolve, reject) => {
     if (window.MercadoPago) {
-      mercadoPagoInstance = new window.MercadoPago(PUBLIC_KEY, {
-        locale: 'pt-BR'
-      });
-      return mercadoPagoInstance;
-    } else {
-      console.error('MercadoPago is not available');
-      return null;
+      console.log("MercadoPago SDK already loaded");
+      resolve();
+      return;
     }
-  } catch (error) {
-    console.error('Error creating MercadoPago instance:', error);
-    return null;
-  }
+
+    const script = document.createElement("script");
+    script.src = "https://sdk.mercadopago.com/js/v2";
+    script.async = true;
+    script.onload = () => {
+      console.log("MercadoPago SDK loaded successfully");
+      resolve();
+    };
+    script.onerror = () => {
+      reject(new Error("Failed to load MercadoPago SDK"));
+    };
+    document.body.appendChild(script);
+  });
 };
+
+// Add MercadoPago to the window object for TypeScript
+declare global {
+  interface Window {
+    MercadoPago: any;
+  }
+}

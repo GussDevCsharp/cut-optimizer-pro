@@ -3,6 +3,17 @@
 import { getMercadoPagoInstance, PUBLIC_KEY } from './sdk';
 import { CustomerData } from './types';
 
+// Define proper types for initialization
+interface RenderComponentInitialization {
+  amount: number;
+  preferenceId: string;
+  payer?: {
+    email?: string;
+    firstName?: string;
+    lastName?: string;
+  };
+}
+
 // Map of payment statuses
 const paymentStatusMapping = {
   approved: 'approved',
@@ -52,38 +63,56 @@ export const initCheckoutBricks = async (
     
     console.log(`Creating payment brick...`);
     
-    // Define initialization and customization based on the official documentation
+    // Create initialization object according to Mercado Pago documentation
+    const initialization: RenderComponentInitialization = {
+      amount,
+      preferenceId
+    };
+    
+    // Add payer information if available
+    if (customerInfo && customerInfo.email) {
+      initialization.payer = {
+        email: customerInfo.email
+      };
+
+      if (customerInfo.firstName) {
+        initialization.payer.firstName = customerInfo.firstName;
+      }
+      
+      if (customerInfo.lastName) {
+        initialization.payer.lastName = customerInfo.lastName;
+      }
+    }
+    
+    // Define rendering configuration according to official documentation
     const renderComponent = {
-      initialization: {
-        amount: amount,
-        preferenceId: preferenceId
-      },
+      initialization,
       customization: {
         visual: {
-          hidePaymentButton: false,
-          hideFormTitle: false
+          hideFormTitle: false,
+          hidePaymentButton: false
         },
         paymentMethods: {
           maxInstallments: 12,
           minInstallments: 1,
-          creditCard: "all",
-          debitCard: "all"
+          creditCard: 'all',
+          debitCard: 'all'
         }
       },
       callbacks: {
         onReady: () => {
           console.log('Brick ready');
         },
-        onSubmit: (formData: any) => {
+        onSubmit: (cardFormData: any) => {
           // This callback triggers when the user clicks on the payment button
-          console.log('Payment submitted:', formData);
-          return new Promise((resolve) => {
+          console.log('Payment submitted:', cardFormData);
+          return new Promise((resolve, reject) => {
             // In a real implementation, you would send this data to your server
             setTimeout(() => {
               if (onComplete) {
                 onComplete('approved', `MOCK_PAYMENT_${Date.now()}`);
               }
-              resolve(true);
+              resolve();
             }, 2000);
           });
         },
@@ -96,24 +125,8 @@ export const initCheckoutBricks = async (
       }
     };
 
-    // Add payer information if available
-    if (customerInfo && customerInfo.email) {
-      (renderComponent.initialization as any).payer = {
-        email: customerInfo.email
-      };
-
-      if (customerInfo.firstName) {
-        (renderComponent.initialization as any).payer.firstName = customerInfo.firstName;
-      }
-      
-      if (customerInfo.lastName) {
-        (renderComponent.initialization as any).payer.lastName = customerInfo.lastName;
-      }
-    }
-
     try {
-      // Create the payment brick in the specified container
-      // Using the render method as specified in the documentation
+      // Create the payment brick in the specified container with the correct syntax
       await bricksBuilder.create('payment', containerId, renderComponent);
       
       console.log('Payment brick created successfully');
