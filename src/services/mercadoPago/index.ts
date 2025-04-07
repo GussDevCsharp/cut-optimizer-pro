@@ -1,15 +1,53 @@
 
-// Re-export from the individual modules in a way that avoids conflicts
-export * from './pixPayment';
-export * from './boletoPayment';
-export * from './types';
-export * from './utils';
-export * from './core';
+// Re-export all functions and types from individual files
 
-// Export from cardPayment.ts with explicit naming to avoid conflicts
-export { 
+// Re-export from SDK functions
+export {
+  initMercadoPago,
+  getMercadoPagoInstance,
+  PUBLIC_KEY
+} from './sdk';
+
+// Re-export from checkout bricks
+export {
+  initCheckoutBricks
+} from './checkoutBricks';
+
+// Re-export from preferences
+export {
+  createPaymentPreference,
+  createCheckoutPreference
+} from './preferences';
+
+// Re-export from card payment
+export {
   processCardPayment,
   getInstallmentOptions,
-  formatCardNumber,
-  formatCurrency 
+  formatCardNumber
 } from './cardPayment';
+
+// Re-export from pix payment
+export {
+  generatePixPayment
+} from './pixPayment';
+
+// Re-export from boleto payment
+export {
+  generateBoletoPayment
+} from './boletoPayment';
+
+// Re-export from utils
+export {
+  formatCPF,
+  validateCPF,
+  formatCurrency
+} from './utils';
+
+// Re-export types
+export type {
+  ProductInfo,
+  CustomerData,
+  CardData,
+  CheckoutBricksOptions,
+  InstallmentOption
+} from './types';

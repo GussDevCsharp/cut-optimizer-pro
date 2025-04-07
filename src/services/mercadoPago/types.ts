@@ -1,28 +1,7 @@
 
-// Customer data interface
-export interface CustomerData {
-  name: string;
-  email: string;
-  identificationType?: string;
-  identificationNumber?: string;
-}
+// Type definitions for Mercado Pago integration
+import { PaymentStatus } from '@/components/checkout/CheckoutModal';
 
-// Card data interface
-export interface CardData {
-  cardNumber: string;
-  cardholderName: string;
-  cardExpirationMonth: string;
-  cardExpirationYear: string;
-  securityCode: string;
-  identificationType: string;
-  identificationNumber: string;
-  // Adding missing properties for payment processing
-  issuer?: string;
-  installments?: number;
-  paymentMethodId?: string;
-}
-
-// Product info interface
 export interface ProductInfo {
   id: string;
   name: string;
@@ -31,38 +10,48 @@ export interface ProductInfo {
   image?: string;
 }
 
-// Installment option interface
-export interface InstallmentOption {
-  installments: number;
-  installmentRate: number;
-  totalAmount: number;
-  installmentAmount: number;
+export interface CustomerData {
+  name?: string;
+  email?: string;
+  identificationType?: string;
+  identificationNumber?: string;
 }
 
-// Checkout Bricks Options
+export interface CardData {
+  cardNumber: string;
+  cardholderName: string;
+  expirationMonth: string;
+  expirationYear: string;
+  securityCode: string;
+  installments: number;
+}
+
 export interface CheckoutBricksOptions {
-  preferenceId: string;
-  customization?: {
-    paymentMethods?: {
-      creditCard?: 'all' | 'none' | string[];
-      debitCard?: 'all' | 'none' | string[];
-      ticket?: 'all' | 'none' | string[];
-      bankTransfer?: 'all' | 'none' | string[];
-      atm?: 'all' | 'none' | string[];
-      wallet_purchase?: 'all' | 'none';
-      maxInstallments?: number;
-    };
-    visual?: {
+  initialization: {
+    preferenceId?: string;
+    amount?: number;
+  };
+  customization: {
+    visual: {
       hideFormTitle?: boolean;
-      hideValueBanner?: boolean;
+      hidePaymentButton?: boolean;
     };
+  };
+  callbacks: {
+    onReady: () => void;
+    onError: (error: any) => void;
+    onSubmit: (data: any) => Promise<void>;
   };
 }
 
-// Declaration for window object to include MercadoPago
-declare global {
-  interface Window {
-    MercadoPago: any;
-    paymentBrickController: any;
-  }
+export interface InstallmentOption {
+  installments: number;
+  installmentAmount: number;
+  totalAmount: number;
+  interestRate: number;
+}
+
+export interface CheckoutResponse {
+  status: PaymentStatus;
+  paymentId?: string;
 }

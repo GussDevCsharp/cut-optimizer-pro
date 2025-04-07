@@ -1,52 +1,9 @@
 
+// Checkout Bricks functionality
+
 import { toast } from '@/hooks/use-toast';
-import { ProductInfo, CheckoutBricksOptions, CustomerData } from './types';
 import { PaymentStatus } from '@/components/checkout/CheckoutModal';
-
-// This would be your public key from Mercado Pago
-// In production, you would likely store this in an environment variable
-// For sandbox testing, we're using a test public key
-const PUBLIC_KEY = 'TEST-8f683d0c-1025-48db-8f1e-dae8d7f94a15';
-
-// Initialize Mercado Pago SDK
-export const initMercadoPago = async (): Promise<void> => {
-  if (window.MercadoPago) return Promise.resolve();
-  
-  return new Promise<void>((resolve, reject) => {
-    try {
-      // Create script element
-      const script = document.createElement('script');
-      script.src = 'https://sdk.mercadopago.com/js/v2';
-      script.type = 'text/javascript';
-      script.onload = () => {
-        if (window.MercadoPago) {
-          // Note: MercadoPago v2 SDK doesn't have setPublishableKey method
-          // It's instantiated with the key instead
-          console.log("MercadoPago SDK loaded successfully");
-          resolve();
-        } else {
-          reject(new Error('MercadoPago SDK failed to load'));
-        }
-      };
-      script.onerror = () => {
-        reject(new Error('Failed to load MercadoPago SDK'));
-      };
-      document.body.appendChild(script);
-    } catch (error) {
-      reject(error);
-    }
-  });
-};
-
-// Get Mercado Pago instance
-export const getMercadoPagoInstance = () => {
-  if (!window.MercadoPago) {
-    throw new Error('MercadoPago not initialized. Call initMercadoPago first.');
-  }
-  return new window.MercadoPago(PUBLIC_KEY, {
-    locale: 'pt'
-  });
-};
+import { PUBLIC_KEY, initMercadoPago } from './sdk';
 
 // Initialize Checkout Bricks
 export const initCheckoutBricks = async (
@@ -211,45 +168,4 @@ export const initCheckoutBricks = async (
     });
     return false;
   }
-};
-
-// Create payment preference (would be called from your backend)
-// This is a mock function. In a real implementation, this would make a call to your backend
-export const createPaymentPreference = async (
-  product: ProductInfo, 
-  paymentMethod: 'pix' | 'card' | 'boleto'
-): Promise<{ preferenceId: string }> => {
-  // In a real implementation, you would call your backend API that interacts with Mercado Pago's API
-  // For this example, we're simulating a successful response
-  return new Promise((resolve) => {
-    // Simulate API call delay
-    setTimeout(() => {
-      resolve({
-        preferenceId: `MOCK_PREFERENCE_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
-      });
-    }, 1000);
-  });
-};
-
-// Create a preference to use with Checkout Bricks
-export const createCheckoutPreference = async (
-  product: ProductInfo,
-  customerData?: CustomerData
-): Promise<{ preferenceId: string }> => {
-  // In a real implementation, you would call your backend API
-  // For this example, we are simulating a successful response
-  console.log('Creating checkout preference for product:', product);
-  
-  if (customerData) {
-    console.log('Customer data:', customerData);
-  }
-  
-  return new Promise((resolve) => {
-    // Simulate API call delay
-    setTimeout(() => {
-      resolve({
-        preferenceId: `MOCK_BRICKS_PREFERENCE_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
-      });
-    }, 1000);
-  });
 };
