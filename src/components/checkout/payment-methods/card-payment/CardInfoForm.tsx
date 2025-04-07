@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { getInstallmentOptions } from "@/services/mercadoPagoService";
+import { getInstallmentOptions, InstallmentOption } from "@/services/mercadoPagoService";
 
 interface CardInfoFormProps {
   cardNumber: string;
@@ -46,7 +46,7 @@ const CardInfoForm: React.FC<CardInfoFormProps> = ({
   isLoading,
   productPrice
 }) => {
-  const [installmentOptions, setInstallmentOptions] = useState<any[]>([]);
+  const [installmentOptions, setInstallmentOptions] = useState<InstallmentOption[]>([]);
 
   // Generate installment options when component mounts
   useEffect(() => {

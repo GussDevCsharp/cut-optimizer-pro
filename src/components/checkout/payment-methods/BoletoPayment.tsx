@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +7,8 @@ import {
   generateBoletoPayment, 
   CustomerData, 
   formatCPF, 
-  validateCPF 
+  validateCPF,
+  BoletoPaymentResponse
 } from "@/services/mercadoPagoService";
 import { ProductInfo, PaymentStatus } from "../CheckoutModal";
 
@@ -16,14 +16,6 @@ interface BoletoPaymentProps {
   product: ProductInfo;
   onProcessing: (isProcessing: boolean) => void;
   onComplete: (status: PaymentStatus, paymentId?: string) => void;
-}
-
-interface BoletoPaymentResponse {
-  status: PaymentStatus;
-  paymentId: string;
-  boletoNumber: string;
-  boletoUrl: string;
-  expirationDate: string;
 }
 
 const BoletoPayment: React.FC<BoletoPaymentProps> = ({ product, onProcessing, onComplete }) => {
@@ -73,15 +65,16 @@ const BoletoPayment: React.FC<BoletoPaymentProps> = ({ product, onProcessing, on
       const customerData: CustomerData = {
         name,
         email,
+        cpf,
         identificationType: 'CPF',
         identificationNumber: cpf.replace(/\D/g, '')
       };
       
       // Call the service to generate a Boleto payment
-      const response = await generateBoletoPayment(product, customerData) as BoletoPaymentResponse;
+      const response = await generateBoletoPayment(product, customerData);
       
       setPaymentData(response);
-      onComplete('pending', response.paymentId);
+      onComplete(response.status, response.paymentId);
     } catch (error) {
       console.error('Error generating Boleto payment:', error);
       onComplete('error');

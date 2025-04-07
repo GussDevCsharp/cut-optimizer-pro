@@ -15,6 +15,7 @@ export interface CustomerData {
   email?: string;
   identificationType?: string;
   identificationNumber?: string;
+  cpf?: string; // Add CPF field to allow direct access
 }
 
 export interface CardData {
@@ -24,6 +25,10 @@ export interface CardData {
   expirationYear: string;
   securityCode: string;
   installments: number;
+  issuer?: string;
+  paymentMethodId?: string;
+  identificationType?: string;
+  identificationNumber?: string;
 }
 
 export interface CheckoutBricksOptions {
@@ -49,9 +54,28 @@ export interface InstallmentOption {
   installmentAmount: number;
   totalAmount: number;
   interestRate: number;
+  label?: string; // Added label for display
 }
 
 export interface CheckoutResponse {
   status: PaymentStatus;
   paymentId?: string;
+}
+
+// Add interfaces for Pix and Boleto responses
+export interface PixPaymentResponse {
+  status: PaymentStatus;
+  paymentId: string;
+  qrCode: string;
+  qrCodeBase64: string;
+  qrCodeText: string;
+  expirationDate: string;
+}
+
+export interface BoletoPaymentResponse {
+  status: PaymentStatus;
+  paymentId: string;
+  boletoNumber: string;
+  boletoUrl: string;
+  expirationDate: string;
 }

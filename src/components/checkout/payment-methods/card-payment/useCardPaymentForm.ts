@@ -116,6 +116,7 @@ export const useCardPaymentForm = ({ product, onProcessing, onComplete }: UseCar
       const customerData: CustomerData = {
         name: formState.name,
         email: formState.email,
+        cpf: formState.cpf,
         identificationType: 'CPF',
         identificationNumber: formState.cpf.replace(/\D/g, '')
       };
@@ -123,11 +124,11 @@ export const useCardPaymentForm = ({ product, onProcessing, onComplete }: UseCar
       const cardData: CardData = {
         cardNumber: formState.cardNumber.replace(/\D/g, ''),
         cardholderName: formState.cardholderName,
-        cardExpirationMonth: formState.expirationMonth,
-        cardExpirationYear: formState.expirationYear,
+        expirationMonth: formState.expirationMonth,
+        expirationYear: formState.expirationYear,
         securityCode: formState.securityCode,
-        issuer: 'visa', // This would normally be detected by Mercado Pago
         installments: parseInt(formState.installments, 10),
+        issuer: 'visa', // This would normally be detected by Mercado Pago
         paymentMethodId: 'visa', // This would normally be detected by Mercado Pago
         identificationType: 'CPF',
         identificationNumber: formState.cpf.replace(/\D/g, '')
@@ -139,7 +140,7 @@ export const useCardPaymentForm = ({ product, onProcessing, onComplete }: UseCar
       onComplete(response.status, response.paymentId);
     } catch (error) {
       console.error('Error processing card payment:', error);
-      onComplete('error');
+      onComplete('error' as PaymentStatus);
     } finally {
       setIsLoading(false);
       onProcessing(false);

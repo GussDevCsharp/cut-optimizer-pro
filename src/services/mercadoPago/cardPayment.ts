@@ -1,96 +1,90 @@
 
 // Card payment functionality
-import { toast } from '@/hooks/use-toast';
-import { CardData, ProductInfo, InstallmentOption } from './types';
-import { getMercadoPagoInstance, initMercadoPago } from './sdk';
+import { ProductInfo, CustomerData, CardData, InstallmentOption, CheckoutResponse } from './types';
+import { PaymentStatus } from '@/components/checkout/CheckoutModal';
+
+// Format card number as user types (e.g. 4111 1111 1111 1111)
+export const formatCardNumber = (value: string): string => {
+  const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+  const matches = v.match(/\d{4,16}/g);
+  const match = matches && matches[0] || '';
+  const parts = [];
+  
+  for (let i = 0, len = match.length; i < len; i += 4) {
+    parts.push(match.substring(i, i + 4));
+  }
+  
+  if (parts.length) {
+    return parts.join(' ');
+  } else {
+    return value;
+  }
+};
+
+// Get installment options for a product
+export const getInstallmentOptions = (amount: number): InstallmentOption[] => {
+  // This is a mock implementation
+  // In a real scenario, you would fetch this from Mercado Pago's API
+  const options: InstallmentOption[] = [];
+  
+  // Calculate installment options (1 to 12)
+  for (let i = 1; i <= 12; i++) {
+    const interestRate = i <= 3 ? 0 : 1.5 * (i - 3); // 0% for up to 3 installments, then 1.5% per additional installment
+    const totalAmount = amount * (1 + interestRate / 100);
+    const installmentAmount = totalAmount / i;
+    
+    let label = `${i}x de ${new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(installmentAmount)}`;
+    
+    if (i <= 3) {
+      label += ' sem juros';
+    } else {
+      label += ` (total: ${new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(totalAmount)})`;
+    }
+    
+    options.push({
+      installments: i,
+      installmentAmount,
+      totalAmount,
+      interestRate,
+      label
+    });
+  }
+  
+  return options;
+};
 
 // Process card payment
 export const processCardPayment = async (
   product: ProductInfo,
   cardData: CardData,
-  customerData: { name: string; email: string; cpf: string }
-): Promise<{ status: string; paymentId: string }> => {
-  try {
-    await initMercadoPago();
-    const mp = getMercadoPagoInstance();
-    
-    // In a real implementation, you'd call your backend here
-    // For the demo, we're simulating a response
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // Simulate some basic validations
-        if (!cardData.cardNumber || cardData.cardNumber.replace(/\s/g, '').length < 16) {
-          throw new Error('Número de cartão inválido');
-        }
-        
-        // Simulate successful payment
+  customerData: CustomerData
+): Promise<CheckoutResponse> => {
+  // This is a mock implementation
+  // In a real scenario, you would call your backend API that interacts with Mercado Pago's API
+  console.log('Processing card payment for product:', product);
+  console.log('Card data:', cardData);
+  console.log('Customer data:', customerData);
+  
+  return new Promise((resolve, reject) => {
+    // Simulate API call delay
+    setTimeout(() => {
+      // Simulate a successful response (90% chance)
+      if (Math.random() < 0.9) {
         resolve({
-          status: 'approved',
-          paymentId: `mock_${Date.now()}`
+          status: 'approved' as PaymentStatus,
+          paymentId: `card_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
         });
-      }, 2000);
-    });
-  } catch (error) {
-    console.error("Error processing card payment:", error);
-    toast({
-      variant: "destructive",
-      title: "Erro ao processar pagamento",
-      description: error instanceof Error ? error.message : "Ocorreu um erro ao processar seu pagamento."
-    });
-    throw error;
-  }
-};
-
-// Get installment options
-export const getInstallmentOptions = async (
-  amount: number
-): Promise<InstallmentOption[]> => {
-  try {
-    // Simulate fetching installment options
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const options: InstallmentOption[] = [];
-        const maxInstallments = 12;
-        
-        for (let i = 1; i <= maxInstallments; i++) {
-          let installmentAmount = amount / i;
-          let interestRate = 0;
-          
-          // Add interest after 3 installments (for simulation)
-          if (i > 3) {
-            interestRate = 0.019 * (i - 3); // 1.9% per month
-            installmentAmount = installmentAmount * (1 + interestRate);
-          }
-          
-          options.push({
-            installments: i,
-            installmentAmount,
-            totalAmount: installmentAmount * i,
-            interestRate: interestRate * 100 // Convert to percentage
-          });
-        }
-        
-        resolve(options);
-      }, 500);
-    });
-  } catch (error) {
-    console.error("Error getting installment options:", error);
-    return [];
-  }
-};
-
-// Format card number
-export const formatCardNumber = (cardNumber: string): string => {
-  return cardNumber
-    .replace(/\s/g, '')
-    .replace(/(\d{4})/g, '$1 ')
-    .trim();
-};
-
-// Format currency
-export const formatCurrency = (value: number): string => {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  }).format(value);
+      } else {
+        resolve({
+          status: 'rejected' as PaymentStatus
+        });
+      }
+    }, 2000);
+  });
 };

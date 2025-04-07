@@ -49,5 +49,8 @@ export type {
   CustomerData,
   CardData,
   CheckoutBricksOptions,
-  InstallmentOption
+  InstallmentOption,
+  PixPaymentResponse,
+  BoletoPaymentResponse,
+  CheckoutResponse
 } from './types';

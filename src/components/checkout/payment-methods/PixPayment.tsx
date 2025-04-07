@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +7,8 @@ import {
   generatePixPayment, 
   CustomerData, 
   formatCPF, 
-  validateCPF 
+  validateCPF,
+  PixPaymentResponse
 } from "@/services/mercadoPagoService";
 import { ProductInfo, PaymentStatus } from "../CheckoutModal";
 
@@ -16,15 +16,6 @@ interface PixPaymentProps {
   product: ProductInfo;
   onProcessing: (isProcessing: boolean) => void;
   onComplete: (status: PaymentStatus, paymentId?: string) => void;
-}
-
-interface PixPaymentResponse {
-  status: PaymentStatus;
-  paymentId: string;
-  qrCode: string;
-  qrCodeBase64: string;
-  qrCodeText: string;
-  expirationDate: string;
 }
 
 const PixPayment: React.FC<PixPaymentProps> = ({ product, onProcessing, onComplete }) => {
@@ -74,15 +65,16 @@ const PixPayment: React.FC<PixPaymentProps> = ({ product, onProcessing, onComple
       const customerData: CustomerData = {
         name,
         email,
+        cpf,
         identificationType: 'CPF',
         identificationNumber: cpf.replace(/\D/g, '')
       };
       
       // Call the service to generate a Pix payment
-      const response = await generatePixPayment(product, customerData) as PixPaymentResponse;
+      const response = await generatePixPayment(product, customerData);
       
       setPaymentData(response);
-      onComplete('pending', response.paymentId);
+      onComplete(response.status, response.paymentId);
     } catch (error) {
       console.error('Error generating Pix payment:', error);
       onComplete('error');
@@ -165,7 +157,6 @@ const PixPayment: React.FC<PixPaymentProps> = ({ product, onProcessing, onComple
     );
   }
 
-  // Show form to collect customer data
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
