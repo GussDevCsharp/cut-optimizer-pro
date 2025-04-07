@@ -20,53 +20,51 @@ export const initCheckoutBricks = async (
     
     console.log(`Initializing checkout brick in container: ${checkoutContainerId}`);
     
-    // Add a delay to ensure the DOM is ready
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
     // Make sure the container exists
-    const container = document.getElementById(checkoutContainerId);
+    let container = document.getElementById(checkoutContainerId);
+    
+    // Try multiple times to find the container with increasing delays
     if (!container) {
-      console.error(`Container with ID ${checkoutContainerId} not found. Current elements:`, 
-        Array.from(document.querySelectorAll('div[id]')).map(el => el.id));
-      
-      // Try again after a short delay as a last attempt
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      const containerRetry = document.getElementById(checkoutContainerId);
-      if (!containerRetry) {
-        console.error("Container still not found after retry");
-        return false;
+      console.log("Container not found initially, waiting for DOM to update...");
+      for (let i = 0; i < 3; i++) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        container = document.getElementById(checkoutContainerId);
+        if (container) {
+          console.log(`Container found after ${i+1} attempts`);
+          break;
+        }
       }
-      console.log("Container found on retry attempt");
     }
     
-    // Double check that container exists and has dimensions
-    const finalContainer = document.getElementById(checkoutContainerId);
-    if (finalContainer) {
-      console.log(`Container found with dimensions: ${finalContainer.offsetWidth}x${finalContainer.offsetHeight}`);
-      
-      if (finalContainer.offsetWidth === 0 || finalContainer.offsetHeight === 0) {
-        console.error("Container has zero dimensions, setting minimum dimensions");
-        finalContainer.style.minHeight = "300px";
-        finalContainer.style.minWidth = "100%";
-      }
-    } else {
+    if (!container) {
+      console.error(`Container with ID ${checkoutContainerId} not found after multiple attempts. Current elements:`, 
+        Array.from(document.querySelectorAll('div[id]')).map(el => el.id));
       return false;
     }
     
+    // Check container dimensions and ensure it has proper size
+    console.log(`Container found with dimensions: ${container.offsetWidth}x${container.offsetHeight}`);
+    
+    if (container.offsetWidth === 0 || container.offsetHeight === 0) {
+      console.log("Container has zero dimensions, setting minimum dimensions");
+      container.style.minHeight = "400px";
+      container.style.minWidth = "100%";
+    }
+    
+    // Create Mercado Pago instance
     const mp = new window.MercadoPago(PUBLIC_KEY, {
-      locale: 'pt'
+      locale: 'pt-BR'  // Use pt-BR instead of pt as per console warning
     });
     
     // Initialize the checkout
     const bricksBuilder = mp.bricks();
     
     const renderPaymentBrick = async () => {
-      console.log(`Container found, rendering payment brick with preference: ${preferenceId}`);
+      console.log(`Rendering payment brick with preference: ${preferenceId}`);
       
       const settings = {
         initialization: {
           preferenceId: preferenceId,
-          // We'll use the preferenceId to determine the amount in the backend
         },
         customization: {
           visual: {
@@ -92,10 +90,7 @@ export const initCheckoutBricks = async (
           },
           onSubmit: ({ selectedPaymentMethod, formData }) => {
             console.log('Payment submitted', selectedPaymentMethod, formData);
-            // In a real integration, you would send this data to your backend
             return new Promise<void>((resolve) => {
-              // For demo purposes, we'll just resolve immediately
-              // In a real integration, you would post to your backend
               setTimeout(() => {
                 resolve();
               }, 1000);
