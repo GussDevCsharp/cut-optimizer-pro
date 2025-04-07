@@ -106,7 +106,7 @@ export const initCheckoutBricks = async (
         onSubmit: (cardFormData: any) => {
           // This callback triggers when the user clicks on the payment button
           console.log('Payment submitted:', cardFormData);
-          return new Promise((resolve, reject) => {
+          return new Promise<void>((resolve, reject) => {
             // In a real implementation, you would send this data to your server
             setTimeout(() => {
               if (onComplete) {

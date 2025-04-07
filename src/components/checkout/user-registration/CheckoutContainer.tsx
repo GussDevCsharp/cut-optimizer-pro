@@ -47,7 +47,7 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
           {
             id: plan.id,
             title: plan.name,
-            description: plan.description,
+            description: plan.description || '',
             unit_price: plan.price,
             quantity: 1,
             currency_id: "BRL"
@@ -56,7 +56,7 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
             name: customerInfo.name,
             email: customerInfo.email,
             firstName: customerInfo.name.split(' ')[0],
-            lastName: customerInfo.name.split(' ').slice(1).join(' '),
+            lastName: customerInfo.name.split(' ').slice(1).join(' ') || '',
             identificationType: "CPF",
             identificationNumber: "00000000000"
           } : undefined
@@ -67,35 +67,39 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
         
         // Initialize the brick
         if (containerRef.current) {
-          console.log("Attempt 1: Container exists in DOM:", !!containerRef.current);
+          console.log("Container exists in DOM:", !!containerRef.current);
           console.log("Container dimensions:", containerRef.current.offsetWidth, "x", containerRef.current.offsetHeight);
           
-          // Initialize the checkout brick
-          console.log("Initializing Bricks with preference:", preference.preferenceId);
-          const success = await initCheckoutBricks(
-            'user-registration-checkout-container',
-            preference.preferenceId,
-            plan.price,
-            customerInfo ? {
-              firstName: customerInfo.name.split(' ')[0],
-              lastName: customerInfo.name.split(' ').slice(1).join(' '),
-              email: customerInfo.email
-            } : undefined,
-            (status, paymentId) => {
-              if (onPaymentComplete) {
-                onPaymentComplete(status, paymentId);
+          // Initialize the checkout brick with a slight delay to ensure DOM is ready
+          setTimeout(async () => {
+            console.log("Initializing Bricks with preference:", preference.preferenceId);
+            const success = await initCheckoutBricks(
+              'user-registration-checkout-container',
+              preference.preferenceId,
+              plan.price,
+              customerInfo ? {
+                firstName: customerInfo.name.split(' ')[0],
+                lastName: customerInfo.name.split(' ').slice(1).join(' ') || '',
+                email: customerInfo.email
+              } : undefined,
+              (status, paymentId) => {
+                if (onPaymentComplete) {
+                  onPaymentComplete(status, paymentId);
+                }
               }
+            );
+            
+            console.log("Checkout Bricks initialized:", success ? "successfully" : "failed");
+            if (!success) {
+              toast({
+                variant: "destructive",
+                title: "Erro",
+                description: "Não foi possível inicializar o checkout"
+              });
             }
-          );
-          
-          console.log("Checkout Bricks initialized successfully");
-          if (!success) {
-            toast({
-              variant: "destructive",
-              title: "Erro",
-              description: "Não foi possível inicializar o checkout"
-            });
-          }
+            
+            setIsLoading(false);
+          }, 800); // Increased delay for safer DOM rendering
         } else {
           console.error("Container ref is null");
           toast({
@@ -103,6 +107,7 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
             title: "Erro",
             description: "Container de checkout não encontrado"
           });
+          setIsLoading(false);
         }
       } catch (error) {
         console.error("Error initializing checkout:", error);
@@ -111,25 +116,19 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
           title: "Erro",
           description: "Ocorreu um erro ao inicializar o checkout"
         });
-      } finally {
         setIsLoading(false);
       }
     };
     
-    // Use setTimeout to ensure the DOM is fully rendered
-    const timer = setTimeout(() => {
-      initializeCheckout();
-    }, 500);
-    
-    return () => clearTimeout(timer);
+    initializeCheckout();
   }, [plan, customerInfo, onPaymentComplete, toast]);
   
   return (
-    <div className="relative">
+    <div className="relative h-full flex flex-col">
       {isLoading && <CheckoutLoading message="Carregando checkout..." />}
       <div 
         id="user-registration-checkout-container" 
-        className="min-h-[400px]"
+        className="flex-1 min-h-[400px] w-full border rounded-md bg-background p-4"
         ref={containerRef}
       ></div>
     </div>
