@@ -45,7 +45,7 @@ export interface UserRegistrationCheckoutProps {
   onPaymentComplete?: (status: string, paymentId?: string) => void;
 }
 
-// For UserManagementPanel.tsx
+// For UserManagementPanel.tsx - Adding the missing properties
 export interface UserData {
   id: string;
   name: string;
@@ -54,4 +54,8 @@ export interface UserData {
   status?: 'active' | 'inactive' | 'pending';
   lastLogin?: string;
   createdAt?: string;
+  // Add the missing properties used in UserManagementPanel.tsx
+  isActive: boolean;
+  expirationDate?: string;
+  planType?: string;
 }
