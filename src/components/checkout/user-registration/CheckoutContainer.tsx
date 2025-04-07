@@ -111,8 +111,10 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
         mpProduct,
         customerInfo ? {
           ...customerInfo,
-          identificationType: "CPF", // Default value
-          identificationNumber: "00000000000" // Default value
+          firstName: customerInfo.name.split(' ')[0],
+          lastName: customerInfo.name.split(' ').slice(1).join(' '),
+          identificationType: "CPF",
+          identificationNumber: customerInfo.cpf || "00000000000"
         } : undefined
       );
       
@@ -136,9 +138,19 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({
           if (width > 0 && height > 0) {
             // Inicializar Mercado Pago Bricks
             console.log("Initializing Bricks with preference:", preference.preferenceId);
+            
+            // Preparar as informações do cliente no formato esperado
+            const customerData = customerInfo ? {
+              firstName: customerInfo.name.split(' ')[0],
+              lastName: customerInfo.name.split(' ').slice(1).join(' '),
+              email: customerInfo.email
+            } : undefined;
+            
             initCheckoutBricks(
               'user-registration-checkout-container', 
               preference.preferenceId,
+              plan.price,
+              customerData,
               onPaymentComplete as (status: PaymentStatus, paymentId?: string) => void
             )
             .then(success => {

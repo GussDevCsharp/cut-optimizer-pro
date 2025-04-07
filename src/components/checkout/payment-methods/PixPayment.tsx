@@ -1,19 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Loader, Copy, CheckCircle } from 'lucide-react';
-import { 
-  generatePixPayment, 
-  CustomerData, 
-  formatCPF, 
-  validateCPF,
-  PixPaymentResponse,
-  convertToMPProductInfo,
-  PaymentStatus as MPPaymentStatus
-} from "@/services/mercadoPagoService";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
+import { Loader2, CopyIcon, CheckCircle } from 'lucide-react';
+import { generatePixPayment, CustomerData } from "@/services/mercadoPagoService";
 import { ProductInfo, PaymentStatus } from "../CheckoutModal";
+import { useToast } from '@/hooks/use-toast';
 
 interface PixPaymentProps {
   product: ProductInfo;
@@ -25,72 +18,77 @@ const PixPayment: React.FC<PixPaymentProps> = ({ product, onProcessing, onComple
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [cpf, setCpf] = useState('');
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
-  const [paymentData, setPaymentData] = useState<PixPaymentResponse | null>(null);
-  const [copiedToClipboard, setCopiedToClipboard] = useState(false);
+  const [pixData, setPixData] = useState<{
+    qrCode: string;
+    qrCodeText: string;
+    expirationDate: string;
+    paymentId: string;
+  } | null>(null);
+  const [copied, setCopied] = useState(false);
+  const { toast } = useToast();
 
-  // Format CPF as the user types
-  const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formattedCpf = formatCPF(e.target.value);
-    setCpf(formattedCpf);
+  // Format CPF input
+  const formatCPF = (value: string) => {
+    const digits = value.replace(/\D/g, '');
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+    if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9, 11)}`;
   };
 
-  // Validate all fields before submission
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
-    
-    if (!name.trim()) newErrors.name = 'Nome é obrigatório';
-    if (!email.trim()) newErrors.email = 'E-mail é obrigatório';
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = 'E-mail inválido';
-    }
-    
-    if (!cpf.trim()) newErrors.cpf = 'CPF é obrigatório';
-    else if (!validateCPF(cpf)) {
-      newErrors.cpf = 'CPF inválido';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCpf(formatCPF(e.target.value));
   };
 
-  // Handle form submission
-  const handleSubmit = async (e: React.FormEvent) => {
+  const generatePix = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) return;
+    // Validate form
+    if (!name.trim() || !email.trim() || !cpf.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Informações incompletas",
+        description: "Por favor, preencha todos os campos para gerar o PIX.",
+      });
+      return;
+    }
+    
+    setIsLoading(true);
+    onProcessing(true);
     
     try {
-      setIsLoading(true);
-      onProcessing(true);
-      
       const customerData: CustomerData = {
         name,
         email,
-        identificationType: 'CPF',
+        identificationType: "CPF",
         identificationNumber: cpf.replace(/\D/g, ''),
         cpf
       };
       
-      // Convert product to Mercado Pago format
-      const mpProduct = convertToMPProductInfo(product);
+      const response = await generatePixPayment(product, customerData);
       
-      // Call the service to generate a Pix payment
-      const response = await generatePixPayment(mpProduct, customerData);
+      setPixData({
+        qrCode: response.qrCode || response.qr_code,
+        qrCodeText: response.qrCodeText || '00020101021226800014br.gov.bcb.pix2558api.mercadolibre.com/payment/123456789',
+        expirationDate: response.expirationDate || new Date(Date.now() + 30 * 60000).toISOString(),
+        paymentId: response.paymentId || `pix_${Date.now()}`
+      });
       
-      setPaymentData(response);
-      // Map the payment status correctly
-      const statusMapping: Record<string, PaymentStatus> = {
-        'pending': 'pending',
-        'approved': 'approved',
-        'rejected': 'rejected',
-        'in_process': 'pending',
-        'error': 'error'
-      };
-      onComplete(statusMapping[response.status] || 'pending', response.paymentId);
+      // Map status string to PaymentStatus enum
+      const status: PaymentStatus = 
+        response.status === 'pending' ? 'pending' : 
+        response.status === 'approved' ? 'approved' : 
+        response.status === 'rejected' ? 'rejected' : 'pending';
+      
+      onComplete(status, response.paymentId);
     } catch (error) {
-      console.error('Error generating Pix payment:', error);
+      console.error("Error generating PIX:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao gerar PIX",
+        description: "Ocorreu um erro ao processar sua solicitação. Por favor, tente novamente.",
+      });
       onComplete('error');
     } finally {
       setIsLoading(false);
@@ -98,132 +96,139 @@ const PixPayment: React.FC<PixPaymentProps> = ({ product, onProcessing, onComple
     }
   };
 
-  // Handle copy to clipboard
   const copyToClipboard = () => {
-    if (paymentData?.qrCodeText) {
-      navigator.clipboard.writeText(paymentData.qrCodeText)
-        .then(() => {
-          setCopiedToClipboard(true);
-          setTimeout(() => setCopiedToClipboard(false), 3000);
-        })
-        .catch(err => {
-          console.error('Failed to copy text: ', err);
-        });
+    if (pixData?.qrCodeText) {
+      navigator.clipboard.writeText(pixData.qrCodeText);
+      setCopied(true);
+      toast({
+        title: "Código PIX copiado!",
+        description: "O código PIX foi copiado para a área de transferência.",
+      });
+      setTimeout(() => setCopied(false), 3000);
     }
   };
 
-  // Format expiration time
-  const formatExpirationTime = (isoDate: string): string => {
-    return new Date(isoDate).toLocaleTimeString('pt-BR', {
+  // Format expiration date for display
+  const formatExpirationDate = (isoDate: string): string => {
+    return new Date(isoDate).toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
     });
   };
 
-  // If payment data is available, show QR code
-  if (paymentData) {
-    return (
-      <div className="flex flex-col items-center py-4">
-        <h3 className="text-lg font-semibold mb-4">Pague com Pix</h3>
-        
-        <div className="flex flex-col items-center space-y-4">
-          <p className="text-sm text-center text-muted-foreground">
-            Escaneie o QR code abaixo com o app do seu banco ou carteira digital
-          </p>
-          
-          <div className="border rounded-lg p-4 bg-gray-50 mb-4">
-            <img 
-              src={paymentData.qrCode || paymentData.qr_code} 
-              alt="QR Code para pagamento Pix" 
-              className="w-48 h-48 mx-auto"
+  return (
+    <div>
+      {!pixData ? (
+        <form onSubmit={generatePix} className="space-y-4">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium mb-1">
+              Nome completo
+            </label>
+            <Input
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Seu nome completo"
+              disabled={isLoading}
+              required
             />
           </div>
           
-          <div className="w-full">
-            <Label htmlFor="pix-code" className="text-xs">Código Pix (copia e cola)</Label>
-            <div className="flex mt-1">
-              <Input
-                id="pix-code"
-                value={paymentData.qrCodeText}
-                readOnly
-                className="text-xs pr-10"
-              />
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="-ml-10 h-10"
-                onClick={copyToClipboard}
-              >
-                {copiedToClipboard ? (
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                ) : (
-                  <Copy className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium mb-1">
+              E-mail
+            </label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="seu@email.com"
+              disabled={isLoading}
+              required
+            />
           </div>
           
-          <p className="text-xs text-muted-foreground mt-4">
-            O QR code expira às {paymentData.expirationDate ? formatExpirationTime(paymentData.expirationDate) : ''}
-          </p>
+          <div>
+            <label htmlFor="cpf" className="block text-sm font-medium mb-1">
+              CPF
+            </label>
+            <Input
+              id="cpf"
+              value={cpf}
+              onChange={handleCPFChange}
+              placeholder="000.000.000-00"
+              disabled={isLoading}
+              required
+              maxLength={14}
+            />
+          </div>
+          
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Gerando PIX...
+              </>
+            ) : (
+              "Gerar PIX"
+            )}
+          </Button>
+        </form>
+      ) : (
+        <div className="space-y-4">
+          <div className="text-center">
+            <h3 className="font-medium mb-2">PIX gerado com sucesso!</h3>
+            <p className="text-sm text-muted-foreground">
+              Escaneie o QR Code ou copie o código para pagar
+            </p>
+            <p className="text-xs text-red-500">
+              Validade: {formatExpirationDate(pixData.expirationDate)}
+            </p>
+          </div>
+          
+          <div className="flex justify-center">
+            <img 
+              src={pixData.qrCode} 
+              alt="QR Code PIX" 
+              className="h-48 w-48 border-2 p-2"
+            />
+          </div>
+          
+          <Separator />
+          
+          <div className="relative">
+            <Input
+              value={pixData.qrCodeText}
+              readOnly
+              className="pr-10 bg-muted/30 text-xs font-mono truncate"
+            />
+            <Button
+              size="sm"
+              variant="ghost"
+              className="absolute right-0 top-0 h-full px-3"
+              onClick={copyToClipboard}
+            >
+              {copied ? (
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              ) : (
+                <CopyIcon className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+          
+          <div className="text-center text-sm text-muted-foreground">
+            <p>ID do pagamento: {pixData.paymentId}</p>
+            <p className="mt-2">
+              Após o pagamento, você receberá uma confirmação por e-mail.
+            </p>
+          </div>
         </div>
-      </div>
-    );
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="name">Nome completo</Label>
-        <Input
-          id="name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Seu nome completo"
-          disabled={isLoading}
-        />
-        {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="email">E-mail</Label>
-        <Input
-          id="email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="seu@email.com"
-          disabled={isLoading}
-        />
-        {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="cpf">CPF</Label>
-        <Input
-          id="cpf"
-          value={cpf}
-          onChange={handleCpfChange}
-          placeholder="000.000.000-00"
-          maxLength={14}
-          disabled={isLoading}
-        />
-        {errors.cpf && <p className="text-xs text-destructive">{errors.cpf}</p>}
-      </div>
-      
-      <Button 
-        type="submit" 
-        className="w-full mt-6" 
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <>
-            <Loader className="mr-2 h-4 w-4 animate-spin" />
-            Gerando QR Code...
-          </>
-        ) : 'Gerar QR Code Pix'}
-      </Button>
-    </form>
+      )}
+    </div>
   );
 };
 

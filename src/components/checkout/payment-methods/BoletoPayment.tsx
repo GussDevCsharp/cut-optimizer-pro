@@ -1,18 +1,11 @@
+
 import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Loader, Copy, FileText, CheckCircle } from 'lucide-react';
-import { 
-  generateBoletoPayment, 
-  CustomerData, 
-  formatCPF, 
-  validateCPF,
-  BoletoPaymentResponse,
-  convertToMPProductInfo,
-  PaymentStatus as MPPaymentStatus
-} from "@/services/mercadoPagoService";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { FileText, Printer, Loader2, Download } from 'lucide-react';
+import { generateBoletoPayment, CustomerData, formatCPF } from "@/services/mercadoPagoService";
 import { ProductInfo, PaymentStatus } from "../CheckoutModal";
+import { useToast } from '@/hooks/use-toast';
 
 interface BoletoPaymentProps {
   product: ProductInfo;
@@ -24,68 +17,67 @@ const BoletoPayment: React.FC<BoletoPaymentProps> = ({ product, onProcessing, on
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [cpf, setCpf] = useState('');
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
-  const [paymentData, setPaymentData] = useState<BoletoPaymentResponse | null>(null);
-  const [copiedToClipboard, setCopiedToClipboard] = useState(false);
+  const [boletoData, setBoletoData] = useState<{
+    boletoNumber: string;
+    boletoUrl: string;
+    expirationDate: string;
+    paymentId: string;
+  } | null>(null);
+  const { toast } = useToast();
 
-  const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formattedCpf = formatCPF(e.target.value);
-    setCpf(formattedCpf);
+  const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCpf(formatCPF(e.target.value));
   };
 
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
-    
-    if (!name.trim()) newErrors.name = 'Nome é obrigatório';
-    if (!email.trim()) newErrors.email = 'E-mail é obrigatório';
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = 'E-mail inválido';
-    }
-    
-    if (!cpf.trim()) newErrors.cpf = 'CPF é obrigatório';
-    else if (!validateCPF(cpf)) {
-      newErrors.cpf = 'CPF inválido';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const generateBoleto = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) return;
+    // Validate form
+    if (!name.trim() || !email.trim() || !cpf.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Informações incompletas",
+        description: "Por favor, preencha todos os campos para gerar o boleto.",
+      });
+      return;
+    }
+    
+    setIsLoading(true);
+    onProcessing(true);
     
     try {
-      setIsLoading(true);
-      onProcessing(true);
-      
       const customerData: CustomerData = {
         name,
         email,
-        identificationType: 'CPF',
+        identificationType: "CPF",
         identificationNumber: cpf.replace(/\D/g, ''),
         cpf
       };
       
-      const mpProduct = convertToMPProductInfo(product);
+      const response = await generateBoletoPayment(product, customerData);
       
-      const response = await generateBoletoPayment(mpProduct, customerData);
+      setBoletoData({
+        boletoNumber: response.boletoNumber || response.barcode,
+        boletoUrl: response.boletoUrl || response.external_resource_url || '#',
+        expirationDate: response.expirationDate || new Date(Date.now() + 3 * 24 * 60 * 60000).toISOString(),
+        paymentId: response.paymentId || `boleto_${Date.now()}`
+      });
       
-      setPaymentData(response);
+      // Map status string to PaymentStatus enum
+      const status: PaymentStatus = 
+        response.status === 'pending' ? 'pending' : 
+        response.status === 'approved' ? 'approved' : 
+        response.status === 'rejected' ? 'rejected' : 'pending';
       
-      const statusMapping: Record<string, PaymentStatus> = {
-        'pending': 'pending',
-        'approved': 'approved',
-        'rejected': 'rejected',
-        'in_process': 'pending',
-        'error': 'error'
-      };
-      
-      onComplete(statusMapping[response.status] || 'pending', response.paymentId);
+      onComplete(status, response.paymentId);
     } catch (error) {
-      console.error('Error generating Boleto payment:', error);
+      console.error("Error generating boleto:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao gerar boleto",
+        description: "Ocorreu um erro ao processar sua solicitação. Por favor, tente novamente.",
+      });
       onComplete('error');
     } finally {
       setIsLoading(false);
@@ -93,137 +85,132 @@ const BoletoPayment: React.FC<BoletoPaymentProps> = ({ product, onProcessing, on
     }
   };
 
-  const copyToClipboard = () => {
-    if (paymentData?.boletoNumber) {
-      navigator.clipboard.writeText(paymentData.boletoNumber)
-        .then(() => {
-          setCopiedToClipboard(true);
-          setTimeout(() => setCopiedToClipboard(false), 3000);
-        })
-        .catch(err => {
-          console.error('Failed to copy text: ', err);
-        });
+  // Format expiration date for display
+  const formatExpirationDate = (isoDate: string): string => {
+    return new Date(isoDate).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+
+  const handlePrintBoleto = () => {
+    if (boletoData?.boletoUrl) {
+      window.open(boletoData.boletoUrl, '_blank');
     }
   };
 
-  const formatExpirationDate = (isoDate: string): string => {
-    return new Date(isoDate).toLocaleDateString('pt-BR');
-  };
-
-  if (paymentData) {
-    return (
-      <div className="flex flex-col py-4">
-        <h3 className="text-lg font-semibold mb-4">Boleto bancário gerado</h3>
-        
-        <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Utilize o código de barras abaixo para efetuar o pagamento via internet banking ou em qualquer banco, casa lotérica ou supermercado.
-          </p>
+  return (
+    <div>
+      {!boletoData ? (
+        <form onSubmit={generateBoleto} className="space-y-4">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium mb-1">
+              Nome completo
+            </label>
+            <Input
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Seu nome completo"
+              disabled={isLoading}
+              required
+            />
+          </div>
           
-          <div className="border rounded-lg p-4 bg-gray-50">
-            <Label htmlFor="boleto-code" className="text-xs">Código de barras</Label>
-            <div className="flex mt-1">
-              <Input
-                id="boleto-code"
-                value={paymentData.boletoNumber}
-                readOnly
-                className="text-xs pr-10 font-mono"
-              />
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium mb-1">
+              E-mail
+            </label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="seu@email.com"
+              disabled={isLoading}
+              required
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="cpf" className="block text-sm font-medium mb-1">
+              CPF
+            </label>
+            <Input
+              id="cpf"
+              value={cpf}
+              onChange={handleCPFChange}
+              placeholder="000.000.000-00"
+              disabled={isLoading}
+              required
+              maxLength={14}
+            />
+          </div>
+          
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Gerando boleto...
+              </>
+            ) : (
+              "Gerar boleto"
+            )}
+          </Button>
+        </form>
+      ) : (
+        <div className="space-y-4">
+          <div className="text-center">
+            <h3 className="font-medium mb-2">Boleto gerado com sucesso!</h3>
+            <p className="text-sm text-muted-foreground mb-1">
+              Imprima ou salve o boleto para pagamento
+            </p>
+            <p className="text-xs text-red-500">
+              Vencimento: {formatExpirationDate(boletoData.expirationDate)}
+            </p>
+          </div>
+          
+          <div className="border-2 p-4 rounded-md bg-muted/30">
+            <div className="flex items-center justify-center mb-4">
+              <FileText className="h-10 w-10 text-primary" />
+            </div>
+            
+            <div className="text-center mb-4">
+              <p className="text-sm font-medium">Código do boleto:</p>
+              <p className="text-xs font-mono mt-1 break-all">{boletoData.boletoNumber}</p>
+            </div>
+            
+            <div className="space-y-2">
               <Button 
-                variant="ghost" 
-                size="sm" 
-                className="-ml-10 h-10"
-                onClick={copyToClipboard}
+                variant="outline" 
+                className="w-full" 
+                onClick={handlePrintBoleto}
               >
-                {copiedToClipboard ? (
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                ) : (
-                  <Copy className="h-4 w-4" />
-                )}
+                <Download className="mr-2 h-4 w-4" />
+                Baixar boleto
+              </Button>
+              
+              <Button 
+                variant="secondary" 
+                className="w-full" 
+                onClick={handlePrintBoleto}
+              >
+                <Printer className="mr-2 h-4 w-4" />
+                Imprimir boleto
               </Button>
             </div>
           </div>
           
-          <div className="space-y-2">
-            <p className="text-xs text-muted-foreground">
-              <strong>Data de vencimento:</strong> {formatExpirationDate(paymentData.expirationDate || '')}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              O boleto estará disponível para pagamento em até 1 hora.
+          <div className="text-center text-sm text-muted-foreground">
+            <p>ID do pagamento: {boletoData.paymentId}</p>
+            <p className="mt-2">
+              Após o pagamento, você receberá uma confirmação por e-mail em até 3 dias úteis.
             </p>
           </div>
-          
-          <Button 
-            variant="outline" 
-            className="w-full"
-            onClick={() => window.open(paymentData.boletoUrl, '_blank')}
-          >
-            <FileText className="mr-2 h-4 w-4" />
-            Visualizar boleto completo
-          </Button>
         </div>
-      </div>
-    );
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="name">Nome completo</Label>
-        <Input
-          id="name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Seu nome completo"
-          disabled={isLoading}
-        />
-        {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="email">E-mail</Label>
-        <Input
-          id="email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="seu@email.com"
-          disabled={isLoading}
-        />
-        {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="cpf">CPF</Label>
-        <Input
-          id="cpf"
-          value={cpf}
-          onChange={handleCpfChange}
-          placeholder="000.000.000-00"
-          maxLength={14}
-          disabled={isLoading}
-        />
-        {errors.cpf && <p className="text-xs text-destructive">{errors.cpf}</p>}
-      </div>
-      
-      <Button 
-        type="submit" 
-        className="w-full mt-6" 
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <>
-            <Loader className="mr-2 h-4 w-4 animate-spin" />
-            Gerando boleto...
-          </>
-        ) : (
-          <>
-            <FileText className="mr-2 h-4 w-4" />
-            Gerar boleto
-          </>
-        )}
-      </Button>
-    </form>
+      )}
+    </div>
   );
 };
 

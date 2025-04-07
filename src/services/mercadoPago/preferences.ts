@@ -53,14 +53,21 @@ export const createCheckoutPreference = async (
       identification: {
         type: customerData.identificationType,
         number: customerData.identificationNumber
-      }
+      },
+      first_name: customerData.firstName || customerData.name.split(' ')[0],
+      last_name: customerData.lastName || customerData.name.split(' ').slice(1).join(' ')
     } : undefined,
     back_urls: {
       success: window.location.origin + "/payment-success",
       failure: window.location.origin + "/payment-failure",
       pending: window.location.origin + "/payment-pending"
     },
-    auto_return: "approved"
+    auto_return: "approved",
+    statement_descriptor: "Melhor Corte",
+    external_reference: `ORDER_${Date.now()}`,
+    expires: true,
+    expiration_date_from: new Date().toISOString(),
+    expiration_date_to: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString() // 3 days
   };
   
   console.log('Creating preference with data:', preferenceData);

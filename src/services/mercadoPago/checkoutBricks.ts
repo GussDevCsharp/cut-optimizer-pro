@@ -2,13 +2,19 @@
 // Checkout Bricks functionality
 
 import { toast } from '@/hooks/use-toast';
-import { PaymentStatus } from '@/components/checkout/CheckoutModal';
+import { PaymentStatus } from './types';
 import { PUBLIC_KEY, initMercadoPago } from './sdk';
 
 // Initialize Checkout Bricks
 export const initCheckoutBricks = async (
   checkoutContainerId: string,
   preferenceId: string,
+  amount: number,
+  customerInfo?: {
+    firstName: string;
+    lastName: string;
+    email: string;
+  },
   onPaymentComplete?: (status: PaymentStatus, paymentId?: string) => void
 ) => {
   try {
@@ -53,7 +59,7 @@ export const initCheckoutBricks = async (
     
     // Create Mercado Pago instance
     const mp = new window.MercadoPago(PUBLIC_KEY, {
-      locale: 'pt-BR'  // Use pt-BR instead of pt as per console warning
+      locale: 'pt-BR'  // Use pt-BR for Brazilian Portuguese
     });
     
     // Initialize the checkout
@@ -64,23 +70,30 @@ export const initCheckoutBricks = async (
       
       const settings = {
         initialization: {
+          amount: amount, // Montante total a pagar
           preferenceId: preferenceId,
+          payer: customerInfo ? {
+            firstName: customerInfo.firstName || "",
+            lastName: customerInfo.lastName || "",
+            email: customerInfo.email || "",
+          } : undefined,
         },
         customization: {
           visual: {
             style: {
-              theme: 'default',
+              theme: 'flat',  // Use o tema flat como no exemplo
             },
             hideFormTitle: true,
             hidePaymentButton: false
           },
           paymentMethods: {
-            creditCard: 'all',
-            debitCard: 'all',
-            ticket: 'all',
-            bankTransfer: 'all',
-            atm: 'all',
-            wallet_purchase: 'all',
+            creditCard: "all",
+            debitCard: "all",
+            ticket: "all",
+            bankTransfer: "all",
+            atm: "all",
+            onboarding_credits: "all",
+            wallet_purchase: "all",
             maxInstallments: 12
           },
         },
@@ -90,10 +103,26 @@ export const initCheckoutBricks = async (
           },
           onSubmit: ({ selectedPaymentMethod, formData }) => {
             console.log('Payment submitted', selectedPaymentMethod, formData);
-            return new Promise<void>((resolve) => {
+            // Simulando o envio para um servidor backend
+            return new Promise<void>((resolve, reject) => {
+              // Simulamos um processamento no servidor
               setTimeout(() => {
+                console.log("Processamento de pagamento simulado concluído");
                 resolve();
-              }, 1000);
+                
+                // Notificar sobre o status do pagamento (normalmente seria feito após o retorno do servidor)
+                if (onPaymentComplete) {
+                  setTimeout(() => {
+                    // Simular sucesso na maioria dos casos
+                    const success = Math.random() > 0.2;
+                    if (success) {
+                      onPaymentComplete('approved', `payment_${Date.now()}`);
+                    } else {
+                      onPaymentComplete('pending');
+                    }
+                  }, 1000);
+                }
+              }, 1500);
             });
           },
           onError: (error: any) => {
@@ -106,52 +135,6 @@ export const initCheckoutBricks = async (
             
             if (onPaymentComplete) {
               onPaymentComplete('error');
-            }
-          },
-          onPaymentMethodReceived: (paymentMethod: any) => {
-            console.log('Payment method received:', paymentMethod);
-          },
-          onPaymentStatusReceived: (payment: any) => {
-            console.log('Payment status received:', payment);
-            let status: PaymentStatus = 'pending';
-            
-            if (payment && payment.status) {
-              switch (payment.status) {
-                case 'approved':
-                  status = 'approved';
-                  toast({
-                    title: "Pagamento aprovado!",
-                    description: "Seu pagamento foi processado com sucesso.",
-                  });
-                  break;
-                case 'in_process':
-                case 'pending':
-                  status = 'pending';
-                  toast({
-                    title: "Pagamento pendente",
-                    description: "Seu pagamento está sendo processado.",
-                  });
-                  break;
-                case 'rejected':
-                  status = 'rejected';
-                  toast({
-                    variant: "destructive",
-                    title: "Pagamento rejeitado",
-                    description: "Seu pagamento foi rejeitado. Por favor, tente outro método de pagamento.",
-                  });
-                  break;
-                default:
-                  status = 'error';
-                  toast({
-                    variant: "destructive",
-                    title: "Erro no pagamento",
-                    description: "Ocorreu um erro durante o processamento do pagamento.",
-                  });
-              }
-            }
-            
-            if (onPaymentComplete) {
-              onPaymentComplete(status, payment?.id);
             }
           },
         }

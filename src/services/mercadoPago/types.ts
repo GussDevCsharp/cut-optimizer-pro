@@ -23,6 +23,8 @@ export interface CustomerData {
   identificationNumber: string;
   // For legacy support
   cpf?: string;
+  firstName?: string;
+  lastName?: string;
 }
 
 // Card payment data
@@ -36,25 +38,41 @@ export interface CardData {
   issuer?: string;
   identificationType?: string;
   identificationNumber?: string;
+  paymentMethodId?: string;
 }
 
 // Checkout Bricks configuration
 export interface CheckoutBricksOptions {
   initialization: {
     amount: number;
+    preferenceId?: string;
+    payer?: {
+      firstName: string;
+      lastName: string;
+      email: string;
+    };
   };
-  callbacks: {
-    onReady: () => void;
-    onError: (error: any) => void;
-    onSubmit: (cardFormData: any) => void;
-  };
-  locale?: string;
   customization?: {
     visual: {
       style: {
         theme: string;
       };
     };
+    paymentMethods?: {
+      creditCard: string;
+      debitCard: string;
+      ticket: string;
+      bankTransfer: string;
+      atm: string;
+      onboarding_credits?: string;
+      wallet_purchase: string;
+      maxInstallments: number;
+    };
+  };
+  callbacks: {
+    onReady: () => void;
+    onError: (error: any) => void;
+    onSubmit: (paymentData: any) => Promise<void>;
   };
 }
 
@@ -104,5 +122,6 @@ export interface CheckoutResponse {
   paymentId?: string;
 }
 
-// Payment status enum - Make this consistent with CheckoutModal.PaymentStatus
+// Payment status enum - aligned with CheckoutModal.PaymentStatus
 export type PaymentStatus = 'pending' | 'approved' | 'rejected' | 'error' | 'in_process';
+

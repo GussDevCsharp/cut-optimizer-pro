@@ -120,7 +120,9 @@ export const useCardPaymentForm = ({ product, onProcessing, onComplete }: UseCar
         email: formState.email,
         identificationType: 'CPF',
         identificationNumber: formState.cpf.replace(/\D/g, ''),
-        cpf: formState.cpf
+        cpf: formState.cpf,
+        firstName: formState.name.split(' ')[0],
+        lastName: formState.name.split(' ').slice(1).join(' ')
       };
       
       const cardData: CardData = {
@@ -132,7 +134,8 @@ export const useCardPaymentForm = ({ product, onProcessing, onComplete }: UseCar
         installments: parseInt(formState.installments, 10),
         issuer: 'visa', // This would normally be detected by Mercado Pago
         identificationType: 'CPF',
-        identificationNumber: formState.cpf.replace(/\D/g, '')
+        identificationNumber: formState.cpf.replace(/\D/g, ''),
+        paymentMethodId: 'visa' // Add the payment method ID
       };
       
       // Convert product to Mercado Pago format
@@ -142,15 +145,18 @@ export const useCardPaymentForm = ({ product, onProcessing, onComplete }: UseCar
       const response = await processCardPayment(mpProduct, cardData, customerData);
       
       // Map the payment status from MP to the component's expected format
-      const statusMapping: Record<MPPaymentStatus, PaymentStatus> = {
-        'pending': 'pending',
-        'approved': 'approved',
-        'rejected': 'rejected',
-        'in_process': 'pending',
-        'error': 'error'
+      const mapMPStatusToComponentStatus = (mpStatus: MPPaymentStatus): PaymentStatus => {
+        switch (mpStatus) {
+          case 'approved': return 'approved';
+          case 'rejected': return 'rejected';
+          case 'pending': return 'pending';
+          case 'in_process': return 'pending';
+          case 'error': return 'error';
+          default: return 'pending';
+        }
       };
       
-      onComplete(statusMapping[response.status], response.paymentId);
+      onComplete(mapMPStatusToComponentStatus(response.status), response.paymentId);
     } catch (error) {
       console.error('Error processing card payment:', error);
       onComplete('error');

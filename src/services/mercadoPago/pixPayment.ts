@@ -11,13 +11,14 @@ export const generatePixPayment = async (
   // This is a mock implementation
   return new Promise((resolve) => {
     setTimeout(() => {
+      const paymentId = `pix_${Date.now()}`;
       resolve({
         qr_code: 'https://www.mercadopago.com/qrcode.png',
         qr_code_base64: 'data:image/png;base64,iVBORw0KGgoAA...', // Base64 encoded QR code image
         status: 'pending',
         transaction_amount: product.unit_price || product.price || 0,
         // Additional fields for the component
-        paymentId: `pix_${Date.now()}`,
+        paymentId: paymentId,
         qrCode: 'https://www.mercadopago.com/qrcode.png',
         qrCodeText: '00020101021226800014br.gov.bcb.pix2558api.mercadolibre.com/payment/123456789',
         expirationDate: new Date(Date.now() + 30 * 60000).toISOString()  // 30 minutes from now
