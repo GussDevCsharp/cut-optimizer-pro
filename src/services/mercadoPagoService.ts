@@ -14,7 +14,8 @@ export {
   generateBoletoPayment,
   formatCPF,
   validateCPF,
-  formatCurrency
+  formatCurrency,
+  convertToMPProductInfo
 } from './mercadoPago';
 
 // Re-export types

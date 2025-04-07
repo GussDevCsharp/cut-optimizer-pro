@@ -40,7 +40,8 @@ export {
 export {
   formatCPF,
   validateCPF,
-  formatCurrency
+  formatCurrency,
+  convertToMPProductInfo
 } from './utils';
 
 // Re-export types
@@ -52,5 +53,6 @@ export type {
   InstallmentOption,
   PixPaymentResponse,
   BoletoPaymentResponse,
-  CheckoutResponse
+  CheckoutResponse,
+  PaymentStatus
 } from './types';

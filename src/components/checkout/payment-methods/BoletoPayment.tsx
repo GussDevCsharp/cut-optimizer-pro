@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +9,8 @@ import {
   CustomerData, 
   formatCPF, 
   validateCPF,
-  BoletoPaymentResponse
+  BoletoPaymentResponse,
+  convertToMPProductInfo
 } from "@/services/mercadoPagoService";
 import { ProductInfo, PaymentStatus } from "../CheckoutModal";
 
@@ -70,8 +72,11 @@ const BoletoPayment: React.FC<BoletoPaymentProps> = ({ product, onProcessing, on
         identificationNumber: cpf.replace(/\D/g, '')
       };
       
+      // Convert product to Mercado Pago format
+      const mpProduct = convertToMPProductInfo(product);
+      
       // Call the service to generate a Boleto payment
-      const response = await generateBoletoPayment(product, customerData);
+      const response = await generateBoletoPayment(mpProduct, customerData);
       
       setPaymentData(response);
       onComplete(response.status, response.paymentId);
@@ -140,7 +145,7 @@ const BoletoPayment: React.FC<BoletoPaymentProps> = ({ product, onProcessing, on
           
           <div className="space-y-2">
             <p className="text-xs text-muted-foreground">
-              <strong>Data de vencimento:</strong> {formatExpirationDate(paymentData.expirationDate)}
+              <strong>Data de vencimento:</strong> {formatExpirationDate(paymentData.expirationDate || '')}
             </p>
             <p className="text-xs text-muted-foreground">
               O boleto estará disponível para pagamento em até 1 hora.

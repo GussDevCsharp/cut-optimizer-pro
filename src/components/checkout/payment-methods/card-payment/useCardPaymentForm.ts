@@ -6,7 +6,8 @@ import {
   validateCPF, 
   processCardPayment,
   CustomerData,
-  CardData
+  CardData,
+  convertToMPProductInfo
 } from "@/services/mercadoPagoService";
 import { ProductInfo, PaymentStatus } from "../../CheckoutModal";
 
@@ -134,13 +135,16 @@ export const useCardPaymentForm = ({ product, onProcessing, onComplete }: UseCar
         identificationNumber: formState.cpf.replace(/\D/g, '')
       };
       
+      // Convert product to Mercado Pago format
+      const mpProduct = convertToMPProductInfo(product);
+      
       // Call the service to process the card payment
-      const response = await processCardPayment(product, cardData, customerData);
+      const response = await processCardPayment(mpProduct, cardData, customerData);
       
       onComplete(response.status, response.paymentId);
     } catch (error) {
       console.error('Error processing card payment:', error);
-      onComplete('error' as PaymentStatus);
+      onComplete('error');
     } finally {
       setIsLoading(false);
       onProcessing(false);

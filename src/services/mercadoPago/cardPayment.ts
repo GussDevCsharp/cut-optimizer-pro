@@ -1,7 +1,7 @@
 
 // Card payment functionality
 import { ProductInfo, CustomerData, CardData, InstallmentOption, CheckoutResponse } from './types';
-import { PaymentStatus } from '@/components/checkout/CheckoutModal';
+import { PaymentStatus } from './types';
 
 // Format card number as user types (e.g. 4111 1111 1111 1111)
 export const formatCardNumber = (value: string): string => {
@@ -52,7 +52,10 @@ export const getInstallmentOptions = (amount: number): InstallmentOption[] => {
       installmentAmount,
       totalAmount,
       interestRate,
-      label
+      label,
+      installmentRate: interestRate,
+      discountRate: 0,
+      paymentMethodId: 'visa'
     });
   }
   

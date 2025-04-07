@@ -1,7 +1,7 @@
 
 // Boleto payment functionality
 import { ProductInfo, CustomerData, BoletoPaymentResponse } from './types';
-import { PaymentStatus } from '@/components/checkout/CheckoutModal';
+import { PaymentStatus } from './types';
 
 // Generate Boleto payment
 export const generateBoletoPayment = async (
@@ -12,7 +12,12 @@ export const generateBoletoPayment = async (
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve({
-        status: 'pending' as PaymentStatus,
+        id: `boleto_${Date.now()}`,
+        barcode: '34191.79001 01043.510047 91020.150008 9 83960026000',
+        external_resource_url: 'https://www.mercadopago.com.br/payments/123456789/pdf',
+        status: 'pending',
+        transaction_amount: product.unit_price || product.price || 0,
+        // Additional fields for the component
         paymentId: `boleto_${Date.now()}`,
         boletoNumber: '34191.79001 01043.510047 91020.150008 9 83960026000',
         boletoUrl: 'https://www.mercadopago.com.br/payments/123456789/pdf',

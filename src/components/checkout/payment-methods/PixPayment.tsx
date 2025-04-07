@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +9,8 @@ import {
   CustomerData, 
   formatCPF, 
   validateCPF,
-  PixPaymentResponse
+  PixPaymentResponse,
+  convertToMPProductInfo
 } from "@/services/mercadoPagoService";
 import { ProductInfo, PaymentStatus } from "../CheckoutModal";
 
@@ -70,8 +72,11 @@ const PixPayment: React.FC<PixPaymentProps> = ({ product, onProcessing, onComple
         identificationNumber: cpf.replace(/\D/g, '')
       };
       
+      // Convert product to Mercado Pago format
+      const mpProduct = convertToMPProductInfo(product);
+      
       // Call the service to generate a Pix payment
-      const response = await generatePixPayment(product, customerData);
+      const response = await generatePixPayment(mpProduct, customerData);
       
       setPaymentData(response);
       onComplete(response.status, response.paymentId);
@@ -119,7 +124,7 @@ const PixPayment: React.FC<PixPaymentProps> = ({ product, onProcessing, onComple
           
           <div className="border rounded-lg p-4 bg-gray-50 mb-4">
             <img 
-              src={paymentData.qrCode} 
+              src={paymentData.qrCode || paymentData.qr_code} 
               alt="QR Code para pagamento Pix" 
               className="w-48 h-48 mx-auto"
             />
@@ -150,7 +155,7 @@ const PixPayment: React.FC<PixPaymentProps> = ({ product, onProcessing, onComple
           </div>
           
           <p className="text-xs text-muted-foreground mt-4">
-            O QR code expira às {formatExpirationTime(paymentData.expirationDate)}
+            O QR code expira às {paymentData.expirationDate ? formatExpirationTime(paymentData.expirationDate) : ''}
           </p>
         </div>
       </div>
