@@ -45,6 +45,20 @@ CREATE TABLE payment_history (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Create leads table for marketing purposes
+CREATE TABLE leads (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  phone TEXT,
+  plan_id TEXT NOT NULL,
+  plan_name TEXT NOT NULL,
+  price NUMERIC(10, 2) NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('new', 'contacted', 'converted', 'lost')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Insert default subscription plans
 INSERT INTO subscription_plans (name, description, price, duration_days, features, is_active)
 VALUES 
@@ -84,7 +98,17 @@ CREATE POLICY payment_history_insert_policy ON payment_history
     SELECT 1 FROM profiles WHERE id = auth.uid() AND email = 'gustavo@softcomfortaleza.com.br'
   ));
 
+-- Policies for leads table
+CREATE POLICY leads_select_policy ON leads 
+  FOR SELECT USING (EXISTS (
+    SELECT 1 FROM profiles WHERE id = auth.uid() AND email = 'gustavo@softcomfortaleza.com.br'
+  ));
+
+CREATE POLICY leads_insert_policy ON leads 
+  FOR INSERT WITH CHECK (TRUE); -- Allow public inserts for lead capture
+
 -- Enable RLS on the tables
 ALTER TABLE subscription_plans ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_subscriptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE payment_history ENABLE ROW LEVEL SECURITY;
+ALTER TABLE leads ENABLE ROW LEVEL SECURITY;
