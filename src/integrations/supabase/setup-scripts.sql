@@ -1,4 +1,3 @@
-
 -- Create profiles table (if it doesn't exist already)
 CREATE TABLE IF NOT EXISTS profiles (
   id UUID REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
@@ -17,6 +16,7 @@ CREATE TABLE subscription_plans (
   duration_days INTEGER NOT NULL,
   features JSONB,
   is_active BOOLEAN DEFAULT TRUE,
+  is_lifetime BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -27,7 +27,8 @@ CREATE TABLE user_subscriptions (
   plan_id UUID REFERENCES subscription_plans(id) NOT NULL,
   status TEXT NOT NULL CHECK (status IN ('active', 'canceled', 'expired')),
   start_date TIMESTAMP WITH TIME ZONE NOT NULL,
-  expiration_date TIMESTAMP WITH TIME ZONE NOT NULL,
+  expiration_date TIMESTAMP WITH TIME ZONE,
+  is_lifetime BOOLEAN DEFAULT FALSE,
   auto_renew BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -65,6 +66,11 @@ VALUES
   ('Básico', 'Plano básico com recursos essenciais', 19.90, 30, '["Otimização de cortes", "Até 50 projetos"]', TRUE),
   ('Profissional', 'Plano profissional com recursos avançados', 49.90, 30, '["Otimização de cortes", "Projetos ilimitados", "Exportação em PDF"]', TRUE),
   ('Empresarial', 'Plano empresarial completo', 99.90, 30, '["Otimização de cortes", "Projetos ilimitados", "Exportação em PDF", "Múltiplos usuários", "Suporte prioritário"]', TRUE);
+
+-- Insert a lifetime plan
+INSERT INTO subscription_plans (name, description, price, duration_days, features, is_active, is_lifetime)
+VALUES 
+  ('Vitalício', 'Plano vitalício com acesso completo', 999.00, 36500, '["Otimização de cortes", "Projetos ilimitados", "Exportação em PDF", "Múltiplos usuários", "Suporte prioritário", "Acesso vitalício"]', TRUE, TRUE);
 
 -- Create RLS policies for the tables
 -- Policy for subscription_plans (public read)

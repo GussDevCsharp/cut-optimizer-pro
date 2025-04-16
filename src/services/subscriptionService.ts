@@ -1,7 +1,7 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { SubscriptionPlan } from "@/integrations/supabase/schema";
 import { toast } from "@/hooks/use-toast";
+import { ADDITIONAL_ADMIN_EMAIL } from '@/context/AuthContext';
 
 /**
  * Fetches all active subscription plans from the database
@@ -112,6 +112,16 @@ export const createUserSubscription = async (
     const expirationDate = new Date();
     expirationDate.setDate(startDate.getDate() + plan.duration_days);
     
+    // Get user email to check for lifetime access
+    const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
+    if (userError) {
+      throw userError;
+    }
+    
+    // Check if this user gets lifetime access
+    const isLifetimeUser = userData?.user?.email === ADDITIONAL_ADMIN_EMAIL;
+    const isLifetimePlan = plan.is_lifetime === true;
+    
     const { error } = await supabase
       .from('user_subscriptions')
       .insert({
@@ -119,7 +129,8 @@ export const createUserSubscription = async (
         plan_id: planId,
         status: 'active',
         start_date: startDate.toISOString(),
-        expiration_date: expirationDate.toISOString(),
+        expiration_date: isLifetimeUser || isLifetimePlan ? null : expirationDate.toISOString(),
+        is_lifetime: isLifetimeUser || isLifetimePlan,
         auto_renew: autoRenew
       });
     
@@ -181,6 +192,40 @@ export const createUserSubscriptionWithPayment = async ({
     return true;
   } catch (error: any) {
     console.error("Error creating subscription with payment:", error);
+    return false;
+  }
+};
+
+/**
+ * Check if a user has an active subscription
+ */
+export const checkUserSubscription = async (userId: string): Promise<boolean> => {
+  try {
+    // Check for lifetime access based on email
+    const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
+    if (userError) {
+      throw userError;
+    }
+    
+    if (userData?.user?.email === ADDITIONAL_ADMIN_EMAIL) {
+      return true; // User has lifetime access
+    }
+    
+    // Check for active subscription
+    const { data: subscription, error } = await supabase
+      .from('user_subscriptions')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('status', 'active')
+      .maybeSingle();
+    
+    if (error) {
+      throw error;
+    }
+    
+    return !!subscription;
+  } catch (error) {
+    console.error("Error checking user subscription:", error);
     return false;
   }
 };

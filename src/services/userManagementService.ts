@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "@/hooks/use-toast";
 import { User } from "@supabase/supabase-js";
@@ -40,10 +39,16 @@ export const getAllUsers = async () => {
       const profile = profiles?.find(p => p.id === user.id);
       const subscription = subscriptions?.find(s => s.user_id === user.id);
       
+      // Check for lifetime plan for specific user
+      const hasLifetimePlan = user.email === ADDITIONAL_ADMIN_EMAIL;
+      
       return {
         ...user,
         profile,
-        subscription
+        subscription: hasLifetimePlan ? { 
+          status: 'active',
+          is_lifetime: true,
+        } : subscription
       };
     });
     
@@ -64,7 +69,21 @@ export const getAllUsers = async () => {
  */
 export const getUserSubscriptionPlan = async (userId: string) => {
   try {
-    // Get active subscription for user
+    // First check if this is the user with lifetime access
+    const { data: user, error: userError } = await supabase.auth.admin.getUserById(userId);
+    
+    if (userError) throw userError;
+    
+    if (user && user.email === ADDITIONAL_ADMIN_EMAIL) {
+      return {
+        status: 'active',
+        is_lifetime: true,
+        plan_name: 'Vitalício',
+        plan_price: 0
+      };
+    }
+    
+    // Otherwise, get active subscription for user
     const { data: subscription, error: subError } = await supabase
       .from('user_subscriptions')
       .select('*, plan_id')
@@ -140,4 +159,9 @@ export const hasFullDataAccess = (userId: string): boolean => {
   // For this example, we'll consider that only admins have full data access
   // In a real application, this would check against the database
   return false; // Default to false for regular users
+};
+
+// Check if user has lifetime access
+export const hasLifetimeAccess = (email: string): boolean => {
+  return email === ADDITIONAL_ADMIN_EMAIL;
 };

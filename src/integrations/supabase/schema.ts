@@ -1,5 +1,5 @@
 
-export type SubscriptionPlanType = 'Básico' | 'Profissional' | 'Empresarial';
+export type SubscriptionPlanType = 'Básico' | 'Profissional' | 'Empresarial' | 'Vitalício';
 
 export interface SubscriptionPlan {
   id: string;
@@ -9,6 +9,7 @@ export interface SubscriptionPlan {
   duration_days: number;
   features: string[];
   is_active: boolean;
+  is_lifetime?: boolean;
   created_at: string;
 }
 
@@ -18,7 +19,8 @@ export interface UserSubscription {
   plan_id: string;
   status: 'active' | 'canceled' | 'expired';
   start_date: string;
-  expiration_date: string;
+  expiration_date?: string | null;
+  is_lifetime?: boolean;
   auto_renew: boolean;
   created_at: string;
   updated_at: string;
