@@ -1,7 +1,8 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "@/hooks/use-toast";
 import { User } from "@supabase/supabase-js";
-import { MASTER_ADMIN_EMAIL } from '@/context/AuthContext';
+import { MASTER_ADMIN_EMAIL, ADDITIONAL_ADMIN_EMAIL } from '@/context/AuthContext';
 
 /**
  * Get all users from the database
@@ -130,9 +131,8 @@ export const updateUserAdminStatus = async (userId: string, isAdmin: boolean) =>
 export const isUserAdmin = (email: string): boolean => {
   if (!email) return false;
   
-  // For simplicity, check if the email matches the master admin email
-  // In a real application, this would check against the database
-  return email === MASTER_ADMIN_EMAIL;
+  // Check if email matches any of the admin emails
+  return email === MASTER_ADMIN_EMAIL || email === ADDITIONAL_ADMIN_EMAIL;
 };
 
 // Check if user has full data access

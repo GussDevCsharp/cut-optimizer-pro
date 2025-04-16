@@ -6,8 +6,9 @@ import { loginWithEmail, registerUser, resetPasswordEmail, logout } from "@/serv
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-// Master admin email - centralized constant
+// Master admin emails - centralized constants
 export const MASTER_ADMIN_EMAIL = "gustavo@softcomfortaleza.com.br";
+export const ADDITIONAL_ADMIN_EMAIL = "italogustavocm@gmail.com";
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -47,8 +48,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await logout();
   };
 
-  // Check if user is master admin
-  const isMasterAdmin = user?.email === MASTER_ADMIN_EMAIL;
+  // Check if user is master admin or additional admin
+  const isMasterAdmin = user?.email === MASTER_ADMIN_EMAIL || user?.email === ADDITIONAL_ADMIN_EMAIL;
 
   return (
     <AuthContext.Provider
