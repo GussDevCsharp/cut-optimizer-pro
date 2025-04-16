@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "@/hooks/use-toast";
 import { User } from "@supabase/supabase-js";
@@ -70,11 +71,12 @@ export const getAllUsers = async () => {
 export const getUserSubscriptionPlan = async (userId: string) => {
   try {
     // First check if this is the user with lifetime access
-    const { data: user, error: userError } = await supabase.auth.admin.getUserById(userId);
+    const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
     
     if (userError) throw userError;
     
-    if (user && user.email === ADDITIONAL_ADMIN_EMAIL) {
+    // Properly access the email property from the nested user object
+    if (userData && userData.user && userData.user.email === ADDITIONAL_ADMIN_EMAIL) {
       return {
         status: 'active',
         is_lifetime: true,
